@@ -50,6 +50,8 @@ class Saproject(object):
             try:
                 # get the active SapObject(something went wrong)
                 sap_object = helper.GetObject("CSI.SAP2000.API.SapObject")
+                # get sap model from sap_object
+                sap_model = sap_object.SapModel
             except (OSError,AttributeError,comtypes.COMError):
                 print("No running API instance of the program found or failed to attach.\nTrying to open a new instance...")
                 AttachToInstance = False
@@ -167,7 +169,7 @@ class SapScripts:
         for China it includes ["GB","JTG","TB","User"]
         """
         from .Scripts.Common_Material_Set import CommonMaterialSet_China
-        MatSet = CommonMaterialSet_China(self.Sapobj,standard)
+        CommonMaterialSet_China(self.Sapobj,standard)
 
 
 # define other Funcs
