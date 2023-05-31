@@ -1,6 +1,5 @@
 
-
-class SapMaterial():
+class SapMaterial:
     def __init__(self,Sapobj):
         """
         Translation: Passing in the parent class object directly is to avoid 

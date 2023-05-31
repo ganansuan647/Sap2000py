@@ -1,5 +1,4 @@
 
-
 class SapSection:
     def __init__(self,Sapobj):
         """
@@ -25,6 +24,26 @@ class SapSection:
         J(float)-The torsional constant. [L4]
         """
         self.__Model.PropFrame.SetGeneral(sectName,matName,1,1,Area,As2,As3,J,I22,I33,1,1,1,1,1,1)
+
+    def PropFrame_SetSD(self,sectName,matName,DesignType=0,Color=-1,Notes="",GUID = ""):
+        """
+        ---set a SD(Section Designer) frame section property---
+        This function initializes a section designer property.
+        The function returns zero if the section property is successfully initialized; otherwise it returns a nonzero value.
+        input:
+        sectName(str)-the name of the defined sections
+        matName(str)-the name of the material used for current section
+        DesignType(long)-This is 0, 1, 2 or 3, indicating the design option for the section.
+            0 = No design
+            1 = Design as general steel section
+            2 = Design as a concrete column; check the reinforcing
+            3 = Design as a concrete column; design the reinforcing
+        Color(long)-The display color assigned to the section. If Color is specified as -1, the program will automatically assign a color.
+        Notes(str)-The notes, if any, assigned to the section.
+        GUID(str)-The GUID (global unique identifier), if any, assigned to the section. If this item is input as Default, the program assigns a GUID to the section.
+        """
+        ret = self.__Model.PropFrame.SetSDSection(sectName, matName, DesignType, Color, Notes, GUID)
+        return ret
 
     def Tendon_SetProp(self,tendonName,matName,modelOpt,Area):
         """

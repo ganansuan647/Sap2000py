@@ -33,6 +33,7 @@ class Saproject(object):
         self.Assign = SapAssign(self)
         self.Analyze = SapAnalyze(self)
         self.Results = SapResults(self)
+        self.Scripts = SapScripts(self)
         
     def createSap(self,AttachToInstance = False,SpecifyPath = False,ProgramPath = "if the flag SpecifyPath is set to True, specify the ProgramPath to SAP2000 here"):
         """
@@ -49,8 +50,6 @@ class Saproject(object):
             try:
                 # get the active SapObject(something went wrong)
                 sap_object = helper.GetObject("CSI.SAP2000.API.SapObject")
-                # Get the active SapModel
-                sap_model = sap_object.SapModel
             except (OSError,AttributeError,comtypes.COMError):
                 print("No running API instance of the program found or failed to attach.\nTrying to open a new instance...")
                 AttachToInstance = False
@@ -70,7 +69,7 @@ class Saproject(object):
                     print("Cannot start a new instance of the program.")
                     sys.exit(-1)
         self._Object = sap_object
-        self._Model = sap_model
+        self._Model = sap_object.SapModel
 
     def openSap(self):
         # Start Application
@@ -95,7 +94,7 @@ class Saproject(object):
         ---set the units of the current Sap2000 model---
         please see unitsTag in Saproject.Units
         """
-        ret = self.Model.SetPresentUnits(unitid)
+        ret = self._Model.SetPresentUnits(unitid)
         return ret
 
     def getUnits(self):
@@ -104,7 +103,7 @@ class Saproject(object):
         lb_in_F=1,lb_ft_F=2,kip_in_F=3,kip_ft_F=4,kN_mm_C=5,kN_m_C=6,kgf_mm_C=7,kgf_m_C=8
         N_mm_C=9,N_m_C=10,Ton_mm_C=11,Ton_m_C=12,kN_cm_C=13,kgf_cm_C=14,N_cm_C=15,Ton_cm_C=16
         """
-        UnitNum=self.Model.GetDatabaseUnits()
+        UnitNum=self._Model.GetDatabaseUnits()
         UnitStr = lookup(self.Units,UnitNum)
         print("The current model unit is:",UnitStr)
         return UnitStr
@@ -113,7 +112,7 @@ class Saproject(object):
             """
             ---get the current SAP2000 program version---
             """
-            currentVersion=self.Model.GetVersion()
+            currentVersion=self._Model.GetVersion()
             print("The current SAP2000 program version is:",currentVersion[1])
             return currentVersion[1]
 
@@ -121,14 +120,14 @@ class Saproject(object):
         """
         ---get the project information ---
         """
-        projectInfo=self.Model.GetProjectInfo()
+        projectInfo=self._Model.GetProjectInfo()
         print(projectInfo)
 
     def getFileName(self):
             """
             ---get the file name of the current model---
             """
-            self.File.name = self.Model.GetModelFilename()
+            self.File.name = self._Model.GetModelFilename()
             print("The current model file name is:",self.File.name)
             return self.File.name
 
@@ -136,7 +135,7 @@ class Saproject(object):
         """
         ---get the name of the present coordinate system---
         """
-        currentCoordSysName = self.Model.GetPresentCoordSystem()
+        currentCoordSysName = self._Model.GetPresentCoordSystem()
         print("The current coordinate system is:",currentCoordSysName)
         return currentCoordSysName
 
@@ -147,11 +146,28 @@ class Saproject(object):
         zoom = True : maintain current window zoom
         zoom = False: return to default zoom
         """
-        ret = self.Model.View.RefreshView(Window, Zoom)
+        ret = self._Model.View.RefreshView(Window, Zoom)
         return ret
     
 
+class SapScripts:
+    def __init__(self,Sapobj):
+        """
+        Translation: Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+        self.Sapobj = Sapobj
 
+    def AddCommonMaterialSet(self,standard = "GB"):
+        """
+        Add Common Material Set for China with your desired standard,
+        for China it includes ["GB","JTG","TB","User"]
+        """
+        from .Scripts.Common_Material_Set import CommonMaterialSet_China
+        MatSet = CommonMaterialSet_China(self.Sapobj,standard)
 
 
 # define other Funcs

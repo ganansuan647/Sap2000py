@@ -1,10 +1,9 @@
-# from Sap2000py import Saproject
-from SapMaterial import SapMaterial
-from SapSection import SapSection
-from SapConstraints import jointConstraints
-from Sapfunctions import Sapfunctions
-from Sapload import SapLoadCases,SapLoadPatterns
-from SapObj import SapPointObj,SapFrameObj,SapTendonObj,SapAreaObj,SapSolidObj,SapLinkObj
+from Sap2000py.SapMaterial import SapMaterial
+from Sap2000py.SapSection import SapSection
+from Sap2000py.SapConstraints import jointConstraints
+from Sap2000py.Sapfunctions import Sapfunctions
+from Sap2000py.Sapload import SapLoadCases,SapLoadPatterns
+from Sap2000py.SapObj import SapPointObj,SapFrameObj,SapTendonObj,SapAreaObj,SapSolidObj,SapLinkObj
 import os
 
 class SapFile:
