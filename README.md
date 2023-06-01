@@ -1,3 +1,4 @@
 # Sap2000py
 A python module to interact with Sap2000 API
-See simple demo in [Sap2000pyDemo.py].(./Sap2000pyDemo.py)
+The purpose of this project is to help engineers deal with Sap2000 easily
+See simple demo in file [Sap2000pyDemo.py]

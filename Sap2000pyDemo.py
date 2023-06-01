@@ -1,6 +1,6 @@
 from Sap2000py.Saproject import Saproject
 import os
-
+import numpy as np
 #full path to the model
 ModelPath = 'F:\python\Sap2000\Models'+os.sep+'Test_Continuous_Bridge.sdb'
 
@@ -17,12 +17,19 @@ Sap.openSap()
 Sap.File.Open(ModelPath)
 
 # Can also creat a new blank model (or )
-# Sap.File.New_Blank()
+Sap.File.New_Blank()
 
 # Check your units and set them correctly
 Sap.getUnits()
-Sap.setUnits(Sap.Units["kN-m-C"])
+Sap.setUnits(Sap.Units["KN_m_C"])
 
+# Add China Common Material Set
+Sap.Scripts.AddCommonMaterialSet(standard = "JTG")
+
+# Add Joints by Script
+joint_coord = np.array([[0,0,0],[10,0,0],[20,0,0],[30,0,0]])
+Sap.Scripts.AddJoints(joint_coord)
+# You can also Add Joints once a time : Sap.Assign.PointObj.AddCartesian(x=0,y=0,z=0)
 
 # Build your Model Here
 

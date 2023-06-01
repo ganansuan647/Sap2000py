@@ -3,6 +3,7 @@ import sys
 import comtypes.client
 from itertools import chain
 import math
+import numpy as np
 
 class Saproject(object):
     """---SAP2000 project class---"""
@@ -97,6 +98,7 @@ class Saproject(object):
         please see unitsTag in Saproject.Units
         """
         ret = self._Model.SetPresentUnits(unitid)
+        print("Model Units set as:",lookup(self.Units,unitid))
         return ret
 
     def getUnits(self):
@@ -170,6 +172,14 @@ class SapScripts:
         """
         from .Scripts.Common_Material_Set import CommonMaterialSet_China
         CommonMaterialSet_China(self.Sapobj,standard)
+
+    def AddJoints(self,Cartesian_coord = np.empty(shape=(0,3))):
+        """
+        Add Joints by Cartesian coordinates,which must be a numpy array
+        input-Cartesian_coord(ndarray)-Nx3 array or Nx2 array in 2D model
+        """
+        from .Scripts.Add_Joints import Add_Joints_Cartesian
+        Add_Joints_Cartesian(self.Sapobj,Cartesian_coord)
 
 
 # define other Funcs
