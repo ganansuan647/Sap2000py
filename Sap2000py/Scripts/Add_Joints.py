@@ -8,7 +8,7 @@ class Add_Joints_Cartesian:
         self.__Object = Sapobj._Object
         self.__Model = Sapobj._Model
         N0 = Sapobj.coord_joints.shape[0] if 'coord_joints' in Sapobj.__dict__ else 0
-        if N0:all_joints = Sapobj.coord_joints
+        all_joints = Sapobj.coord_joints if N0 else np.empty(shape=(0,Cartesian_coord.shape[1]))
         # Add new coords
         N,dim = Cartesian_coord.shape
         uniqueN = N
@@ -18,9 +18,9 @@ class Add_Joints_Cartesian:
                 print('coordinates ',Cartesian_coord[i],' duplicates! please check!')
             else:
                 if dim==2:
-                    Sapobj.Assign.PointObj.AddCartesian(Cartesian_coord[i,1],Cartesian_coord[i,2])
+                    Sapobj.Assign.PointObj.AddCartesian(Cartesian_coord[i,0],Cartesian_coord[i,1])
                 if dim==3:
-                    Sapobj.Assign.PointObj.AddCartesian(Cartesian_coord[i,1],Cartesian_coord[i,2],Cartesian_coord[i,3])
+                    Sapobj.Assign.PointObj.AddCartesian(Cartesian_coord[i,0],Cartesian_coord[i,1],Cartesian_coord[i,2])
                 all_joints = np.vstack((all_joints, Cartesian_coord[i]))
         Sapobj.coord_joints = all_joints
         print(uniqueN,' Joints Added to the Model!')

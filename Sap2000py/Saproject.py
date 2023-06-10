@@ -98,8 +98,10 @@ class Saproject(object):
         please see unitsTag in Saproject.Units
         """
         ret = self._Model.SetPresentUnits(unitid)
-        print("Model Units set as:",lookup(self.Units,unitid))
-        return ret
+        if ret==0:
+            print("Model Units set as:",lookup(self.Units,unitid))
+        else:
+            print("Fail to change Units!")
 
     def getUnits(self):
         """
@@ -164,6 +166,8 @@ class SapScripts:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
         self.Sapobj = Sapobj
+        from .Scripts.GetResults import GetResults
+        self.GetResults = GetResults(Sapobj)
 
     def AddCommonMaterialSet(self,standard = "GB"):
         """
@@ -181,6 +185,32 @@ class SapScripts:
         from .Scripts.Add_Joints import Add_Joints_Cartesian
         Add_Joints_Cartesian(self.Sapobj,Cartesian_coord)
 
+    def SelectCombo(self,ComboList):
+        """
+        Select combo you need for out put
+        """
+        self.Sapobj.Results.Setup.DeselectAllCasesAndCombosForOutput()
+        for combo in ComboList:
+            self.Sapobj.Results.Setup.SetComboSelectedForOutput(combo, True)
+
+    def writecell(self,WorkSheet,dataArray,startCell):
+        """
+        ---write matrix(ndarray) in specified WorkSheet---
+        input:
+            WorkSheet: pointer to the target worksheet
+            dataArray(ndarray): 2d numpy array
+            startCell(str): top left corner of the matrix
+        """
+        import re
+        from openpyxl.utils import get_column_letter, column_index_from_string
+        colname,rowname = re.findall(r'\d+|\D+', startCell)
+        rownum = int(rowname)
+        colnum = column_index_from_string(colname)
+        m,n = dataArray.shape
+        for i in range(m):
+            for j in range(n):
+                WorkSheet.cell(rownum+i,colnum+j,value = dataArray[i,j])
+
 
 # define other Funcs
 def lookup(look,val):
@@ -191,3 +221,4 @@ def lookup(look,val):
         return(list(look.keys())[list(look.values()).index(val)])
     else:
         return None
+
