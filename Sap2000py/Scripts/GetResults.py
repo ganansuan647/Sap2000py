@@ -18,15 +18,17 @@ class GetResults:
                 if Dealflag = False, return everything we got
         output:
         Namelist(list):Item Name List with order
-        Result(ndarray):results in np.array
+        AbsReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        MaxReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        MinReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
         """
         # get result by group name
         GroupElm = 2
         ret = self._Sapobj.Results.JointReact(Name,GroupElm)
         colstart,colend = 6,12
         if Dealflag:
-            uniquelist,JointMaxReaction = deal_with_item(ret,colstart,colend)
-            return uniquelist,JointMaxReaction
+            uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
+            return uniquelist,AbsReaction,MaxReaction,MinReaction
         else:
             return ret[1],ret[colstart:colend]
          
@@ -40,15 +42,17 @@ class GetResults:
                 if Dealflag = False, return everything we got
         output:
         Namelist(list):Item Name List with order
-        Result(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
+        AbsReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
+        MaxReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
+        MinReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
         """
         # get result by group name
         GroupElm = 2
         ret = self._Sapobj.Results.FrameForce(Name,GroupElm)
         colstart,colend = 8,14
         if Dealflag:
-            uniquelist,JointMaxReaction = deal_with_item(ret,colstart,colend)
-            return uniquelist,JointMaxReaction
+            uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
+            return uniquelist,AbsReaction,MaxReaction,MinReaction
         else:
             return ret[1],ret[colstart:colend]
     
@@ -62,15 +66,17 @@ class GetResults:
                 if Dealflag = False, return everything we got
         output:
         Namelist(list):Item Name List with order
-        Result(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        AbsReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        MaxReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        MinReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
         """
         # get result by group name
         GroupElm = 2
         ret = self._Sapobj.Results.FrameJointForce(Name,GroupElm)
         colstart,colend = 7,13
         if Dealflag:
-            uniquelist,JointMaxReaction = deal_with_item(ret,colstart,colend)
-            return uniquelist,JointMaxReaction
+            uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
+            return uniquelist,AbsReaction,MaxReaction,MinReaction
         else:
             return ret[1],ret[colstart:colend]
 
@@ -84,15 +90,17 @@ class GetResults:
                 if Dealflag = False, return everything we got
         output:
         Namelist(list):Item Name List with order
-        Result(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
+        AbsReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
+        MaxReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
+        MinReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
         """
         # get result by group name
         GroupElm = 2
         ret = self._Sapobj.Results.LinkForce(Name,GroupElm)
         colstart,colend = 7,13
         if Dealflag:
-            uniquelist,JointMaxReaction = deal_with_item(ret,colstart,colend)
-            return uniquelist,JointMaxReaction
+            uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
+            return uniquelist,AbsReaction,MaxReaction,MinReaction
         else:
             return ret[1],ret[colstart:colend]
 
@@ -106,15 +114,17 @@ class GetResults:
                 if Dealflag = False, return everything we got
         output:
         Namelist(list):Item Name List with order
-        Result(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        AbsReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        MaxReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
+        MinReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
         """
         # get result by group name
         GroupElm = 2
         ret = self._Sapobj.Results.LinkJointForce(Name,GroupElm)
         colstart,colend = 7,13
         if Dealflag:
-            uniquelist,JointMaxReaction = deal_with_item(ret,colstart,colend)
-            return uniquelist,JointMaxReaction
+            uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
+            return uniquelist,AbsReaction,MaxReaction,MinReaction
         else:
             return ret[1],ret[colstart:colend]
 
@@ -128,15 +138,17 @@ class GetResults:
                 if Dealflag = False, return everything we got
         output:
         Namelist(list):Item Name List with order
-        Result(ndarray):results in np.array:[U1,U2,U3,R1,R2,R3]
+        AbsReaction(ndarray):results in np.array:[U1,U2,U3,R1,R2,R3]
+        MaxReaction(ndarray):results in np.array:[U1,U2,U3,R1,R2,R3]
+        MinReaction(ndarray):results in np.array:[U1,U2,U3,R1,R2,R3]
         """
         # get result by group name
         GroupElm = 2
         ret = self._Sapobj.Results.LinkDeformation(Name,GroupElm)
         colstart,colend = 6,12
         if Dealflag:
-            uniquelist,JointMaxReaction = deal_with_item(ret,colstart,colend)
-            return uniquelist,JointMaxReaction
+            uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
+            return uniquelist,AbsReaction,MaxReaction,MinReaction
         else:
             return ret[1],ret[colstart:colend]
 
@@ -150,11 +162,15 @@ def deal_with_item(results,colstart,colend):
     # find duplicates
     indexdict = find_duplicates(itemtext)
     MaxReaction = np.zeros((len(uniquelist),reaction.shape[1]))
+    MinReaction = np.zeros((len(uniquelist),reaction.shape[1]))
+    AbsReaction = np.zeros((len(uniquelist),reaction.shape[1]))
     for item in uniquelist:
         num = uniquelist.index(item)
         itemreaction = reaction[indexdict[item],:]
-        MaxReaction[num,:] = np.max(np.fabs(itemreaction),0)
-    return uniquelist,MaxReaction
+        MaxReaction[num,:] = np.max(itemreaction,0)
+        MinReaction[num,:] = np.min(itemreaction,0)
+        AbsReaction[num,:] = np.max(np.fabs(itemreaction),0)
+    return uniquelist,AbsReaction,MaxReaction,MinReaction
 
 
 

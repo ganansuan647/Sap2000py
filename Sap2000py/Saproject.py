@@ -185,13 +185,19 @@ class SapScripts:
         from .Scripts.Add_Joints import Add_Joints_Cartesian
         Add_Joints_Cartesian(self.Sapobj,Cartesian_coord)
 
-    def SelectCombo(self,ComboList):
+    def SelectCombo_Case(self,Combo_CaseList):
         """
-        Select combo you need for out put
+        Select combo or case you need for out put
         """
         self.Sapobj.Results.Setup.DeselectAllCasesAndCombosForOutput()
-        for combo in ComboList:
-            self.Sapobj.Results.Setup.SetComboSelectedForOutput(combo, True)
+        for combo_case in Combo_CaseList:
+            self.Sapobj.Results.Setup.SetComboSelectedForOutput(combo_case,True)
+            ret = self.Sapobj.Results.Setup.GetComboSelectedForOutput(combo_case)
+            if ret[1]!=0:
+                self.Sapobj.Results.Setup.SetCaseSelectedForOutput(combo_case,True)
+                ret = self.Sapobj.Results.Setup.GetCaseSelectedForOutput(combo_case)
+            if ret[0]==False:print(combo_case," may not be name of a combo/case, please check!")
+
 
     def writecell(self,WorkSheet,dataArray,startCell):
         """
