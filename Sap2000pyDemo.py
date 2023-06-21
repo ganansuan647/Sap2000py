@@ -1,6 +1,7 @@
 from Sap2000py.Saproject import Saproject
 import os
 import numpy as np
+import openpyxl
 #full path to the model
 ModelPath = 'F:\python\Sap2000\Models'+os.sep+'Test_Continuous_Bridge.sdb'
 
@@ -16,14 +17,14 @@ Sap.openSap()
 # Open Sap2000 sdb file (create if not exist, default: CurrentPath\\NewSapProj.sdb)
 Sap.File.Open(ModelPath)
 
-# Can also creat a new blank model (or )
+# Can also creat a new blank model (or other models you need like 2DFrame/3DFrame etc.)
 Sap.File.New_Blank()
 
 # Check your units and set them correctly
 Sap.getUnits()
 Sap.setUnits(Sap.Units["KN_m_C"])
 
-# Add China Common Material Set
+# Add China Common Material Set·
 Sap.Scripts.AddCommonMaterialSet(standard = "JTG")
 
 
@@ -38,8 +39,55 @@ Sap.Scripts.AddJoints(joint_coord)
 
 
 
-# run analysis
-Sap.Analyze.RunAnalysis()
+
+# Modal Analysis
+# Remove all cases for analysis
+Sap.Scripts.Analyze.RemoveCases("All")
+# Select cases for analysis
+Sap.Scripts.Analyze.AddCases(Casename = ['DEAD', 'MODAL', '63纵桥向','2Y1', '2Y2', '2Y3'])
+# Delete Results
+Sap.Scripts.Analyze.DeleteResults("All")
+# Run analysis
+Sap.Scripts.Analyze.RunAll()
+
+
+
+# post process
+# open excel
+filename='F:\python\Sap2000\Models'+os.sep+'Test_Continuous_Bridge.xlsx'
+wb = openpyxl.load_workbook(filename)
+# choose a target sheet
+print("SheetNames are: ",wb.sheetnames)
+
+# Open 
+TargetSheet = wb.sheetnames[0]  # you can also put sheetnames here
+Targetid = wb.sheetnames.index(TargetSheet)
+ws=wb.worksheets[Targetid]
+# change a name if you want
+# ws.title = "yoursheetname"
+
+# get reactions under deadload 
+# select combo for output
+Sap.Scripts.SelectCombo_Case(["DEAD"])
+
+# get Frame force result by group name
+Name,EleAbsForce,__,__ = Sap.Scripts.GetResults.ElementJointForce_by_Group("墩底")
+# write in excel (here we need F3 --> [2]),"D22" is the top left corner of the matrix
+Sap.Scripts.writecell(ws,EleAbsForce[:,[2]],"D22")
+
+# get reactions under earthquake time history
+# select combo for output
+Sap.Scripts.SelectCombo_Case(["E2YEarthquake"])
+
+# get Frame force result by group name
+Name,EleAbsForce,EleMaxForce,EleMinForce = Sap.Scripts.GetResults.ElementJointForce_by_Group("墩底")
+# write in excel (here we need F3,F1,M2 --> [2,0,4]),,"D30" is the top left corner of the matrix
+Sap.Scripts.writecell(ws,EleAbsForce[:,[2,0,4]],"D30")
+
+
+wb.save(filename)
+
+
 
 # Save your file with a Filename(default: your ModelPath)
 Sap.File.Save()

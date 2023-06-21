@@ -168,6 +168,8 @@ class SapScripts:
         self.Sapobj = Sapobj
         from .Scripts.GetResults import GetResults
         self.GetResults = GetResults(Sapobj)
+        from .Scripts.Analyze import Analyze
+        self.Analyze = Analyze(Sapobj)
 
     def AddCommonMaterialSet(self,standard = "GB"):
         """

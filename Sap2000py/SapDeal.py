@@ -360,6 +360,15 @@ class SapAnalyze:
         """
         self.__Model.Analyze.RunAnalysis()
 
+    def DeleteResults(self,CaseName):
+        """
+        ---This function deletes the results for a specified load case---
+        inputs:
+        CaseName(str)-The name of a load case
+        """
+        ret = self.__Model.Analyze.DeleteResults(CaseName)
+        return ret
+
     def ModifyUnDeformedGeometryModeShape(self,CaseName,Mode,MaxDisp,Direction,Original=False):
         """
         ---This function modifies the undeformed geometry based on the shape of a specified mode from a specified
