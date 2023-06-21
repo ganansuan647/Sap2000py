@@ -1,7 +1,7 @@
 import os
 import sys
 import comtypes.client
-from itertools import chain
+# from itertools import chain
 import math
 import numpy as np
 
@@ -27,6 +27,15 @@ class Saproject(object):
             "Kgf_cm_C":14,
             "N_cm_C":15,
             "Tonf_cm_C":16
+        }
+        self.ObjDict = {
+            'Point':1,
+            'Frame':2,
+            'Cable':3,
+            'Tendon':4,
+            'Area':5,
+            'Solid':6,
+            'Link':7
         }
         from .SapDeal import SapFile,SapDefinitions,SapAssign,SapAnalyze,SapResults
         self.File = SapFile(self)
@@ -99,7 +108,7 @@ class Saproject(object):
         """
         ret = self._Model.SetPresentUnits(unitid)
         if ret==0:
-            print("Model Units set as:",lookup(self.Units,unitid))
+            print("Model Units set as:",self.Scripts.lookup(self.Units,unitid))
         else:
             print("Fail to change Units!")
 
@@ -110,7 +119,7 @@ class Saproject(object):
         N_mm_C=9,N_m_C=10,Ton_mm_C=11,Ton_m_C=12,kN_cm_C=13,kgf_cm_C=14,N_cm_C=15,Ton_cm_C=16
         """
         UnitNum=self._Model.GetDatabaseUnits()
-        UnitStr = lookup(self.Units,UnitNum)
+        UnitStr = self.Scripts.lookup(self.Units,UnitNum)
         print("The current model unit is:",UnitStr)
         return UnitStr
     
@@ -168,8 +177,10 @@ class SapScripts:
         self.Sapobj = Sapobj
         from .Scripts.GetResults import GetResults
         self.GetResults = GetResults(Sapobj)
-        from .Scripts.Analyze import Analyze
-        self.Analyze = Analyze(Sapobj)
+        from .Scripts.Analyze import SapAnalyze
+        self.Analyze = SapAnalyze(Sapobj)
+        from .Scripts.Group import SapGroup
+        self.Group = SapGroup(Sapobj)
 
     def AddCommonMaterialSet(self,standard = "GB"):
         """
@@ -184,8 +195,16 @@ class SapScripts:
         Add Joints by Cartesian coordinates,which must be a numpy array
         input-Cartesian_coord(ndarray)-Nx3 array or Nx2 array in 2D model
         """
-        from .Scripts.Add_Joints import Add_Joints_Cartesian
+        from .Scripts.Build_Model import Add_Joints_Cartesian
         Add_Joints_Cartesian(self.Sapobj,Cartesian_coord)
+
+    def AddElements(self,Connections):
+        """
+        Add Elements by Element_type,Element_coord,Element_name
+        input Connections(ndarray)-Nx2 array
+        """
+        from .Scripts.Build_Model import Add_Elements
+        Add_Elements(self.Sapobj,Connections)
 
     def SelectCombo_Case(self,Combo_CaseList):
         """
@@ -200,8 +219,8 @@ class SapScripts:
                 ret = self.Sapobj.Results.Setup.GetCaseSelectedForOutput(combo_case)
             if ret[0]==False:print(combo_case," may not be name of a combo/case, please check!")
 
-
-    def writecell(self,WorkSheet,dataArray,startCell):
+    @staticmethod
+    def writecell(WorkSheet,dataArray,startCell):
         """
         ---write matrix(ndarray) in specified WorkSheet---
         input:
@@ -220,13 +239,13 @@ class SapScripts:
                 WorkSheet.cell(rownum+i,colnum+j,value = dataArray[i,j])
 
 
-# define other Funcs
-def lookup(look,val):
-    """
-    ---look up keys by value in a dict---
-    """
-    if val in look.values():
-        return(list(look.keys())[list(look.values()).index(val)])
-    else:
-        return None
-
+    # define other Funcs
+    @staticmethod
+    def lookup(look,val):
+        """
+        ---look up keys by value in a dict---
+        """
+        if val in look.values():
+            return(list(look.keys())[list(look.values()).index(val)])
+        else:
+            return None

@@ -1,0 +1,6 @@
+numpy
+os
+openpyxl
+comtypes
+itertools
+prettyprinter

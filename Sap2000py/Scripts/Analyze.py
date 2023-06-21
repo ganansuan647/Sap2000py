@@ -1,5 +1,5 @@
 
-class Analyze:
+class SapAnalyze:
     def __init__(self,Sapobj):
         """
         Choose cases to run and Analyze model

@@ -2,6 +2,7 @@ from Sap2000py.Saproject import Saproject
 import os
 import numpy as np
 import openpyxl
+import prettyprinter as pp
 #full path to the model
 ModelPath = 'F:\python\Sap2000\Models'+os.sep+'Test_Continuous_Bridge.sdb'
 
@@ -36,7 +37,16 @@ Sap.Scripts.AddJoints(joint_coord)
 # After using this script to add joints, you can see all the joints in var Sap.coord_joints
 
 # Build Elements by Script
+Sap.Scripts.AddElements([[1,2],[2,3],[3,4]])
 
+
+# Add elements to your group
+Sap.Scripts.Group.AddtoGroup('Edge',['1','4'],"Point")
+# Check Your Group Elements
+Eledict = Sap.Scripts.Group.GetElements('Edge')
+pp.pprint(Eledict)
+# Select the group you need
+Sap.Scripts.Group.Select('Edge')
 
 
 
