@@ -43,12 +43,10 @@ class SapGroup:
         input:
             GroupName(str|list):group name
         output:
-        ElementList(dict):
+        ElementList(list):
+            EleList is like ['Frame:id1','Point:id2']
             element id : type(Point:1,Frame:2,Cable:3,
                         Tendon:4,Area:5,Solid:6,Link:7)
-        Warning: It should be noted that dict can only pair one value to one key,
-                So please makesure Your Group don't have two elements with 
-                different type but the same id!!
         """
         # Change type to list
         if type(GroupName)==str:
@@ -66,12 +64,16 @@ class SapGroup:
                 for types in typelist:
                     typestr = self._Sapobj.Scripts.lookup(self._Sapobj.ObjDict,types)
                     typestr_list.append(typestr)
-                ElementList.update(dict(zip(elementList,typestr_list)))
+                
+                # combine elementList and typestr_list to a new list
+                newlist = [tstr+':'+ele for tstr,ele in zip(typestr_list,elementList)]
+                # update the ElementList
+                ElementList.update(dict.fromkeys(newlist))
 
         if nonameflag:
             print('You have entered the wrong GroupName, please check in the Caselist below:')
             print(self.GetGroupNames())
-        return ElementList
+        return list(ElementList)
 
     def AddtoGroup(self,GroupName:str,idlist,typeStr:str):
         """
@@ -108,22 +110,22 @@ class SapGroup:
         """
         Objstr = typeStr+'Obj'
         # Delete from existing elements
-        EleList = self.GetElements(GroupName)
+        EleList = dict.fromkeys(self.GetElements(GroupName))
         for id2del in dellist:
-            if id2del in EleList:
-                if EleList[id2del] == typeStr:
-                    del EleList[id2del]
-                else:
-                    print('The element {} is not {}!'.format(id2del,typeStr))
+            # key in EleList is like {'Frame:id'}
+            elekey = typeStr+':'+id2del
+            if elekey in EleList:
+                del EleList[elekey]
             else:
-                print('The element {} is not in group {}!'.format(id2del,GroupName))
+                print('The element {} is not in group {}!'.format(elekey,GroupName))
         
         # clear current group
         self.__Model.GroupDef.Clear(GroupName)
 
         # create the group again
         for ele in EleList.keys():
-            typestr = EleList[ele]
-            self.AddtoGroup(GroupName,ele,typestr)
+            typestr = ele.split(':')[0]
+            eleid = ele.split(':')[1]
+            self.AddtoGroup(GroupName,eleid,typestr)
 
         
