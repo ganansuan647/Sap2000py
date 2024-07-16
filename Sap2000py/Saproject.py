@@ -23,9 +23,8 @@ class Saproject(object):
         self.Assign = SapAssign(self)
         self.Analyze = SapAnalyze(self)
         self.Results = SapResults(self)
-        # self.Scripts = SapScripts(self)
+        self.Scripts = SapScripts(self)
         
-    
     @property
     def SapVersion(self):
         """
@@ -301,11 +300,11 @@ class SapScripts:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
         self.Sapobj = Sapobj
-        from .Scripts.GetResults import GetResults
+        from Sap2000py.Scripts.GetResults import GetResults
         self.GetResults = GetResults(Sapobj)
-        from .Scripts.Analyze import SapAnalyze
+        from Sap2000py.Scripts.Analyze import SapAnalyze
         self.Analyze = SapAnalyze(Sapobj)
-        from .Scripts.Group import SapGroup
+        from Sap2000py.Scripts.Group import SapGroup
         self.Group = SapGroup(Sapobj)
 
     def AddCommonMaterialSet(self,standard = "GB"):
@@ -313,7 +312,7 @@ class SapScripts:
         Add Common Material Set for China with your desired standard,
         for China it includes ["GB","JTG","TB","User"]
         """
-        from .Scripts.Common_Material_Set import CommonMaterialSet_China
+        from Sap2000py.Scripts.Common_Material_Set import CommonMaterialSet_China
         CommonMaterialSet_China(self.Sapobj,standard)
 
     def AddJoints(self,Cartesian_coord = np.empty(shape=(0,3))):

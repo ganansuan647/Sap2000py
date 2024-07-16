@@ -1,9 +1,6 @@
 numpy
-os
 openpyxl
 comtypes>=1.1.11
-itertools
 rich
 loguru
 pathlib
-json
