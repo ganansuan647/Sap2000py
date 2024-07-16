@@ -13,4 +13,4 @@
 #  Environemet: Successfully executed in python 3.8
 #  Date: 2021-08-12
 #########################################################################
-from Sap2000py.__about__ import __version__
+__version__ = "0.1.0"
