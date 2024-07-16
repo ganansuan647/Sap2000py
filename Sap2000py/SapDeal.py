@@ -5,20 +5,22 @@ from Sap2000py.Sapfunctions import Sapfunctions
 from Sap2000py.Sapload import SapLoadCases,SapLoadPatterns
 from Sap2000py.SapObj import SapPointObj,SapFrameObj,SapTendonObj,SapAreaObj,SapSolidObj,SapLinkObj
 import os
+from pathlib import Path
+from typing import Union
+from loguru import logger
 
-class SapFile:
+class SapFile():
     def __init__(self,Sapobj):
         """
         Translation: Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
+        self.Sapobj = Sapobj
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model 
-        FileName=os.getcwd()+os.sep+'NewSapProj.sdb'
-        self.path, self.name = os.path.split(FileName)
 
-    def Open(self,FileName):
+    def Open(self,FileName : Union[Path , str] = Path('.')/"NewSapProj.sdb"):
         """
         ---This function opens an existing Sap2000 file. The file name must have an sdb, $2k, s2k, xlsx, xls, or
         mdb extension. Files with sdb extensions are opened as standard Sap2000 files. Files with $2k and s2k
@@ -29,19 +31,32 @@ class SapFile:
         FileName(str)-The full path of a model file to be opened in the Sap2000 application
         """
         # make sure filepath exists
-        self.path, self.name = os.path.split(FileName)
-        if not os.path.exists(self.path):os.makedirs(self.path)
-        # open sdb file or create a new file
-        if(os.path.isfile(FileName)):
-            # open the sdbFile
-            ret = self.__Model.File.OpenFile(FileName)  # open an existing file
-            if(ret!=0):print("Cannot open file"+self.filename)
-        else:
+        if type(FileName) == str:FileName = Path(FileName)
+        if not FileName.suffix == '.sdb':
+            logger.critical("File extension must be .sdb")
+            return -1
+        
+        if not FileName.exists():
+            if not FileName.parent.resolve().exists():
+                logger.warning(f"Path {FileName.parent.resolve()} does not exist! Creating path...")
+                FileName.parent.mkdir(parents=True,exist_ok=True)
+            
+            # create the file
+            FileName.touch()
+            # get the full path of the file
+            FileName = FileName.resolve()
+            logger.warning(f"File {FileName} does not exist! Creating file...")
             # create new blank model
             ret = self.__Model.File.NewBlank()
-            if(ret!=0):print("Cannot create new sap model")
+            if(ret!=0):logger.error("Cannot create new Blank Sap model")
             # save sdb file
             ret = self.Save(FileName)
+            if(ret!=0):logger.error(f"Cannot save file at path:{FileName}")
+        else:
+            # open the sdbFile
+            ret = self.__Model.File.OpenFile(str(FileName))  # open an existing file
+            if(ret!=0):logger.error(f"Cannot open file at path:{FileName}")
+        self.Sapobj.setDefaultProjectInfo()
         return ret
 
     def New_Blank(self):
@@ -50,13 +65,14 @@ class SapFile:
         """
         self.__Model.File.NewBlank()
 
-    def Save(self,FileName=os.getcwd()+os.sep+'NewSapProj.sdb'):
+    def Save(self,FileName : Union[Path , str] = Path('.')/"NewSapProj.sdb"):
         """
         ---save Sap model file---
         save at savepath\savename
         """
-        if not FileName:FileName = self.path+os.sep+self.name
-        ret = self.__Model.File.Save(FileName)
+        # make sure filepath exists
+        if type(FileName) == str:FileName = Path(FileName).resolve()
+        ret = self.__Model.File.Save(str(FileName))
         return ret
     
     def New_2DFrame(self,TempType,NumberStorys,StoryHeight,NumberBays,BayWidth,Restraint=True,

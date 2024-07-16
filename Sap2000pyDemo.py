@@ -2,7 +2,7 @@ from Sap2000py.Saproject import Saproject
 import os
 import numpy as np
 import openpyxl
-import prettyprinter as pp
+from rich import print
 #full path to the model
 ModelPath = 'F:\python\Sap2000\Models'+os.sep+'Test_Continuous_Bridge.sdb'
 
@@ -17,13 +17,22 @@ Sap.openSap()
 
 # Open Sap2000 sdb file (create if not exist, default: CurrentPath\\NewSapProj.sdb)
 Sap.File.Open(ModelPath)
+# And print the project information
+Sap.getProjectInfo()
 
 # Can also creat a new blank model (or other models you need like 2DFrame/3DFrame etc.)
 Sap.File.New_Blank()
 
-# Check your units and set them correctly
+
+# Get the model information (getSapVersion() will print and also returns the version)
+vsesion = Sap.SapVersion
+Sap.getSapVersion()
+
+# Check your units (getUnits() will print and also returns the units)
+unit = Sap.Units
 Sap.getUnits()
-Sap.setUnits(Sap.Units["KN_m_C"])
+# set Units as you wish (Just type in Sap.setUnits(""), it will show you the options in your IDE)
+Sap.setUnits("KN_m_C")
 
 # Add China Common Material Set·
 Sap.Scripts.AddCommonMaterialSet(standard = "JTG")
@@ -104,3 +113,5 @@ Sap.File.Save()
 
 # Don't forget to close the program
 Sap.closeSap()
+
+

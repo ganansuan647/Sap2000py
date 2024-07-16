@@ -4,13 +4,80 @@ import comtypes.client
 # from itertools import chain
 import math
 import numpy as np
+from typing import Literal
+from loguru import logger
+from datetime import datetime
+from pathlib import Path
+import json
+
+
 
 class Saproject(object):
     """---SAP2000 project class---"""
 
     def __init__(self):
         self.createSap(AttachToInstance = True)
-        self.Units = {
+        from Sap2000py.SapDeal import SapFile,SapDefinitions,SapAssign,SapAnalyze,SapResults
+        self.File = SapFile(self)
+        self.Define = SapDefinitions(self)
+        self.Assign = SapAssign(self)
+        self.Analyze = SapAnalyze(self)
+        self.Results = SapResults(self)
+        # self.Scripts = SapScripts(self)
+        
+    
+    @property
+    def SapVersion(self):
+        """
+        ---the current SAP2000 program version---
+        """
+        return self._Model.GetVersion()[1]
+    
+    @property
+    def ProjectInfo(self):
+        """
+        ---get the project information---
+        self._Model.GetProjectInfo() returns a list of 4 elements:
+        [num_fields:int, Defaultfieldnames:list[str], Defaultfieldkeys:list[str], UserDefinedInfo:Dict[str,str]]
+        Defaultfields = ["Company Name","Client Name","Project Name","Project Number","Model Name","Model Description","Revision Number","Frame Type","Engineer","Checker","Supervisor","Issue Code","Design Code"]
+        """
+        projectInfo = self._Model.GetProjectInfo()
+        num_fields = projectInfo[0]
+        if num_fields:
+            ProjectInfoDict = dict(zip(projectInfo[1],projectInfo[2]))
+            if type(projectInfo[3])==dict:
+                ProjectInfoDict.update(projectInfo[3])
+            else:
+                logger.trace("No User Defined Info!")
+            return ProjectInfoDict
+        else:
+            self.setDefaultProjectInfo()
+            return self.ProjectInfoDict
+    
+    @property
+    def FilePath(self):
+        """
+        ---get the file path of the current model---
+        """
+        return self._Model.GetModelFilepath()
+    
+    @property
+    def FileName(self):
+        """
+        ---get the file name of the current model---
+        """
+        return self._Model.GetModelFilename()
+
+    @property
+    def CoordSystem(self):
+        """
+        ---the name of the present coordinate system---
+        """
+        return self._Model.GetPresentCoordSystem()
+
+    @property
+    def Unitdict(self):
+        return {
             "lb_in_F":1,
             "lb_ft_F":2,
             "Kip_in_F":3,
@@ -28,7 +95,14 @@ class Saproject(object):
             "N_cm_C":15,
             "Tonf_cm_C":16
         }
-        self.ObjDict = {
+    
+    @property
+    def Unitdict_rev(self):
+        return {value: key for key, value in self.Unitdict.items()}
+    
+    @property
+    def Objectdict(self):
+        return {
             'Point':1,
             'Frame':2,
             'Cable':3,
@@ -37,14 +111,25 @@ class Saproject(object):
             'Solid':6,
             'Link':7
         }
-        from .SapDeal import SapFile,SapDefinitions,SapAssign,SapAnalyze,SapResults
-        self.File = SapFile(self)
-        self.Define = SapDefinitions(self)
-        self.Assign = SapAssign(self)
-        self.Analyze = SapAnalyze(self)
-        self.Results = SapResults(self)
-        self.Scripts = SapScripts(self)
-        
+    
+    @property
+    def Unitid(self):
+        """
+        ---the units number of the current sap2000 model---
+        lb_in_F=1,lb_ft_F=2,kip_in_F=3,kip_ft_F=4,kN_mm_C=5,kN_m_C=6,kgf_mm_C=7,kgf_m_C=8
+        N_mm_C=9,N_m_C=10,Ton_mm_C=11,Ton_m_C=12,kN_cm_C=13,kgf_cm_C=14,N_cm_C=15,Ton_cm_C=16
+        """
+        return self._Model.GetDatabaseUnits()
+
+    @property
+    def Units(self):
+        """
+        ---get the units name of the current sap2000 model---
+        lb_in_F=1,lb_ft_F=2,kip_in_F=3,kip_ft_F=4,kN_mm_C=5,kN_m_C=6,kgf_mm_C=7,kgf_m_C=8
+        N_mm_C=9,N_m_C=10,Ton_mm_C=11,Ton_m_C=12,kN_cm_C=13,kgf_cm_C=14,N_cm_C=15,Ton_cm_C=16
+        """
+        return self.Unitdict_rev[self.Unitid]
+    
     def createSap(self,AttachToInstance = False,SpecifyPath = False,ProgramPath = "if the flag SpecifyPath is set to True, specify the ProgramPath to SAP2000 here"):
         """
         ---open Sap2000 program---
@@ -63,7 +148,8 @@ class Saproject(object):
                 # get sap model from sap_object
                 sap_model = sap_object.SapModel
             except (OSError,AttributeError,comtypes.COMError):
-                print("No running API instance of the program found or failed to attach.\nTrying to open a new instance...")
+                logger.warning("No running API instance of the program found or failed to attach.")
+                logger.info("Trying to open a new instance...")
                 AttachToInstance = False
         if not AttachToInstance:
             if SpecifyPath:
@@ -71,14 +157,14 @@ class Saproject(object):
                     # Create an instance of the SAPObject from the specified path
                     sap_object = helper.CreateObject(ProgramPath)
                 except (OSError, comtypes.COMError):
-                    print("Cannot start a new instance of the program from " + ProgramPath)
+                    logger.error(f"Cannot start a new instance of the program from {ProgramPath}")
                     sys.exit(-1)
             else:
                 try:
                     # Create SapObject
                     sap_object = helper.CreateObjectProgID("CSI.SAP2000.API.SapObject")
                 except (OSError, comtypes.COMError):
-                    print("Cannot start a new instance of the program.")
+                    logger.error("Cannot start a new instance of the program.")
                     sys.exit(-1)
         self._Object = sap_object
         self._Model = sap_object.SapModel
@@ -101,58 +187,98 @@ class Saproject(object):
         self._Object.ApplicationExit(True)
         self._Object,self._Model=0,0
     
-    def setUnits(self,unitid):
-        """
-        ---set the units of the current Sap2000 model---
-        please see unitsTag in Saproject.Units
-        """
-        ret = self._Model.SetPresentUnits(unitid)
-        if ret==0:
-            print("Model Units set as:",self.Scripts.lookup(self.Units,unitid))
-        else:
-            print("Fail to change Units!")
-
     def getUnits(self):
         """
-        ---get the units number of the current sap2000 model---
-        lb_in_F=1,lb_ft_F=2,kip_in_F=3,kip_ft_F=4,kN_mm_C=5,kN_m_C=6,kgf_mm_C=7,kgf_m_C=8
-        N_mm_C=9,N_m_C=10,Ton_mm_C=11,Ton_m_C=12,kN_cm_C=13,kgf_cm_C=14,N_cm_C=15,Ton_cm_C=16
+        ---get the units and unitid of the current sap2000 model---
         """
-        UnitNum=self._Model.GetDatabaseUnits()
-        UnitStr = self.Scripts.lookup(self.Units,UnitNum)
-        print("The current model unit is:",UnitStr)
-        return UnitStr
+        logger.opt(colors=True).info(f"Current Unit is <yellow>{self.Units:}</yellow>, id = <blue>{self.Unitid}</blue>")
+        return self.Units
     
+    def setUnits(self, Unit:Literal[
+        "KN_m_C","KN_cm_C","KN_mm_C",
+        "N_m_C","N_cm_C","N_mm_C",
+        "Kgf_m_C","Kgf_cm_C","Kgf_mm_C",
+        "Tonf_m_C","Tonf_cm_C","Tonf_mm_C",
+        "lb_in_F","lb_ft_F",
+        "Kip_in_F","Kip_ft_F"])->None:
+        """
+        ---set the units of the current Sap2000 model---
+        """
+        if Unit not in self.Unitdict.keys():
+            logger.opt(colors=True).error(f"Unit <yellow>{Unit}</yellow> is not supported! Must be one of these: <cyan>{list(self.Unitdict.keys())}</cyan>")
+            return
+        unitid = self.Unitdict[Unit]
+        if unitid == self._Model.GetDatabaseUnits():
+            logger.info(f"Model Units is already {Unit}")
+        else:
+            ret = self._Model.SetPresentUnits(unitid)
+            if ret==0:
+                logger.opt(colors=True).success(f"Model Units set as: <yellow>{Unit}</yellow>")
+            else:
+                logger.opt(colors=True).warning(f"Fail to change Units to <yellow>{Unit}</yellow>! Please check!")
+
     def getSapVersion(self):
             """
-            ---get the current SAP2000 program version---
+            ---Print the current SAP2000 program version---
             """
-            currentVersion=self._Model.GetVersion()
-            print("The current SAP2000 program version is:",currentVersion[1])
-            return currentVersion[1]
+            logger.opt(colors=True).info(f"The current SAP2000 program version is: <yellow>{self.SapVersion}</yellow>")
+            return self.SapVersion
 
     def getProjectInfo(self):
         """
         ---get the project information ---
         """
-        projectInfo=self._Model.GetProjectInfo()
-        print(projectInfo)
+        logger.info(f"Project Information:{json.dumps(self.ProjectInfo,indent=4)}")
 
+    def setProjectInfo(self, field:Literal["Company Name","Client Name","Project Name","Project Number","Model Name","Model Description","Revision Number","Frame Type","Engineer","Checker","Supervisor","Issue Code","Design Code","UserDefined"] = "", value:str = "", info_dict:dict = {}, show_log=True)->None:
+        """
+        ---set the project information---
+        input: ProjectInfoDict(dict)
+        """
+        ret = self._Model.SetProjectInfo(field, value)
+        
+        if info_dict:
+            ret=[]
+            for key,value in info_dict.items():
+                ret.append(self.setProjectInfo(key, value))
+            return any(ret)
+                
+        if not show_log:
+            return ret
+        
+        if ret==0:
+            logger.opt(colors=True).success(f"Project Information <yellow>{field}</yellow> set as <cyan>{value}</cyan>!")
+        else:
+            logger.opt(colors=True).warning(f"Fail to set Project Information <yellow>{field}</yellow> as <cyan>{value}</cyan>! Please check!")
+        return ret
+    
+    def setDefaultProjectInfo(self):
+        """
+        ---set the default project information---
+        """
+        self.setProjectInfo(info_dict={
+            "Company Name":"Tongji University",
+            "Author":"Gou Lingyun",
+            "Sap2000 Version": str(self.SapVersion),
+            "Date": str(datetime.today()),
+            "Created By": "Sap2000py Module",
+            "Link": "https://github.com/ganansuan647/Sap2000py"
+            })
+    
     def getFileName(self):
             """
             ---get the file name of the current model---
             """
-            self.File.name = self._Model.GetModelFilename()
-            print("The current model file name is:",self.File.name)
-            return self.File.name
+            path = Path(f"{self.FileName}")
+            logger.opt(colors=True).info(f"The current model file name is: {path}")
+            return self.FileName
 
     def getCoordSystem(self):
         """
-        ---get the name of the present coordinate system---
+        ---get and print the name of the present coordinate system---
         """
-        currentCoordSysName = self._Model.GetPresentCoordSystem()
-        print("The current coordinate system is:",currentCoordSysName)
-        return currentCoordSysName
+        logger.info(f"The current coordinate system is: <yellow>{self.CoordSystem}</yellow>")
+        return self.CoordSystem
 
     def RefreshView(self,Window=0,Zoom=False):
         """
@@ -217,7 +343,8 @@ class SapScripts:
             if ret[1]!=0:
                 self.Sapobj.Results.Setup.SetCaseSelectedForOutput(combo_case,True)
                 ret = self.Sapobj.Results.Setup.GetCaseSelectedForOutput(combo_case)
-            if ret[0]==False:print(combo_case," may not be name of a combo/case, please check!")
+            if ret[0]==False:
+                logger.warning(f"[orange1]{combo_case}[/orange1] may not be name of a combo/case, please check!")
 
     @staticmethod
     def writecell(WorkSheet,dataArray,startCell):
@@ -238,14 +365,32 @@ class SapScripts:
             for j in range(n):
                 WorkSheet.cell(rownum+i,colnum+j,value = dataArray[i,j])
 
-
-    # define other Funcs
-    @staticmethod
-    def lookup(look,val):
-        """
-        ---look up keys by value in a dict---
-        """
-        if val in look.values():
-            return(list(look.keys())[list(look.values()).index(val)])
-        else:
-            return None
+if __name__ == "__main__":
+    sys.path.append(".")
+    Sap = Saproject()
+    Sap.openSap()
+    Sap.File.New_Blank()
+    Sap.File.Open(Path('.')/"Test"/"Test.sdb")
+    
+    print(Sap.Units)
+    Sap.getUnits()
+    
+    print(Sap.SapVersion)
+    Sap.getSapVersion()
+    
+    Sap.setProjectInfo(field="Company Name",value="Tongji University")
+    Sap.setProjectInfo("Author","Gou Lingyun")
+    Sap.setProjectInfo("Email","gulangyu@tongji.edu.cn")
+    print(Sap.ProjectInfo)
+    Sap.getProjectInfo()
+    
+    print(Sap.FileName)
+    Sap.getFileName()
+    
+    print(Sap.CoordSystem)
+    Sap.getCoordSystem()
+    # Test setUnits
+    Sap.setUnits("KN_m_E")
+    Sap.setUnits("KN_m_C")
+    
+    
