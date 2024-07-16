@@ -3,4 +3,7 @@ os
 openpyxl
 comtypes
 itertools
-prettyprinter
+rich
+loguru
+pathlib
+json

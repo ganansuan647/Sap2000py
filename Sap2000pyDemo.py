@@ -4,7 +4,7 @@ import numpy as np
 import openpyxl
 from rich import print
 #full path to the model
-ModelPath = 'F:\python\Sap2000\Models'+os.sep+'Test_Continuous_Bridge.sdb'
+ModelPath = 'F:\python\Sap2000\Models\Test.sdb'
 
 # Create a Sap2000py obj (default: attatch to instance and create if not exist)
 Sap = Saproject()
@@ -53,7 +53,7 @@ Sap.Scripts.AddElements([[1,2],[2,3],[3,4]])
 Sap.Scripts.Group.AddtoGroup('Edge',['1','4'],"Point")
 # Check Your Group Elements
 Eledict = Sap.Scripts.Group.GetElements('Edge')
-pp.pprint(Eledict)
+print(Eledict)
 # Select the group you need
 Sap.Scripts.Group.Select('Edge')
 
@@ -63,7 +63,7 @@ Sap.Scripts.Group.Select('Edge')
 # Remove all cases for analysis
 Sap.Scripts.Analyze.RemoveCases("All")
 # Select cases for analysis
-Sap.Scripts.Analyze.AddCases(Casename = ['DEAD', 'MODAL', '63纵桥向','2Y1', '2Y2', '2Y3'])
+Sap.Scripts.Analyze.AddCases(Casename = ['DEAD', 'MODAL','yourCase1', 'yourCase2'])
 # Delete Results
 Sap.Scripts.Analyze.DeleteResults("All")
 # Run analysis
@@ -73,7 +73,7 @@ Sap.Scripts.Analyze.RunAll()
 
 # post process
 # open excel
-filename='F:\python\Sap2000\Models'+os.sep+'Test_Continuous_Bridge.xlsx'
+filename='F:\python\Sap2000\Models\Test.xlsx'
 wb = openpyxl.load_workbook(filename)
 # choose a target sheet
 print("SheetNames are: ",wb.sheetnames)
@@ -90,7 +90,7 @@ ws=wb.worksheets[Targetid]
 Sap.Scripts.SelectCombo_Case(["DEAD"])
 
 # get Frame force result by group name
-Name,EleAbsForce,__,__ = Sap.Scripts.GetResults.ElementJointForce_by_Group("墩底")
+Name,EleAbsForce,__,__ = Sap.Scripts.GetResults.ElementJointForce_by_Group("PierBottom")
 # write in excel (here we need F3 --> [2]),"D22" is the top left corner of the matrix
 Sap.Scripts.writecell(ws,EleAbsForce[:,[2]],"D22")
 
@@ -99,7 +99,7 @@ Sap.Scripts.writecell(ws,EleAbsForce[:,[2]],"D22")
 Sap.Scripts.SelectCombo_Case(["E2YEarthquake"])
 
 # get Frame force result by group name
-Name,EleAbsForce,EleMaxForce,EleMinForce = Sap.Scripts.GetResults.ElementJointForce_by_Group("墩底")
+Name,EleAbsForce,EleMaxForce,EleMinForce = Sap.Scripts.GetResults.ElementJointForce_by_Group("PierBottom")
 # write in excel (here we need F3,F1,M2 --> [2,0,4]),,"D30" is the top left corner of the matrix
 Sap.Scripts.writecell(ws,EleAbsForce[:,[2,0,4]],"D30")
 
