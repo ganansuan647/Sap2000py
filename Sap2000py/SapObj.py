@@ -1,113 +1,8 @@
 
-class SapPointObj:
-    def __init__(self,Sapobj):
-        """
-        Translation: Passing in the parent class object directly is to avoid 
-        getting only the last opened SAP2000 window when initializing the 
-        parent class instance to get the model pointer in the subclass.
-        """
+class SapPointObj_Get:
+    def __init__(self, Sapobj):
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
-
-    def AddCartesian(self,x,y,z,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
-        """
-        ---This function adds a point object to a model.The added point object will be tagged as a Special
-        Point except if it was merged with another point object. Special points are allowed to exist in
-        the model with no objects connected to them.---
-        inputs:
-        x,y,z-The X,Y,Z(float)-coordinates of the added point object in the specified coordinate system. [L]
-        Name(str)-This is the name that the program ultimately assigns for the point object. If no UserName
-            is specified, the program assigns a default name to the point object. If a UserName is specified
-            and that name is not used for another point, the UserName is assigned to the point; otherwise a
-            default name is assigned to the point.If a point is merged with another point, this will be the
-            name of the point object with which it was merged.
-        UserName(str)-This is an optional user specified name for the point object. If a UserName is specified
-            and that name is already used for another point object, the program ignores the UserName.
-        CSys(str)-The name of the coordinate system in which the joint coordinates are defined.
-        MergeOff(bool)-If this item is False, a new point object that is added at the same location as an existing
-            point object will be merged with the existing point object (assuming the two point objects have the
-            same MergeNumber) and thus only one point object will exist at the location.If this item is True, the
-            points will not merge and two point objects will exist at the same location.
-        MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
-            are the same. By default all pointobjects have a merge number of zero.
-        """
-        self.__Model.PointObj.AddCartesian(x,y,z,Name,UserName,CSys,MergeOff,MergeNumber)
-
-    def AddCylindrical(self,r,theta,z,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
-        """
-        ---This function adds a point object to a model. The added point object will be tagged as a Special Point
-        except if it was merged with another point object. Special points are allowed to exist in the model with
-        no objects connected to them---
-        inputs:
-        r(float)-The radius for the added point object in the specified coordinate system. [L]
-        theta(float)-The angle for the added point object in the specified coordinate system. The angle is measured
-            in the XY plane from the positive global X axis. When looking in the XY plane with the positive Z axis
-            pointing toward you, a positive Theta angle is counter clockwise. [deg]
-        z(float)-The Z-coordinate of the added point object in the specified coordinate system. [L]
-        Name(str)-This is the name that the program ultimately assigns for the point object. If no UserName
-            is specified, the program assigns a default name to the point object. If a UserName is specified
-            and that name is not used for another point, the UserName is assigned to the point; otherwise a
-            default name is assigned to the point.If a point is merged with another point, this will be the
-            name of the point object with which it was merged.
-        UserName(str)-This is an optional user specified name for the point object. If a UserName is specified
-            and that name is already used for another point object, the program ignores the UserName.
-        CSys(str)-The name of the coordinate system in which the joint coordinates are defined.
-        MergeOff(bool)-If this item is False, a new point object that is added at the same location as an existing
-            point object will be merged with the existing point object (assuming the two point objects have the
-            same MergeNumber) and thus only one point object will exist at the location.If this item is True, the
-            points will not merge and two point objects will exist at the same location.
-        MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
-            are the same. By default all pointobjects have a merge number of zero.
-        """
-        self.__Model.PointObj.AddCartesian(r,theta,z,Name,UserName,CSys,MergeOff,MergeNumber)
-
-    def AddSpherical(self,r,a,b,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
-        """
-        ---This function adds a point object to a model. The added point object will be tagged as a Special Point
-        except if it was merged with another point object. Special points are allowed to exist in the model with
-        no objects connected to them---
-        inputs:
-        r(float)-The radius for the added point object in the specified coordinate system. [L]
-        a(float)-The plan angle for the added point object in the specified coordinate system. This angle is
-            measured in the XY plane from the positive global X axis. When looking in the XY plane with the
-            positive Z axis pointing toward you, a positive a angle is counterclockwise. [deg]
-        b(float)-The elevation angle for the added point object in the specified coordinate system. This angle
-            is measured in an X'Z plane that is perpendicular to the XY plane with the positive X' axis oriented
-            at angle a from the positive global X axis. Angle b is measured from the positive global Z axis. When
-            looking in the X’Z plane with the positive Y' axis pointing toward you, a positive b angle is counter
-            clockwise. [deg]
-        Name(str)-This is the name that the program ultimately assigns for the point object. If no UserName
-            is specified, the program assigns a default name to the point object. If a UserName is specified
-            and that name is not used for another point, the UserName is assigned to the point; otherwise a
-            default name is assigned to the point.If a point is merged with another point, this will be the
-            name of the point object with which it was merged.
-        UserName(str)-This is an optional user specified name for the point object. If a UserName is specified
-            and that name is already used for another point object, the program ignores the UserName.
-        CSys(str)-The name of the coordinate system in which the joint coordinates are defined.
-        MergeOff(bool)-If this item is False, a new point object that is added at the same location as an existing
-            point object will be merged with the existing point object (assuming the two point objects have the
-            same MergeNumber) and thus only one point object will exist at the location.If this item is True, the
-            points will not merge and two point objects will exist at the same location.
-        MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
-            are the same. By default all pointobjects have a merge number of zero.
-        """
-        self.__Model.PointObj.AddSpherical(r,a,b,Name,UserName,CSys,MergeOff,MergeNumber)
-
-    def ChangeName(self,name:str,newName):
-        """
-        ---The function returns zero if the new name is successfully applied, otherwise it returns a nonzero value---
-        inputs:
-        name(str)-The existing name of a point object.
-        newName(str)-The new name for the point object.
-        """
-        self.__Model.PointObj.ChangeName(name,newName)
-
-    def Count(self):
-        """
-        ---This function returns the total number of point objects in the model---
-        """
-        pointNum=self.__Model.PointObj.Count()
-        return pointNum
 
     def CommonTo(self,name:str)->int:
         """
@@ -375,20 +270,11 @@ class SapPointObj:
         result=self.__Model.PointObj.GetSpringCoupled(name,k)
         return result
 
-    def IsSpringCoupled(self,name:str):
-        """
-        ---This function indicates if the spring assignments to a point object are coupled, that is, if they have
-        off-diagonal terms in the 6x6 spring matrix for the point object---
-        inputs:
-        name(str)-The name of an existing point object.
-        return:
-        [numberItem,IsCoupled]
-        IsCoupled(bool)-This item is True if the spring assigned to the specified point object is coupled, otherwise
-            it is False.
-        """
-        result=self.__Model.PointObj.IsSpringCoupled(name)
-        return result
-
+class SapPointObj_Set:
+    def __init__(self,Sapobj):
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+        
     def Constraint(self,name:str,ConstraintName,ItemType=0,Replace=True):
         """
         ---This function makes joint constraint assignments to point objects.---
@@ -624,12 +510,137 @@ class SapPointObj:
         """
         self.__Model.PointObj.SetSpringCoupled(name,k,ItemType,IsLocalCSys,Replace)
 
+class SapPointObj:
+    def __init__(self,Sapobj):
+        """
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+        self.Get = SapPointObj_Get(Sapobj)
+        self.Set = SapPointObj_Set(Sapobj)
+
+    def AddCartesian(self,x,y,z,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
+        """
+        ---This function adds a point object to a model.The added point object will be tagged as a Special
+        Point except if it was merged with another point object. Special points are allowed to exist in
+        the model with no objects connected to them.---
+        inputs:
+        x,y,z-The X,Y,Z(float)-coordinates of the added point object in the specified coordinate system. [L]
+        Name(str)-This is the name that the program ultimately assigns for the point object. If no UserName
+            is specified, the program assigns a default name to the point object. If a UserName is specified
+            and that name is not used for another point, the UserName is assigned to the point; otherwise a
+            default name is assigned to the point.If a point is merged with another point, this will be the
+            name of the point object with which it was merged.
+        UserName(str)-This is an optional user specified name for the point object. If a UserName is specified
+            and that name is already used for another point object, the program ignores the UserName.
+        CSys(str)-The name of the coordinate system in which the joint coordinates are defined.
+        MergeOff(bool)-If this item is False, a new point object that is added at the same location as an existing
+            point object will be merged with the existing point object (assuming the two point objects have the
+            same MergeNumber) and thus only one point object will exist at the location.If this item is True, the
+            points will not merge and two point objects will exist at the same location.
+        MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
+            are the same. By default all pointobjects have a merge number of zero.
+        """
+        self.__Model.PointObj.AddCartesian(x,y,z,Name,UserName,CSys,MergeOff,MergeNumber)
+
+    def AddCylindrical(self,r,theta,z,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
+        """
+        ---This function adds a point object to a model. The added point object will be tagged as a Special Point
+        except if it was merged with another point object. Special points are allowed to exist in the model with
+        no objects connected to them---
+        inputs:
+        r(float)-The radius for the added point object in the specified coordinate system. [L]
+        theta(float)-The angle for the added point object in the specified coordinate system. The angle is measured
+            in the XY plane from the positive global X axis. When looking in the XY plane with the positive Z axis
+            pointing toward you, a positive Theta angle is counter clockwise. [deg]
+        z(float)-The Z-coordinate of the added point object in the specified coordinate system. [L]
+        Name(str)-This is the name that the program ultimately assigns for the point object. If no UserName
+            is specified, the program assigns a default name to the point object. If a UserName is specified
+            and that name is not used for another point, the UserName is assigned to the point; otherwise a
+            default name is assigned to the point.If a point is merged with another point, this will be the
+            name of the point object with which it was merged.
+        UserName(str)-This is an optional user specified name for the point object. If a UserName is specified
+            and that name is already used for another point object, the program ignores the UserName.
+        CSys(str)-The name of the coordinate system in which the joint coordinates are defined.
+        MergeOff(bool)-If this item is False, a new point object that is added at the same location as an existing
+            point object will be merged with the existing point object (assuming the two point objects have the
+            same MergeNumber) and thus only one point object will exist at the location.If this item is True, the
+            points will not merge and two point objects will exist at the same location.
+        MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
+            are the same. By default all pointobjects have a merge number of zero.
+        """
+        self.__Model.PointObj.AddCartesian(r,theta,z,Name,UserName,CSys,MergeOff,MergeNumber)
+
+    def AddSpherical(self,r,a,b,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
+        """
+        ---This function adds a point object to a model. The added point object will be tagged as a Special Point
+        except if it was merged with another point object. Special points are allowed to exist in the model with
+        no objects connected to them---
+        inputs:
+        r(float)-The radius for the added point object in the specified coordinate system. [L]
+        a(float)-The plan angle for the added point object in the specified coordinate system. This angle is
+            measured in the XY plane from the positive global X axis. When looking in the XY plane with the
+            positive Z axis pointing toward you, a positive a angle is counterclockwise. [deg]
+        b(float)-The elevation angle for the added point object in the specified coordinate system. This angle
+            is measured in an X'Z plane that is perpendicular to the XY plane with the positive X' axis oriented
+            at angle a from the positive global X axis. Angle b is measured from the positive global Z axis. When
+            looking in the X’Z plane with the positive Y' axis pointing toward you, a positive b angle is counter
+            clockwise. [deg]
+        Name(str)-This is the name that the program ultimately assigns for the point object. If no UserName
+            is specified, the program assigns a default name to the point object. If a UserName is specified
+            and that name is not used for another point, the UserName is assigned to the point; otherwise a
+            default name is assigned to the point.If a point is merged with another point, this will be the
+            name of the point object with which it was merged.
+        UserName(str)-This is an optional user specified name for the point object. If a UserName is specified
+            and that name is already used for another point object, the program ignores the UserName.
+        CSys(str)-The name of the coordinate system in which the joint coordinates are defined.
+        MergeOff(bool)-If this item is False, a new point object that is added at the same location as an existing
+            point object will be merged with the existing point object (assuming the two point objects have the
+            same MergeNumber) and thus only one point object will exist at the location.If this item is True, the
+            points will not merge and two point objects will exist at the same location.
+        MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
+            are the same. By default all pointobjects have a merge number of zero.
+        """
+        self.__Model.PointObj.AddSpherical(r,a,b,Name,UserName,CSys,MergeOff,MergeNumber)
+
+    def ChangeName(self,name:str,newName):
+        """
+        ---The function returns zero if the new name is successfully applied, otherwise it returns a nonzero value---
+        inputs:
+        name(str)-The existing name of a point object.
+        newName(str)-The new name for the point object.
+        """
+        self.__Model.PointObj.ChangeName(name,newName)
+
+    def Count(self):
+        """
+        ---This function returns the total number of point objects in the model---
+        """
+        pointNum=self.__Model.PointObj.Count()
+        return pointNum
+
+    def IsSpringCoupled(self,name:str):
+        """
+        ---This function indicates if the spring assignments to a point object are coupled, that is, if they have
+        off-diagonal terms in the 6x6 spring matrix for the point object---
+        inputs:
+        name(str)-The name of an existing point object.
+        return:
+        [numberItem,IsCoupled]
+        IsCoupled(bool)-This item is True if the spring assigned to the specified point object is coupled, otherwise
+            it is False.
+        """
+        result=self.__Model.PointObj.IsSpringCoupled(name)
+        return result
 
 
 class FrameObj_Set:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -1278,7 +1289,7 @@ class FrameObj_Set:
 class FrameObj_Get:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -1753,7 +1764,7 @@ class FrameObj_Get:
 class SapFrameObj:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -1846,7 +1857,7 @@ class SapFrameObj:
 class CableObj_Set:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -2082,7 +2093,7 @@ class CableObj_Set:
 class CableObj_Get:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -2362,7 +2373,7 @@ class CableObj_Get:
 class SapCableObj:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -2433,7 +2444,7 @@ class SapCableObj:
 class TendonObj_Set:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -2697,7 +2708,7 @@ class TendonObj_Set:
 class TendonObj_Get:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -2989,7 +3000,7 @@ class TendonObj_Get:
 class SapTendonObj:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -3051,7 +3062,7 @@ class SapTendonObj:
 class AreaObj_Set:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -3586,7 +3597,7 @@ class AreaObj_Set:
 class AreaObj_Get:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -4128,7 +4139,7 @@ class AreaObj_Get:
 class SapAreaObj:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -4196,11 +4207,10 @@ class SapAreaObj:
         return result
 
 
-
 class SolidObj_Set:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -4485,7 +4495,7 @@ class SolidObj_Set:
 class SolidObj_Get:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -4816,7 +4826,7 @@ class SolidObj_Get:
 class SapSolidObj:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -4872,11 +4882,10 @@ class SapSolidObj:
         return result
 
 
-
 class LinkObj_Set:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -5023,7 +5032,7 @@ class LinkObj_Set:
 class LinkObj_Get:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -5247,7 +5256,7 @@ class LinkObj_Get:
 class SapLinkObj:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """

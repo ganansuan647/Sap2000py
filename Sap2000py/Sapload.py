@@ -2,7 +2,7 @@
 class SapLoadPatterns:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -32,7 +32,7 @@ class SapLoadPatterns:
 class load_StaticLinear:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -78,7 +78,7 @@ class load_StaticLinear:
 class load_StaticLinearMultistep:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -139,7 +139,7 @@ class load_StaticLinearMultistep:
 class load_StaticNonlinear:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -305,7 +305,7 @@ class load_StaticNonlinear:
 class load_Buckling:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -362,7 +362,7 @@ class load_Buckling:
 class load_DirHistLinear:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -480,7 +480,7 @@ class load_DirHistLinear:
 class load_DirHistNonlinear:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -639,7 +639,7 @@ class load_DirHistNonlinear:
 class load_ModalEigen:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -716,7 +716,7 @@ class load_ModalEigen:
 class load_ModalRitz:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -780,7 +780,7 @@ class load_ModalRitz:
 class load_ModalHistLinear:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -895,7 +895,7 @@ class load_ModalHistLinear:
 class load_ModalHistNonlinear:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -1052,7 +1052,7 @@ class load_ModalHistNonlinear:
 class load_ResponseSpectrum:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -1210,7 +1210,7 @@ class load_ResponseSpectrum:
 class SapLoadCases:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """

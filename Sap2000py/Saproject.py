@@ -262,7 +262,7 @@ class Saproject(object):
             "Date": str(datetime.today()),
             "Created By": "Sap2000py Module",
             "Link": "https://github.com/ganansuan647/Sap2000py"
-            })
+            },show_log=False)
     
     def getFileName(self):
             """
@@ -293,7 +293,7 @@ class Saproject(object):
 class SapScripts:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """

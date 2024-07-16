@@ -2,7 +2,7 @@
 class SapSection:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
@@ -112,11 +112,10 @@ class SapSection:
         self.__Model.PropSolid.SetProp(name,matProp,a,b,c,incompatible)
 
 
-
 class PropLink:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """

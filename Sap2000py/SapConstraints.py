@@ -3,7 +3,7 @@
 class jointConstraints:
     def __init__(self,Sapobj):
         """
-        Translation: Passing in the parent class object directly is to avoid 
+        Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
         parent class instance to get the model pointer in the subclass.
         """
