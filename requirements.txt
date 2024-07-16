@@ -1,7 +1,7 @@
 numpy
 os
 openpyxl
-comtypes
+comtypes>=1.1.11
 itertools
 rich
 loguru

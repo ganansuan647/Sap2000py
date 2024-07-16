@@ -124,12 +124,14 @@ Sap.closeSap()
 
 ## Dependencies
 
+- python>=3.4.3
+
 This project requires the following Python libraries:
 
 - numpy
 - os
 - openpyxl
-- comtypes
+- comtypes>=1.1.11
 - itertools
 - rich
 - loguru
