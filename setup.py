@@ -23,7 +23,8 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         "Programming Language :: Python :: 3",
-        "Operating System :: Microsoft :: Windows"
+        "Operating System :: Microsoft :: Windows",
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires=[
         "numpy",
