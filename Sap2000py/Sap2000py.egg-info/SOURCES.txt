@@ -1,0 +1,8 @@
+LICENSE
+README.md
+setup.py
+Sap2000py/Sap2000py.egg-info/PKG-INFO
+Sap2000py/Sap2000py.egg-info/SOURCES.txt
+Sap2000py/Sap2000py.egg-info/dependency_links.txt
+Sap2000py/Sap2000py.egg-info/requires.txt
+Sap2000py/Sap2000py.egg-info/top_level.txt

@@ -13,3 +13,4 @@
 #  Environemet: Successfully executed in python 3.8
 #  Date: 2021-08-12
 #########################################################################
+from .__about__ import __version__
