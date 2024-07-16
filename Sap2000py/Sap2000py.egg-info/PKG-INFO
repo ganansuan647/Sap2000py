@@ -1,14 +1,14 @@
 Metadata-Version: 2.1
 Name: Sap2000py
-Version: 0.1.0
+Version: 0.1.1
 Summary: Sap2000 API python interface
 Home-page: https://github.com/ganansuan647/Sap2000py
 Author: Lingyun Gou
 Author-email: 17717910647@163.com
 License: GPL Licence
 Keywords: Sap2000 API python
-Classifier: Development Status :: 3 - Alpha
-Classifier: Intended Audience :: Developers in Structural Engineering
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
 Classifier: Programming Language :: Python :: 3
 Classifier: Operating System :: Microsoft :: Windows
 Requires-Python: >=3.4.3

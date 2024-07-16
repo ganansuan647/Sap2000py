@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-__version__="0.1.0"
+__version__="0.1.1"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -20,8 +20,8 @@ setup(
     package_dir={"": "Sap2000py"},
     packages=find_packages("Sap2000py"),
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers in Structural Engineering',
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Science/Research',
         "Programming Language :: Python :: 3",
         "Operating System :: Microsoft :: Windows"
     ],
