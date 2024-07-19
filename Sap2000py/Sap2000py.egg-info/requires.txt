@@ -1,5 +1,0 @@
-numpy
-comtypes>=1.1.11
-loguru
-pathlib
-rich
