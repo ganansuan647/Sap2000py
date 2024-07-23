@@ -239,16 +239,14 @@ class Saproject(object):
         if info_dict:
             ret=[]
             for key,value in info_dict.items():
-                ret.append(self.setProjectInfo(key, value))
-            return any(ret)
+                ret.append(self.setProjectInfo(key, value, show_log = show_log))
+            ret = any(ret)
                 
-        if not show_log:
-            return ret
-        
-        if ret==0:
-            logger.opt(colors=True).success(f"Project Information <yellow>{field}</yellow> set as <cyan>{value}</cyan>!")
-        else:
-            logger.opt(colors=True).warning(f"Fail to set Project Information <yellow>{field}</yellow> as <cyan>{value}</cyan>! Please check!")
+        if show_log:
+            if ret==0:
+                logger.opt(colors=True).success(f"Project Information <yellow>{field}</yellow> set as <cyan>{value}</cyan>!")
+            else:
+                logger.opt(colors=True).warning(f"Fail to set Project Information <yellow>{field}</yellow> as <cyan>{value}</cyan>! Please check!")
         return ret
     
     def setDefaultProjectInfo(self):

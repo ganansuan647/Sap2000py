@@ -826,7 +826,7 @@ class SapResults_Set:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
-        self.Option = self.SapResults_Set_Option(Sapobj)
+        self.Option = SapResults_Set_Option(Sapobj)
         
     def SetCaseSelectedForOutput(self,Name,Selected=True):
         """
