@@ -10,12 +10,14 @@ class SapSection:
         self.__Model = Sapobj._Model
         self.PropLink = PropLink(Sapobj)
 
-    def PropFrame_SetGeneral(self,sectName,matName,Area,As2,As3,I22,I33,J):
+    def PropFrame_SetGeneral(self,sectName,matName,t3,t2,Area,As2,As3,I22,I33,J,notes=""):
         """
         ---set a general frame section property---
         intput:
         sectName(str)-the name of the defined sections
         matName(str)-the name of the material used for current section
+        Depth(t3)-The depth of the section. [L]
+        Width(t2)-The width of the section. [L]
         Area(float)-The cross-sectional area. [L2]
         As2(float)-The shear area for forces in the section local 2-axis direction. [L2]
         As3(float)-The shear area for forces in the section local 3-axis direction. [L2]
@@ -23,7 +25,8 @@ class SapSection:
         I33(float)-The moment of inertia for bending about the local 3 axis. [L4]
         J(float)-The torsional constant. [L4]
         """
-        self.__Model.PropFrame.SetGeneral(sectName,matName,1,1,Area,As2,As3,J,I22,I33,1,1,1,1,1,1)
+        ret = self.__Model.PropFrame.SetGeneral(sectName,matName,t3,t2,Area,As2,As3,J,I22,I33,1,1,1,1,1,1,-1, notes + "\nAdded by Sap2000py")
+        return ret
 
     def PropFrame_SetSD(self,sectName,matName,DesignType=0,Color=-1,Notes="",GUID = ""):
         """

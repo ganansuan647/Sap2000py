@@ -274,7 +274,7 @@ class Saproject(object):
         """
         ---get and print the name of the present coordinate system---
         """
-        logger.info(f"The current coordinate system is: <yellow>{self.CoordSystem}</yellow>")
+        logger.opt(colors=True).info(f"The current coordinate system is: <yellow>{self.CoordSystem}</yellow>")
         return self.CoordSystem
 
     def RefreshView(self,Window=0,Zoom=False):

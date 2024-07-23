@@ -508,7 +508,8 @@ class SapPointObj_Set:
             are deleted prior to making the assignment. If it is False, the spring assignments are added to any
             existing assignments.
         """
-        self.__Model.PointObj.SetSpringCoupled(name,k,ItemType,IsLocalCSys,Replace)
+        ret = self.__Model.PointObj.SetSpringCoupled(name,k,ItemType,IsLocalCSys,Replace)
+        return ret
 
 class SapPointObj:
     def __init__(self,Sapobj):
