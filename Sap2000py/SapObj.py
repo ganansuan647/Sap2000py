@@ -289,7 +289,8 @@ class SapPointObj_Set:
         Replace(bool)-If this item is True, all previous joint constraints, if any, assigned to the specified
             point object(s) are deleted before making the new assignment.
         """
-        self.__Model.PointObj.SetConstraint(name,ConstraintName)
+        ret = self.__Model.PointObj.SetConstraint(name,ConstraintName)
+        return ret
 
     def GroupAssign(self,name:str,GroupName,Remove=False,ItemType=0):
         """
@@ -309,7 +310,8 @@ class SapPointObj_Set:
             SelectedObjects, all selected point objects are added or removed from the group specified by the
             GroupName item and the Name item is ignored.
         """
-        self.__Model.PointObj.SetGroupAssign(name,GroupName,Remove,ItemType)
+        ret = self.__Model.PointObj.SetGroupAssign(name,GroupName,Remove,ItemType)
+        return ret
 
     def LoadDispl(self,name:str,LoadPat,Value,Replace=False,CSys="Global",ItemType=0):
         """
@@ -337,7 +339,8 @@ class SapPointObj_Set:
             If this item is SelectedObjects, the load assignment is made to all selected point objects and the Name
             item is ignored.
         """
-        self.__Model.PointObj.SetLoadDispl(name,LoadPat,Value,Replace,CSys,ItemType)
+        ret = self.__Model.PointObj.SetLoadDispl(name,LoadPat,Value,Replace,CSys,ItemType)
+        return ret
 
     def LoadForce(self,name:str,loadPat,value,Replace=False,CSys="Global",ItemType=0):
         """
@@ -365,7 +368,8 @@ class SapPointObj_Set:
             If this item is SelectedObjects, the load assignment is made to all selected point objects and the Name
             item is ignored.
         """
-        self.__Model.PointObj.SetLoadForce(name,loadPat,value,Replace,CSys,ItemType)
+        ret = self.__Model.PointObj.SetLoadForce(name,loadPat,value,Replace,CSys,ItemType)
+        return ret
 
     def LocalAxes(self,name:str,a,b,c,itemType=0):
         """
@@ -386,7 +390,8 @@ class SapPointObj_Set:
             If this item is SelectedObjects, the load assignment is made to all selected point objects and the Name
             item is ignored.
         """
-        self.__Model.PointObj.SetLocalAxes(name,a,b,c,itemType)
+        ret = self.__Model.PointObj.SetLocalAxes(name,a,b,c,itemType)
+        return ret
 
     def Mass(self,name:str,m,itemType=0,isLocalCSys=True,Replace=False):
         """
@@ -413,7 +418,8 @@ class SapPointObj_Set:
         Replace(bool)-If this item is True, all existing point mass assignments to the specified point object(s) are
             deleted prior to making the assignment. If it is False, the mass assignments are added to any existing assignments.
         """
-        self.__Model.PointObj.SetMass(name,m,itemType,isLocalCSys,Replace)
+        ret = self.__Model.PointObj.SetMass(name,m,itemType,isLocalCSys,Replace)
+        return ret
 
     def Restraint(self,name:str,value,itemType=0):
         """
@@ -437,7 +443,8 @@ class SapPointObj_Set:
             If this item is SelectedObjects, the load assignment is made to all selected point objects and the Name
             item is ignored.
         """
-        self.__Model.PointObj.SetRestraint(name,value,itemType)
+        ret = self.__Model.PointObj.SetRestraint(name,value,itemType)
+        return ret
 
     def Spring(self,name:str,k,ItemType=0,IsLocalCSys=False,Replace=False):
         """
@@ -465,7 +472,8 @@ class SapPointObj_Set:
             are deleted prior to making the assignment. If it is False, the spring assignments are added to any
             existing assignments.
         """
-        self.__Model.PointObj.SetSpring(name,k,ItemType,IsLocalCSys,Replace)
+        ret = self.__Model.PointObj.SetSpring(name,k,ItemType,IsLocalCSys,Replace)
+        return ret
 
     def SpringCoupled(self,name:str,k,ItemType=0,IsLocalCSys=False,Replace=False):
         """
@@ -545,7 +553,8 @@ class SapPointObj:
         MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
             are the same. By default all pointobjects have a merge number of zero.
         """
-        self.__Model.PointObj.AddCartesian(x,y,z,Name,UserName,CSys,MergeOff,MergeNumber)
+        ret = self.__Model.PointObj.AddCartesian(x,y,z,Name,UserName,CSys,MergeOff,MergeNumber)
+        return ret
 
     def AddCylindrical(self,r,theta,z,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
         """

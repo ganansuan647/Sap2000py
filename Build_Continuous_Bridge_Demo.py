@@ -5,6 +5,8 @@ from pathlib import Path
 from collections import namedtuple
 from extract_polygon_from_dxf import DXF2Polygons
 from functools import lru_cache
+from typing import Literal
+from itertools import chain
 
 #full path to the model
 ModelPath = Path('.\Test\Test.sdb')
@@ -60,31 +62,6 @@ class Section_General:
     def get_elements_with_this_section(self):
         raise NotImplementedError
 
-# define a general frame section
-H50sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_above_50.dxf', unit_of_dxf='cm', show_log=False)
-H45sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_40_to_50.dxf', unit_of_dxf='cm', show_log=False)
-H40sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_below_40.dxf', unit_of_dxf='cm', show_log=False)
-solid_section = Section_General(
-    name = "#468_pier_solid",
-    material = "C40",
-    Area = H50sec.outer_geometric_properties['area'],
-    Depth = H50sec.outer_geometric_properties['height'],Width = H50sec.outer_geometric_properties['width'],
-    As2=H50sec.outer_geometric_properties['Asy'],As3=H50sec.outer_geometric_properties['Asx'],
-    I22=H50sec.outer_geometric_properties['Iyy'],I33=H50sec.outer_geometric_properties['Ixx'],J=H50sec.outer_geometric_properties['J'],
-    notes = "#468_pier_top_solid_section")
-ret = solid_section.define()
-print(ret)
-box_section = Section_General(
-    name = "#468_pier_box",
-    material = "C40",
-    Area = H50sec.combine_geometric_properties['area'],
-    Depth = H50sec.combine_geometric_properties['height'],Width = H50sec.combine_geometric_properties['width'],
-    As2=H50sec.combine_geometric_properties['Asy'],As3=H50sec.combine_geometric_properties['Asx'],
-    I22=H50sec.combine_geometric_properties['Iyy'],I33=H50sec.combine_geometric_properties['Ixx'],J=H50sec.combine_geometric_properties['J'],
-    notes = "#468_pier_top_solid_section")
-ret = box_section.define()
-print(ret)
-
 @dataclass
 class SapPoint:
     x: float
@@ -95,14 +72,18 @@ class SapPoint:
     
     def add(self):
         ret = Sap.Assign.PointObj.AddCartesian(self.x, self.y, self.z, UserName=self.name)
-        if ret == 0:
-            logger.success(f"Point {self.name} : ({self.x}, {self.y}, {self.z}) added successfully.")
+        if ret[1] == 0:
+            logger.opt(colors=True).success(f"Point <yellow>{self.name}</yellow> : <cyan>({self.x}, {self.y}, {self.z})</cyan> added.")
+        else:
+            logger.opt(colors=True).error(f"Point <yellow>{self.name}</yellow> : <cyan>({self.x}, {self.y}, {self.z})</cyan> failed to add.")
         return ret
     
     def defineMass(self):
         ret = Sap.Assign.PointObj.Set.Mass(self.name, [self.mass for i in range(6)])
         if ret == 0:
             logger.success(f"Mass {self.mass} added to Point {self.name}")
+        else:
+            logger.error(f"Mass {self.mass} failed to add to Point {self.name}")
         return ret
 
 @dataclass
@@ -159,67 +140,109 @@ class SapBase_6Spring():
         if ret[1] == 0:
             logger.opt(colors=True).success(f"Spring for Joint: <yellow>{self.name}</yellow> Added! K = <cyan>{self.spring_data}</cyan>")
         else:
-            logger.opt(colors=True).success(f"Spring for Joint: <yellow>{self.name}</yellow> Failed to Add! K = {self.spring_data}")
+            logger.opt(colors=True).error(f"Spring for Joint: <yellow>{self.name}</yellow> Failed to Add! K = {self.spring_data}")
         return ret
 
     def connect_with_pier(self):
         raise NotImplementedError
 
 @dataclass
-class SapPier_Box:
+class Sap_Double_Box_Pier:
     name: str
     station: float  # station of the pier, like K100+000 -> 100000
-    horizontal_pos: float
     Height_of_pier_bottom: float
     Height_of_pier: float
-    Height_of_cap: float
-    Mass_of_cap_in_ton: float
     bottom_solid_length: float
     top_solid_length: float
     Distance_between_bearings: float
+    Height_of_cap: float = 3.0 if Height_of_pier >= 50 else 2.8 if 40<=Height_of_pier<50 else 2.7
+    Distance_between_piers: float = 20.75
     num_of_hollow_elements: int =1
     is_intermediate_pier: bool =False # whether the pier is an intermediate pier, if true, the pier will have 4 bearings otherwise 2
     offset: float =1.0 # the distance between the centerline of the support (bearing) and the centerline of the pier.
     
     def __post_init__(self):
-        self.generate_points()
-        self.generate_pier_elements()
-        # self.add_body_constraint()
-        self.add_mass()
+        self.addsome_empty_attr()
         
+        self.generate_pier_points(side = 'both')
+        self.generate_pier_elements(side = 'both')
+        
+        self.generate_base_points()
+        self.generate_cap_elements()
         self.base.get_spring_data()
         self.base.add_spring()
-    
+        
+        self.add_body_constraint()
+        # self.add_mass()
+        
     def add_mass(self):
-        self.cap_point.defineMass()
+        # if cap section is defined properly, mass of cap should not be added to cap point
+        # self.cap_point.defineMass()
+        pass
     
-    def generate_points(self):
-        x,y = self.station,self.horizontal_pos
-        points = []
+    def generate_base_points(self):
+        x = self.station
+        y = 0
         # base point
         self.base_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap, f"{self.name}_Base")
         self.base = SapBase_6Spring(self.base_point, self.name)
-        points.append(self.base_point)
         
         # cap points
+        if not hasattr(self, "Mass_of_cap_in_ton"):
+            self.get_cap_section()
         self.cap_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap/2, f"{self.name}_Cap",mass=self.Mass_of_cap_in_ton)
-        points.append(self.cap_point)
         
+        # cap top points
+        self.cap_top_point = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name}_CapTop")
+        
+        self.base_points = [self.base_point, self.cap_point, self.cap_top_point]
+        for point in self.base_points:
+            point.add()
+    
+    def addsome_empty_attr(self):
+        self.pier_bottom_point:dict = {}
+        self.pier_hollow_bottom:dict = {}
+        self.hollow_points:dict = {}
+        self.pier_hollow_top:dict = {}
+        self.pier_top:dict = {}
+        self.bearing_bottom_point_outer:dict = {}
+        self.bearing_bottom_point_inner:dict = {}
+        self.points:dict = {}
+    
+    def generate_pier_points(self,side = Literal['left','right','both']):
+        x = self.station
+        if side == 'left':
+            y = - self.Distance_between_piers/2
+        elif side == 'right':
+            y = self.Distance_between_piers/2
+        elif side == 'both':
+            self.generate_pier_points('left')
+            self.generate_pier_points('right')
+            return
+
+        points = []
         # pier points
-        self.pier_bottom_point = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name}_Bottom")
-        points.append(self.pier_bottom_point)
-        self.pier_hollow_bottom = SapPoint(x, y, self.Height_of_pier_bottom + self.bottom_solid_length, f"{self.name}_HollowBottom")
-        points.append(self.pier_hollow_bottom)
+        self.pier_bottom_point[side] = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name+'_'+side}_Bottom")
+        points.append(self.pier_bottom_point[side])
+        
+        self.pier_hollow_bottom[side] = SapPoint(x, y, self.Height_of_pier_bottom + self.bottom_solid_length, f"{self.name+'_'+side}_HollowBottom")
+        points.append(self.pier_hollow_bottom[side])
+        
         hollow_points = []
         for i,h in enumerate(self.__hollow_points_to_define()):
-            middle_point = SapPoint(x, y, h, f"{self.name}_HollowMiddle_{i}")
+            middle_point = SapPoint(x, y, h, f"{self.name+'_'+side}_HollowMiddle_{i}")
             points.append(middle_point)
             hollow_points.append(middle_point)
-        self.hollow_points=hollow_points
-        self.pier_hollow_top = SapPoint(x, y, self.Height_of_pier_bottom + self.Height_of_pier - self.top_solid_length, f"{self.name}_HollowTop")
-        points.append(self.pier_hollow_top)
-        self.pier_top = SapPoint(x, y, self.Height_of_pier_bottom + self.Height_of_pier, f"{self.name}_Top")
+        self.hollow_points[side] = hollow_points
         
+        h_piertop = self.Height_of_pier_bottom + self.Height_of_pier
+        
+        self.pier_hollow_top[side] = SapPoint(x, y, h_piertop - self.top_solid_length, f"{self.name+'_'+side}_HollowTop")
+        points.append(self.pier_hollow_top[side])
+        
+        self.pier_top[side] = SapPoint(x, y, h_piertop, f"{self.name+'_'+side}_Top")
+        points.append(self.pier_top[side])
+
         # bearing bottom points
         if y>0:
             y_outer = y + self.Distance_between_bearings/2
@@ -227,23 +250,22 @@ class SapPier_Box:
         else:
             y_outer = y - self.Distance_between_bearings/2
             y_inner = y + self.Distance_between_bearings/2
-            
         if self.is_intermediate_pier:
-            self.bearing_bottom_point_outer = [SapPoint(x-self.offset, y_outer, self.Height_of_pier_bottom, f"{self.name}_BearingBottom_outter_1"),
-                                               SapPoint(x+self.offset, y_outer, self.Height_of_pier_bottom, f"{self.name}_BearingBottom_outter_2")]
-            self.bearing_bottom_point_inner = [SapPoint(x-self.offset, y_inner, self.Height_of_pier_bottom, f"{self.name}_BearingBottom_inner_1"),
-                                               SapPoint(x+self.offset, y_inner, self.Height_of_pier_bottom, f"{self.name}_BearingBottom_inner_2")]
-            points.extend(self.bearing_bottom_point_outer)
-            points.extend(self.bearing_bottom_point_inner)
+            self.bearing_bottom_point_outer[side] = [SapPoint(x-self.offset, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter_1"),
+                                               SapPoint(x+self.offset, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter_2")]
+            self.bearing_bottom_point_inner[side] = [SapPoint(x-self.offset, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner_1"),
+                                               SapPoint(x+self.offset, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner_2")]
+            points.extend(self.bearing_bottom_point_outer[side])
+            points.extend(self.bearing_bottom_point_inner[side])
         else: 
-            self.bearing_bottom_point_outer = SapPoint(x, y_outer, self.Height_of_pier_bottom, f"{self.name}_BearingBottom_outter")
-            self.bearing_bottom_point_inner = SapPoint(x, y_inner, self.Height_of_pier_bottom, f"{self.name}_BearingBottom_inner")
-            points.append(self.bearing_bottom_point_outer)
-            points.append(self.bearing_bottom_point_inner)
+            self.bearing_bottom_point_outer[side] = SapPoint(x, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter")
+            self.bearing_bottom_point_inner[side] = SapPoint(x, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner")
+            points.append(self.bearing_bottom_point_outer[side])
+            points.append(self.bearing_bottom_point_inner[side])
         
-        self.points = points
-        # Add points to SAP2000 model
-        for point in self.points:
+        self.points[side] = points
+        # Add points to SAP2000 model (only add once)
+        for point in points:
             point.add()
 
     def __hollow_points_to_define(self):
@@ -262,7 +284,6 @@ class SapPier_Box:
             result.append(coord_list[0] + (coord_list[1] - coord_list[0]) * i / self.num_of_hollow_elements)
         return result
 
-    # @lru_cache(maxsize=3)
     def get_solid_section(self):
         if self.Height_of_pier >= 50:
             sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_above_50.dxf', unit_of_dxf='cm', show_log=False)
@@ -283,7 +304,6 @@ class SapPier_Box:
             notes = self.name+"_pier_solid_section")
         return solid_section
     
-    # @lru_cache(maxsize=3)
     def get_box_section(self):
         if self.Height_of_pier >= 50:
             sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_above_50.dxf', unit_of_dxf='cm', show_log=False)
@@ -306,52 +326,77 @@ class SapPier_Box:
     
     def get_cap_section(self):
         width = 12 if self.Height_of_pier >= 50 else 10.794
-        depth = 18.625
+        depth = 37.25
+        self.Mass_of_cap_in_ton = width * depth * self.Height_of_cap * 2.5
         ret = Sap._Model.PropFrame.SetRectangle(self.name+"_Cap", "C30", width, depth)
         if ret == 0:
             logger.success(f"Cap section {self.name}_Cap added!")
         return self.name+"_Cap"
     
-    def add_body_constraint(self):
-        Sap.Define.jointConstraints.SetBody(self.pier_top.name, True, True, True, True, True, True)
-        Sap.Define.jointConstraints.SetDiaphragm(self.pier_top.name, True, True, True)
-        ret = Sap.Assign.PointObj.SetRestraint(self.base_point.name, [True, True, True, True, True, True])
-        if ret[1] == 0:
-            logger.success(f"Body constraint added to {self.base_point.name}")
-        return ret
+    def __add_body_constraints_for_points(self,constraint_name:str, points : list):
+        for point in points:
+            ret = Sap.Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
+            if ret[1] == 0:
+                logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to Body constraint : <yellow>{constraint_name}</yellow>")
+            else:
+                logger.opt(colors=True).error(f"<yellow>{point.name}</yellow> failed to add to Body constraint : <yellow>{constraint_name}</yellow>")
     
-    def generate_pier_elements(self):
-        solid_section = self.get_solid_section()
-        box_section = self.get_box_section()
-        solid_section.define()
-        box_section.define()
+    def add_body_constraint(self):
+        body_dof = ["UX", "UY", "UZ", "RX", "RY", "RZ"]
+        flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
+        
+        # add body constraint between capTop and pier
+        
+        Sap.Define.jointConstraints.SetBody(self.name+"_Cap_Pier", body_dof)
+        self.__add_body_constraints_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
+        
+        # add body constraint between pier top and bearing bottom
+        left_points = flatten([self.pier_top['left'], self.bearing_bottom_point_outer['left'], self.bearing_bottom_point_inner['left']])
+        right_points = flatten([self.pier_top['right'], self.bearing_bottom_point_outer['right'], self.bearing_bottom_point_inner['right']])
+        # left
+        Sap.Define.jointConstraints.SetBody(self.name+"_left_Pier_Bearing", body_dof)
+        self.__add_body_constraints_for_points(self.name+"_left_Pier_Bearing", left_points)
+        # right
+        Sap.Define.jointConstraints.SetBody(self.name+"_right_Pier_Bearing", body_dof)
+        self.__add_body_constraints_for_points(self.name+"_right_Pier_Bearing", right_points)
+        
+    def generate_cap_elements(self):
         cap_section_name = self.get_cap_section()
         
         # define solid cap
         Sap.Assign.FrameObj.AddByPoint(self.base_point.name, self.cap_point.name, propName=cap_section_name, userName = self.name+"base2cap")
-        Sap.Assign.FrameObj.AddByPoint(self.cap_point.name, self.pier_bottom_point.name, propName=cap_section_name, userName = self.name+"cap2bottom")
+        Sap.Assign.FrameObj.AddByPoint(self.cap_point.name, self.cap_top_point.name, propName=cap_section_name, userName = self.name+"cap2bottom")
+    
+    def generate_pier_elements(self,side = Literal['left','right','both']):
+        if side == 'both':
+            self.generate_pier_elements('left')
+            self.generate_pier_elements('right')
+            return
+                  
+        solid_section = self.get_solid_section()
+        box_section = self.get_box_section()
+        solid_section.define()
+        box_section.define()
         
-        # define pierpython
-        Sap.Assign.FrameObj.AddByPoint(self.pier_bottom_point.name, self.pier_hollow_bottom.name, propName=solid_section.name, userName = self.name+"bottom2hollowBottom")
-        for i,h in enumerate(self.hollow_points):
+        # define pier
+        Sap.Assign.FrameObj.AddByPoint(self.pier_bottom_point[side].name, self.pier_hollow_bottom[side].name, propName=solid_section.name, userName = self.name+'_'+side+"bottom2hollowBottom")
+        for i,h in enumerate(self.hollow_points[side]):
             if i == 0:
-                Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom.name, h.name, propName=box_section.name, userName = self.name+f"hollow_{i+1}")
+                Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"hollow_{i+1}")
             else:
-                Sap.Assign.FrameObj.AddByPoint(self.hollow_points[i-1].name, h.name, propName=box_section.name, userName = self.name+f"hollow_{i+1}")
-        if len(self.hollow_points) == 0:
-            Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom.name, self.pier_hollow_top.name, propName=box_section.name, userName = self.name+"hollowBottom2Top")
+                Sap.Assign.FrameObj.AddByPoint(self.hollow_points[side][i-1].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"hollow_{i+1}")
+        if len(self.hollow_points[side]) == 0:
+            Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+"hollowBottom2Top")
         else:
-            Sap.Assign.FrameObj.AddByPoint(self.hollow_points[-1].name, self.pier_hollow_top.name, propName=box_section.name, userName = self.name+f"hollow_{i+1}")
-        Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_top.name, self.pier_top.name, propName=solid_section.name, userName = self.name+"hollowTop2Top")
+            Sap.Assign.FrameObj.AddByPoint(self.hollow_points[side][-1].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+f"hollow_{i+1}")
+        Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_top[side].name, self.pier_top[side].name, propName=solid_section.name, userName = self.name+'_'+side+"hollowTop2Top")
 
-sap_pier = SapPier_Box(
-    name="#468",
+pier466 = Sap_Double_Box_Pier(
+    name="#466",
     station=0,
-    horizontal_pos=8.125,
+    Distance_between_piers=20.75,
     Height_of_pier_bottom=-3.1,
     Height_of_pier=40.0,
-    Height_of_cap=3.0,
-    Mass_of_cap_in_ton=1676.25,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -359,7 +404,85 @@ sap_pier = SapPier_Box(
     is_intermediate_pier = True,
     offset = 1.0
 )
+
+pier467 = Sap_Double_Box_Pier(
+    name="#467",
+    station=90,
+    Distance_between_piers=20.75,
+    Height_of_pier_bottom=-4.5,
+    Height_of_pier=45.0,
+    bottom_solid_length=2.0,
+    top_solid_length=3.0,
+    Distance_between_bearings=7.0,
+    num_of_hollow_elements=2,
+    is_intermediate_pier = False,
+)
+
+pier468 = Sap_Double_Box_Pier(
+    name="#468",
+    station=180,
+    Distance_between_piers=20.75,
+    Height_of_pier_bottom=-5.9,
+    Height_of_pier=47.0,
+    bottom_solid_length=2.0,
+    top_solid_length=3.0,
+    Distance_between_bearings=7.0,
+    num_of_hollow_elements=2,
+    is_intermediate_pier = False,
+)
+
+pier469 = Sap_Double_Box_Pier(
+    name="#469",
+    station=270,
+    Distance_between_piers=20.75,
+    Height_of_pier_bottom=-5.9,
+    Height_of_pier=47.0,
+    bottom_solid_length=2.0,
+    top_solid_length=3.0,
+    Distance_between_bearings=7.0,
+    num_of_hollow_elements=2,
+    is_intermediate_pier = False,
+)
+
+pier470 = Sap_Double_Box_Pier(
+    name="#470",
+    station=360,
+    Distance_between_piers=20.75,
+    Height_of_pier_bottom=-5.9,
+    Height_of_pier=47.0,
+    bottom_solid_length=2.0,
+    top_solid_length=3.0,
+    Distance_between_bearings=7.0,
+    num_of_hollow_elements=2,
+    is_intermediate_pier = False,
+)
+
+pier471 = Sap_Double_Box_Pier(
+    name="#471",
+    station=450,
+    Distance_between_piers=20.75,
+    Height_of_pier_bottom=-5.9,
+    Height_of_pier=47.0,
+    bottom_solid_length=2.0,
+    top_solid_length=3.0,
+    Distance_between_bearings=7.0,
+    num_of_hollow_elements=2,
+    is_intermediate_pier = True,
+    offset=1.0
+)
     
+@dataclass
+class Sap_Box_Girder:
+    pierlist: list[Sap_Double_Box_Pier]
+    num_of_ele_foreach_girder: int = 6
+    
+    
+    
+        
+
+    
+    
+Sap.RefreshView()
 a=1
 
 # point1 = SapPoint(*[1,0,0], "#468")
@@ -377,3 +500,28 @@ a=1
         
 # Sap.File.Save(ModelPath)
 # Sap.closeSap()
+
+# define a general frame section
+H50sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_above_50.dxf', unit_of_dxf='cm', show_log=False)
+H45sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_40_to_50.dxf', unit_of_dxf='cm', show_log=False)
+H40sec = DXF2Polygons(file_path=r'Test\TongZhouSha_H_below_40.dxf', unit_of_dxf='cm', show_log=False)
+solid_section = Section_General(
+    name = "#468_pier_solid",
+    material = "C40",
+    Area = H50sec.outer_geometric_properties['area'],
+    Depth = H50sec.outer_geometric_properties['height'],Width = H50sec.outer_geometric_properties['width'],
+    As2=H50sec.outer_geometric_properties['Asy'],As3=H50sec.outer_geometric_properties['Asx'],
+    I22=H50sec.outer_geometric_properties['Iyy'],I33=H50sec.outer_geometric_properties['Ixx'],J=H50sec.outer_geometric_properties['J'],
+    notes = "#468_pier_top_solid_section")
+ret = solid_section.define()
+print(ret)
+box_section = Section_General(
+    name = "#468_pier_box",
+    material = "C40",
+    Area = H50sec.combine_geometric_properties['area'],
+    Depth = H50sec.combine_geometric_properties['height'],Width = H50sec.combine_geometric_properties['width'],
+    As2=H50sec.combine_geometric_properties['Asy'],As3=H50sec.combine_geometric_properties['Asx'],
+    I22=H50sec.combine_geometric_properties['Iyy'],I33=H50sec.combine_geometric_properties['Ixx'],J=H50sec.combine_geometric_properties['J'],
+    notes = "#468_pier_top_solid_section")
+ret = box_section.define()
+print(ret)

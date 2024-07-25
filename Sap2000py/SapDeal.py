@@ -55,7 +55,10 @@ class SapFile():
         else:
             # open the sdbFile
             ret = self.__Model.File.OpenFile(str(FileName))  # open an existing file
-            if(ret!=0):logger.error(f"Cannot open file at path:{FileName}")
+            if(ret!=0):logger.error(f"Cannot open file at path:{FileName}, Instead Creating new Blank Sap model")
+            # create new blank model
+            ret = self.__Model.File.NewBlank()
+            if(ret!=0):logger.error("Cannot create new Blank Sap model")
         self.Sapobj.setDefaultProjectInfo()
         return ret
 

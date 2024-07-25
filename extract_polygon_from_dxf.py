@@ -71,7 +71,9 @@ class DXF2Polygons:
             end_point = (entity.dxf.end.x, entity.dxf.end.y)
             return []
         else:
-            raise ValueError(f"Unsupported entity type: {entity.dxftype()}")
+            self.logger.warning(f"Unsupported entity type: {entity.dxftype()}. Ignored!")
+            return []
+            # raise ValueError(f"Unsupported entity type: {entity.dxftype()}")
         
     def arc_to_points(self,center, radius, start_angle, end_angle, num_points=40):
         """将ARC转换为一系列点"""
@@ -252,8 +254,13 @@ class DXF2Polygons:
 
 if __name__ == '__main__':
     # 示例文件路径
-    dxf_file_path = r'Test\TongZhouSha_H_above_50.dxf'
+    # dxf_file_path = r'Test\TongZhouSha_H_above_50.dxf'
+    # unit_of_dxf = 'cm'
+    # show_log = True
+    # H50section = DXF2Polygons(dxf_file_path, unit_of_dxf, show_log)
+    # H50section.plot()
+    dxf_file_path = r'Test\TongZhouSha_Main_Girder_1.dxf'
     unit_of_dxf = 'cm'
     show_log = True
-    H50section = DXF2Polygons(dxf_file_path, unit_of_dxf, show_log)
-    H50section.plot()
+    mainsec = DXF2Polygons(dxf_file_path, unit_of_dxf, show_log)
+    mainsec.plot()
