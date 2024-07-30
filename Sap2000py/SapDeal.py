@@ -219,7 +219,7 @@ class LoadCombo:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
 
-    def Add(self,name,comboType):
+    def Add(self,name,comboType:Literal['LinearAdd','Envelope','AbsAdd','SRSS','RangeAdd']):
         """
         ---This function adds a new load combination---
         inputs:
@@ -227,9 +227,11 @@ class LoadCombo:
         comboType(int)-This is 0, 1, 2, 3 or 4 indicating the load combination type.0 = Linear Additive,
             1 = Envelope,2 = Absolute Additive,3 = SRSS,4 = Range Additive
         """
-        self.__Model.RespCombo.Add(name,comboType)
+        typeid = {'LinearAdd':0,'Envelope':1,'AbsAdd':2,'SRSS':3,'RangeAdd':4}[comboType]
+        ret = self.__Model.RespCombo.Add(name,typeid)
+        return ret
 
-    def SetCaseList(self,name,CNameType,CName,SF):
+    def SetCaseList(self,name,CNameType:Literal['LoadCase','LoadCombo'],CName,SF):
         """
         ---This function adds or modifies one load case or response combination in the list of
         cases included in the load combination specified by the Name item.---
@@ -245,7 +247,9 @@ class LoadCombo:
             Name item, it is added.
         SF(float)-The scale factor multiplying the case or combination indicated by the CName item.
         """
-        self.__Model.RespCombo.SetCaseList(name,CNameType,CName,SF)
+        cnametype = {'LoadCase':0,'LoadCombo':1}[CNameType]
+        ret = self.__Model.RespCombo.SetCaseList(name,cnametype,CName,SF)
+        return ret
 
 class SapDefinitions:
     def __init__(self,Sapobj):

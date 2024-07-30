@@ -51,7 +51,7 @@ class Saproject(object):
             return ProjectInfoDict
         else:
             self.setDefaultProjectInfo()
-            return self.ProjectInfoDict
+            return self.ProjectInfo
     
     @property
     def FilePath(self):
@@ -129,6 +129,13 @@ class Saproject(object):
         """
         return self.Unitdict_rev[self.Unitid]
     
+    @property
+    def is_lock(self):
+        """
+        ---check if the model is locked---
+        """
+        return self._Model.GetModelIsLocked()
+    
     def createSap(self,AttachToInstance = False,SpecifyPath = False,ProgramPath = "if the flag SpecifyPath is set to True, specify the ProgramPath to SAP2000 here"):
         """
         ---open Sap2000 program---
@@ -185,6 +192,26 @@ class Saproject(object):
         """
         self._Object.ApplicationExit(True)
         self._Object,self._Model=0,0
+    
+    def lockModel(self):
+        """
+        ---lock the current model---
+        """
+        ret = self._Model.SetModelIsLocked(True)
+        if ret==0:
+            logger.success("Model Locked!")
+        else:
+            logger.warning("Fail to lock the model!")
+            
+    def unlockModel(self):
+        """
+        ---unlock the current model---
+        """
+        ret = self._Model.SetModelIsLocked(False)
+        if ret==0:
+            logger.success("Model Unlocked!")
+        else:
+            logger.warning("Fail to unlock the model!")
     
     def getUnits(self):
         """

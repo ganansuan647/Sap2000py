@@ -33,7 +33,7 @@ class fun_ResponseSpectrum:
         JGJ32010PTDF(float)-The period time discount factor
         DampRatio(float)-The damping ratio for the function, 0 <= DampRatio < 1.
         """
-        self.Model.Func.FuncRS.SetChinese2010(name,JGJ32010AlphaMax,JGJ32010SI,JGJ32010Tg,JGJ32010PTDF,DampRatio)
+        self.__Model.Func.FuncRS.SetChinese2010(name,JGJ32010AlphaMax,JGJ32010SI,JGJ32010Tg,JGJ32010PTDF,DampRatio)
 
     def Set_JTGB022013(self,name,direction,peakAccel,Tg,Ci,Cs,dampRatio):
         """
@@ -48,7 +48,7 @@ class fun_ResponseSpectrum:
         Cs(float)-The site soil coefficient.
         dampRatio(float)-The damping ratio for the function, 0 <= DampRatio < 1.
         """
-        self.Model.Func.FuncRS.SetJTGB022013(name,direction,peakAccel,Tg,Ci,Cs,dampRatio)
+        self.__Model.Func.FuncRS.SetJTGB022013(name,direction,peakAccel,Tg,Ci,Cs,dampRatio)
 
     def Set_CJJ1662011(self,name,direction,peakAccel,Tg,dampRatio):
         """
@@ -60,7 +60,7 @@ class fun_ResponseSpectrum:
         Tg(float)-The characteristic ground period, Tg > 0.1. [s]
         dampRatio(float)-The damping ratio for the function, 0 <= DampRatio < 1.
         """
-        self.Model.Func.FuncRS.SetCJJ1662011(name,direction,peakAccel,Tg,dampRatio)
+        self.__Model.Func.FuncRS.SetCJJ1662011(name,direction,peakAccel,Tg,dampRatio)
 
     def Set_User(self,name,period,value,dampRatio):
         """
@@ -72,7 +72,7 @@ class fun_ResponseSpectrum:
         dampRatio(float)-The damping ratio for the function, 0 <= DampRatio < 1.
         """
         numberItems=len(period)
-        self.Model.Func.FuncRS.SetUser(name,numberItems,period,value,dampRatio)
+        self.__Model.Func.FuncRS.SetUser(name,numberItems,period,value,dampRatio)
 
 class fun_TimeHistory:
     def __init__(self,Sapobj):
@@ -93,4 +93,4 @@ class fun_TimeHistory:
         value(list)-This is a list that includes the function value for each data point.
         """
         numberItems=len(myTime)
-        self.Model.Func.FuncTH.SetUser(name,numberItems,myTime,value)
+        self.__Model.Func.FuncTH.SetUser(name,numberItems,myTime,value)

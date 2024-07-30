@@ -1046,7 +1046,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetMass(name,massOverL,Replace,itemType)
+        ret = self.__Model.FrameObj.SetMass(name,massOverL,Replace,itemType)
+        return ret
 
     def MaterialOverwrite(self,name,proName,itemType=0):
         """
@@ -1102,7 +1103,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetModifiers(name,value,itemType)
+        ret = self.__Model.FrameObj.SetModifiers(name,value,itemType)
+        return ret
 
     def NotionalSize(self,name,stype,value):
         """
@@ -1824,7 +1826,8 @@ class SapFrameObj:
         # that name is not used for another frame, cable or tendon object, the UserName is assigned to the
         # frame object, otherwise a default name is assigned to the frame object.
         name = ""
-        self.__Model.FrameObj.AddByPoint(Point1,Point2,name,propName,userName)
+        ret = self.__Model.FrameObj.AddByPoint(Point1,Point2,name,propName,userName)
+        return ret
 
     def ChangeName(self,name,newName):
         """
@@ -5318,7 +5321,8 @@ class SapLinkObj:
         # used for another link object, the UserName is assigned to the link object; otherwise a default name is
         # assigned to the link object
         Name = ""
-        self.__Model.LinkObj.AddByPoint(Point1,Point2,Name,IsSingleJoint,PropName,UserName)
+        ret = self.__Model.LinkObj.AddByPoint(Point1,Point2,Name,IsSingleJoint,PropName,UserName)
+        return ret
 
     def Count(self):
         """

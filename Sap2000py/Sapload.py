@@ -1,4 +1,4 @@
-
+from typing import Literal
 class SapLoadPatterns:
     def __init__(self,Sapobj):
         """
@@ -492,9 +492,10 @@ class load_DirHistNonlinear:
         inputs:
         name(str)-The name of an existing or new load case
         """
-        self.__Model.LoadCases.DirHistNonlinear.SetCase(name)
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetCase(name)
+        return ret
 
-    def SetDampProportional(self,name,DampType,Dampa,Dampb,Dampf1=0,
+    def SetDampProportional(self,name,DampType=Literal['MassStiffness','Period','Frequency'],Dampa=0,Dampb=0,Dampf1=0,
                                                             Dampf2=0,Dampd1=0,Dampd2=0):
         """
             ---This function sets proportional modal damping data for the specified load case---
@@ -512,7 +513,9 @@ class load_DirHistNonlinear:
             Dampd1(float)-This is the damping at point 1 (0 <= Dampd1 < 1).This item applies only when DampType = 2 or 3.
             Dampd2(float)-This is the damping at point 2 (0 <= Dampd2 < 1).This item applies only when DampType = 2 or 3.
             """
-        self.__Model.LoadCases.DirHistNonlinear.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        typeid = {'MassStiffness':1,'Period':2,'Frequency':3}[DampType]
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetDampProportional(name,typeid,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        return ret
 
     def SetGeometricNonlinearity(self,name,NLGeomType=0):
         """
@@ -522,7 +525,8 @@ class load_DirHistNonlinear:
         NLGeomType(int)-This is 0, 1 or 2, indicating the geometric nonlinearity option selected for the load case.
             0 = None,1 = P-delta,2 = P-delta plus large displacements
         """
-        self.__Model.LoadCases.DirHistNonlinear.SetGeometricNonlinearity(name,NLGeomType)
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetGeometricNonlinearity(name,NLGeomType)
+        return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
@@ -535,7 +539,8 @@ class load_DirHistNonlinear:
             initial case is a nonlinear static or nonlinear direct integration time history load case, the state at
             the end of that case is used. If the initial case is anything else, zero initial conditions are assumed.
         """
-        self.__Model.LoadCases.DirHistNonlinear.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetInitialCase(name,initialCase)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,Func,SF=None,
                                                     TF=None,AT=None,CSys=None,Ang=None):
@@ -571,7 +576,8 @@ class load_DirHistNonlinear:
             CSys=["Global" for each in range(NumberLoads)]
         if Ang == None:
             Ang=[0.0 for each in range(NumberLoads)]
-        self.__Model.LoadCases.DirHistNonlinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        return ret
 
     def SetMassSource(self,name,source=""):
         """
@@ -582,7 +588,8 @@ class load_DirHistNonlinear:
             source from the previous load case or the default mass source if the load case starts from zero initial
             conditions.
         """
-        self.__Model.LoadCases.DirHistNonlinear.SetMassSource(name,source)
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetMassSource(name,source)
+        return ret
 
     def SetSolControlParameters(self,name,DTMax=0,DTMin=0,MaxIterCS=10,MaxIterNR=40,
                 TolConvD=1e-4,UseEventStepping=False,TolEventD=0.01,MaxLineSearchPerIter=20,TolLineSearch=0.1,
@@ -602,10 +609,11 @@ class load_DirHistNonlinear:
         TolLineSearch(float)-The relative line-search acceptance tolerance.
         LineSearchStepFact(float)-The line-search step factor.
         """
-        self.__Model.LoadCases.DirHistNonlinear.SetSolControlParameters(name,DTMax,DTMin,MaxIterCS,MaxIterNR,
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetSolControlParameters(name,DTMax,DTMin,MaxIterCS,MaxIterNR,
                 TolConvD,UseEventStepping,TolEventD,MaxLineSearchPerIter,TolLineSearch,LineSearchStepFact)
+        return ret
 
-    def SetTimeIntegration(self,name,IntegrationType=4):
+    def SetTimeIntegration(self,name,IntegrationType:Literal['Newmark','Wilson','Collocation','Hilber-Hughes-Taylor','Chung and Hulbert']):
         """
             ---This function sets time integration data for the specified load case---
             inputs:
@@ -614,17 +622,23 @@ class load_DirHistNonlinear:
             3 = Collocation,4 = Hilber-Hughes-Taylor,5 = Chung and Hulbert
             """
         Alpha, Beta, Gamma, Theta, m = 0.0, 0.0, 0.0, 0.0, 0.0
-        if IntegrationType == 1:
+        if IntegrationType == 'Newmark':
             Gamma, Beta = 0.5, 0.25
-        if IntegrationType == 2:
+            typeid = 1
+        if IntegrationType == 'Wilson':
             Theta = 1.0
-        if IntegrationType == 3:
+            typeid = 2
+        if IntegrationType == 'Collocation':
             Gamma, Beta, Theta = 0.5, 0.1667, 1.0
-        if IntegrationType == 4:
+            typeid = 3
+        if IntegrationType == 'Hilber-Hughes-Taylor':
             Alpha = 0.0
-        if IntegrationType == 5:
+            typeid = 4
+        if IntegrationType == 'Chung and Hulbert':
             Gamma, Beta, Alpha, m = 0.5, 0.25, 0.0, 0.0
-        self.__Model.LoadCases.DirHistNonlinear.SetTimeIntegration(name,IntegrationType,Alpha,Beta,Gamma,Theta,m)
+            typeid = 5
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetTimeIntegration(name,typeid,Alpha,Beta,Gamma,Theta,m)
+        return ret
 
     def SetTimeStep(self,name,nstep,DT):
         """
@@ -634,7 +648,8 @@ class load_DirHistNonlinear:
         nstep(int)-The number of output time steps.
         DT(float)-The output time step size.
         """
-        self.__Model.LoadCases.DirHistNonlinear.SetTimeStep(name,nstep,DT)
+        ret = self.__Model.LoadCases.DirHistNonlinear.SetTimeStep(name,nstep,DT)
+        return ret
 
 class load_ModalEigen:
     def __init__(self,Sapobj):
@@ -645,13 +660,15 @@ class load_ModalEigen:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
+        
     def SetCase(self,name):
         """
         ---This function initializes a modal eigen load case---
         inputs:
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.ModalEigen.SetCase(name)
+        ret = self.__Model.LoadCases.ModalEigen.SetCase(name)
+        return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
@@ -665,7 +682,8 @@ class load_ModalEigen:
             time history load case, the stiffness at the end of that case is used. If the initial case is anything
             else, zero initial conditions are assumed.
         """
-        self.__Model.LoadCases.ModalEigen.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.ModalEigen.SetInitialCase(name,initialCase)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,TargetPar=None,StaticCorrect=None):
         """
@@ -687,7 +705,8 @@ class load_ModalEigen:
             TargetPar=[99 for each in range(NumberLoads)]
         if StaticCorrect==None:
             StaticCorrect=[0 for each in range(NumberLoads)]
-        self.__Model.LoadCases.ModalEigen.SetLoads(name,NumberLoads,LoadType,LoadName,TargetPar,StaticCorrect)
+        ret = self.__Model.LoadCases.ModalEigen.SetLoads(name,NumberLoads,LoadType,LoadName,TargetPar,StaticCorrect)
+        return ret
 
     def SetNumberModes(self,name,MaxModes=12,MinModes=1):
         """
@@ -697,7 +716,8 @@ class load_ModalEigen:
         MaxModes(int)-The maximum number of modes requested.
         MinModes(int)-The minimum number of modes requested.
         """
-        self.__Model.LoadCases.ModalEigen.SetNumberModes(name,MaxModes,MinModes)
+        ret = self.__Model.LoadCases.ModalEigen.SetNumberModes(name,MaxModes,MinModes)
+        return ret
 
     def SetParameters(self,name,EigenShiftFreq=0,EigenCutOff=0,EigenTol=1e-9,
                                                     AllowAutoFreqShift=1):
@@ -711,7 +731,8 @@ class load_ModalEigen:
         AllowAutoFreqShift(int)-This is either 0 or 1, indicating if automatic frequency shifting is allowed.
             0 = Automatic frequency shifting is NOT allowed,1 = Automatic frequency shifting is allowed
         """
-        self.__Model.LoadCases.ModalEigen.SetParameters(name,EigenShiftFreq,EigenCutOff,EigenTol,AllowAutoFreqShift)
+        ret = self.__Model.LoadCases.ModalEigen.SetParameters(name,EigenShiftFreq,EigenCutOff,EigenTol,AllowAutoFreqShift)
+        return ret
 
 class load_ModalRitz:
     def __init__(self,Sapobj):
@@ -1064,7 +1085,8 @@ class load_ResponseSpectrum:
         ---This function initializes a response spectrum analysis case---
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetCase(name)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetCase(name)
+        return ret
 
     def SetDampConstant(self,name,damp):
         """
@@ -1073,7 +1095,8 @@ class load_ResponseSpectrum:
         name(str)-The name of an existing response spectrum load case.
         damp(float)-The constant damping for all modes (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetDampConstant(name,damp)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetDampConstant(name,damp)
+        return ret
 
     def SetDampInterpolated(self,name,DampType,NumberItems,Time,Damp):
         """
@@ -1088,7 +1111,8 @@ class load_ResponseSpectrum:
         Damp(float list)-This is a float list that includes the damping for the specified period of frequency
         (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetDampInterpolated(name,DampType,NumberItems,Time,Damp)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetDampInterpolated(name,DampType,NumberItems,Time,Damp)
+        return ret
 
     def SetDampOverrides(self,name,NumberItems,Mode,Damp):
         """
@@ -1099,7 +1123,8 @@ class load_ResponseSpectrum:
         Mode(int list)-This is a int list that includes a mode number.
         Damp(float list)-This is a float list that includes the damping for the specified mode (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetDampOverrides(name,NumberItems,Mode,Damp)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetDampOverrides(name,NumberItems,Mode,Damp)
+        return ret
 
     def SetDampProportional(self,name,DampType,Dampa,Dampb,Dampf1=0,
                                                                 Dampf2=0,Dampd1=0,Dampd2=0):
@@ -1119,8 +1144,9 @@ class load_ResponseSpectrum:
         Dampd1(float)-This is the damping at point 1 (0 <= Dampd1 < 1).This item applies only when DampType = 2 or 3.
         Dampd2(float)-This is the damping at point 2 (0 <= Dampd2 < 1).This item applies only when DampType = 2 or 3.
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,
                                                                 Dampf2,Dampd1,Dampd2)
+        return ret
 
     def SSetDiaphragmEccentricityOverride(self,name,Diaph,Eccen,Delete=False):
         """
@@ -1133,9 +1159,10 @@ class load_ResponseSpectrum:
         Eccen(float)-The eccentricity applied to the specified diaphragm. [L]
         Delete(bool)-If this item is True, the eccentricity override for the specified diaphragm is deleted.
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetDiaphragmEccentricityOverride(name,Diaph,Eccen,Delete)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetDiaphragmEccentricityOverride(name,Diaph,Eccen,Delete)
+        return ret
 
-    def SetDirComb(self,name,MyType,SF=0):
+    def SetDirComb(self,name,MyType = Literal['SRSS', 'ABS', 'CQC3'],SF=0):
         """
         ---This function sets the directional combination option for the specified load case---
         inputs:
@@ -1143,7 +1170,9 @@ class load_ResponseSpectrum:
         MyType(int)-This is 1, 2, or 3,  indicating the directional combination option.1 = SRSS,2 = ABS,3 = CQC3
         SF(float)-This item applies only when MyType = 2. It is the ABS scale factor.
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetDirComb(name,MyType,SF)
+        mytype = {'SRSS':1,'ABS':2,'CQC3':3}[MyType]
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetDirComb(name,mytype,SF)
+        return ret
 
     def SetEccentricity(self,name,Eccen):
         """
@@ -1152,19 +1181,20 @@ class load_ResponseSpectrum:
         name(str)-The name of an existing response spectrum load case.
         Eccen(float)-The eccentricity ratio that applies to all diaphragms.
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetEccentricity(name,Eccen)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetEccentricity(name,Eccen)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadName,Func,SF=None,
                                                     CSys=None,Ang=None):
         """
         ---This function sets the load data for the specified analysis case---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
+        name(str)-The name of an existing response spectrum load case.
         NumberLoads(int)-The number of loads assigned to the specified analysis case.
         LoadName(str list)-This is a str list that includes the name of each load assigned to the load case.
             If the LoadType item is Load, this item is the name of a defined load pattern.
             If the LoadType item is Accel, this item is U1, U2, U3, R1, R2 or R3, indicating the direction of the load.
-        Func(str list)-This is a str list that includes the name of the time history function associated with each load.
+        Func(str list)-This is a str list that includes the name of the response spectrum  function associated with each load.
         SF(float list)-This is a str list that includes the scale factor of each load assigned to the load case.
             [L/s2] for U1 U2 and U3; otherwise unitless
         CSys(str float)-This is a str list that includes the name of the coordinate system associated with each load.
@@ -1180,7 +1210,8 @@ class load_ResponseSpectrum:
             CSys=["GLOBAL" for each in range(NumberLoads)]
         if Ang == None:
             Ang=[0.0 for each in range(NumberLoads)]
-        self.__Model.LoadCases.ResponseSpectrum.SetLoads(name,NumberLoads,LoadName,Func,SF,CSys,Ang)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetLoads(name,NumberLoads,LoadName,Func,SF,CSys,Ang)
+        return ret
 
     def SetModalCase(self,name,ModalCase):
         """
@@ -1190,7 +1221,8 @@ class load_ResponseSpectrum:
         ModalCase(str)-This is the name of an existing modal load case. It specifies the modal load case on
             which any mode-type load assignments to the specified load case are based.
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetModalCase(name,ModalCase)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetModalCase(name,ModalCase)
+        return ret
 
     def SetModalComb_1(self,name,MyType,F1=1,F2=0,PeriodicRigidCombType=1,td=60):
         """
@@ -1205,7 +1237,8 @@ class load_ResponseSpectrum:
             1 = SRSS,2 = Absolute
         td(float)-This item applies only when MyType = 6. It is the factor td. [s]
         """
-        self.__Model.LoadCases.ResponseSpectrum.SetModalComb_1(name,MyType,F1,F2,PeriodicRigidCombType,td)
+        ret = self.__Model.LoadCases.ResponseSpectrum.SetModalComb_1(name,MyType,F1,F2,PeriodicRigidCombType,td)
+        return ret
 
 class SapLoadCases:
     def __init__(self,Sapobj):

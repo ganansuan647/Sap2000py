@@ -1,4 +1,5 @@
 
+from typing import Literal
 class SapGroup:
     def __init__(self,Sapobj):
         """
@@ -75,7 +76,7 @@ class SapGroup:
             print(self.GetGroupNames())
         return list(ElementList)
 
-    def AddtoGroup(self,GroupName:str,idlist,typeStr:str):
+    def AddtoGroup(self,GroupName:str,namelist,type:Literal['Point','Frame','Cable','Tendon','Area','Solid','Link']):
         """
         Add elements to group
         input:
@@ -84,7 +85,7 @@ class SapGroup:
             typeStr(str):{'Point':1,'Frame':2,'Cable':3,
                         'Tendon':4,'Area':5,'Solid':6,'Link':7}
         """
-        Objstr = typeStr+'Obj'
+        Objstr = type+'Obj'
         SapModel = self.__Model
 
         # check if this group exists
@@ -93,11 +94,13 @@ class SapGroup:
             SapModel.GroupDef.SetGroup(GroupName)
 
         # Change type to list
-        if type(idlist)==str:
-            idlist = [idlist]
+        if isinstance(namelist,str):
+            namelist = [namelist]
 
-        for id in idlist:
-            eval('SapModel.{}.SetGroupAssign(id, GroupName)'.format(Objstr))
+        for name in namelist:
+            ret = eval(f'SapModel.{Objstr}.SetGroupAssign(name, GroupName)')
+            if ret != 0:
+                print(f'Add {Objstr}:{name} to group {GroupName} failed!')
 
     def RemovefromGroup(self,GroupName:str,dellist,typeStr:str):
         """

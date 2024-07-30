@@ -500,17 +500,17 @@ class Sap_Double_Box_Pier:
         box_section.define()
         
         # define pier
-        Sap.Assign.FrameObj.AddByPoint(self.pier_bottom_point[side].name, self.pier_hollow_bottom[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_bottom2hollowBottom")
+        Sap.Assign.FrameObj.AddByPoint(self.pier_bottom_point[side].name, self.pier_hollow_bottom[side].name, propName=solid_section.name, userName = self.name+'_'+side+"bottom2hollowBottom")
         for i,h in enumerate(self.hollow_points[side]):
             if i == 0:
-                Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
+                Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"hollow_{i+1}")
             else:
-                Sap.Assign.FrameObj.AddByPoint(self.hollow_points[side][i-1].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
+                Sap.Assign.FrameObj.AddByPoint(self.hollow_points[side][i-1].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"hollow_{i+1}")
         if len(self.hollow_points[side]) == 0:
-            Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+"_hollowBottom2Top")
+            Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+"hollowBottom2Top")
         else:
-            Sap.Assign.FrameObj.AddByPoint(self.hollow_points[side][-1].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
-        Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_top[side].name, self.pier_top[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_hollowTop2Top")
+            Sap.Assign.FrameObj.AddByPoint(self.hollow_points[side][-1].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+f"hollow_{i+1}")
+        Sap.Assign.FrameObj.AddByPoint(self.pier_hollow_top[side].name, self.pier_top[side].name, propName=solid_section.name, userName = self.name+'_'+side+"hollowTop2Top")
 
 @dataclass
 class Sap_Bearing_Linear:
@@ -807,7 +807,7 @@ class Sap_Box_Girder:
         self.girder_points[gidername][side] = points
     
 #full path to the model
-ModelPath = Path('.\Test\TongZhouShaTall.sdb')
+ModelPath = Path('.\Test\TongZhouShaLow.sdb')
 # ModelPath = Path('.\Test\TongZhouShaLow.sdb')
 
 # Create a Sap2000py obj (default: attatch to instance and create if not exist)
@@ -837,7 +837,7 @@ pier1 = Sap_Double_Box_Pier(
     station=0,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -851,7 +851,7 @@ pier2 = Sap_Double_Box_Pier(
     station=90,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -864,7 +864,7 @@ pier3 = Sap_Double_Box_Pier(
     station=180,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -877,7 +877,7 @@ pier4 = Sap_Double_Box_Pier(
     station=270,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -890,7 +890,7 @@ pier5 = Sap_Double_Box_Pier(
     station=360,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -903,7 +903,7 @@ pier6 = Sap_Double_Box_Pier(
     station=450,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -917,7 +917,7 @@ pier7 = Sap_Double_Box_Pier(
     station=540,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -930,7 +930,7 @@ pier8 = Sap_Double_Box_Pier(
     station=630,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -943,7 +943,7 @@ pier9 = Sap_Double_Box_Pier(
     station=720,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -956,7 +956,7 @@ pier10 = Sap_Double_Box_Pier(
     station=810,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -969,7 +969,7 @@ pier11 = Sap_Double_Box_Pier(
     station=900,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -983,7 +983,7 @@ pier12 = Sap_Double_Box_Pier(
     station=990,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -996,7 +996,7 @@ pier13 = Sap_Double_Box_Pier(
     station=1080,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -1009,7 +1009,7 @@ pier14 = Sap_Double_Box_Pier(
     station=1170,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -1022,7 +1022,7 @@ pier15 = Sap_Double_Box_Pier(
     station=1260,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -1035,7 +1035,7 @@ pier16 = Sap_Double_Box_Pier(
     station=1350,
     Distance_between_piers=20.75,
     Height_of_pier_bottom=0.0,
-    Height_of_pier=60.9,
+    Height_of_pier=29.3,
     bottom_solid_length=2.0,
     top_solid_length=3.0,
     Distance_between_bearings=7.0,
@@ -1061,6 +1061,7 @@ girderright = Sap_Box_Girder(
     pierlist=[pier11,pier12,pier13,pier14,pier15,pier16],
     fixedpier = [pier13,pier14],
     Plan = '方案一')
+    
     
 Sap.RefreshView()
 
@@ -1228,9 +1229,11 @@ Sap.Define.LoadCombo.Add('E2横向+竖向', comboType = 'SRSS')
 Sap.Define.LoadCombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = "E2横向", SF = 1)
 Sap.Define.LoadCombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = "E2竖向", SF = 1)
 
+
 Sap.File.Save(ModelPath)
-Sap.Scripts.Analyze.AddCases(CaseName = ['DEAD', 'MODAL','E2X','E2Y'])
+
 Sap.Analyze.RunAnalysis()
+
 a=1
 # Sap.closeSap()
 

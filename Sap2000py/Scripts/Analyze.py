@@ -6,7 +6,6 @@ class SapAnalyze:
         """
         self.__Object = Sapobj._Object
         self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
         self.CaseFlags = {1:'Not run',2:'Could not start',3:'Not finished',4:'Finished'}
 
     def AddCases(self,CaseName="All"):
@@ -25,7 +24,7 @@ class SapAnalyze:
         """
         Change Cases in Casename(list) to Run(bool)
         """
-        CaseRunFlags = self._Sapobj.Analyze.GetRunCaseFlag()
+        CaseRunFlags = self.__Model.Analyze.GetRunCaseFlag()
 
         # All CaseName
         if Casename == "All":
@@ -41,7 +40,7 @@ class SapAnalyze:
                 print('CaseName "{}"dosen\'t exist!'.format(Name))
                 nonameflag = True
             else:
-                self._Sapobj.Analyze.SetRunCaseFlag(Name, Run)
+                self.__Model.Analyze.SetRunCaseFlag(Name, Run)
 
         if nonameflag:
             print('You have entered the wrong CaseName, please check in the Caselist below:')
@@ -51,11 +50,11 @@ class SapAnalyze:
         """
         Run All cases set to run
         """
-        CaseRunFlags = self._Sapobj.Analyze.GetRunCaseFlag()
+        CaseRunFlags = self.__Model.Analyze.GetRunCaseFlag()
         allflag = False
         i = 1
         while not allflag:
-            self._Sapobj.Analyze.RunAnalysis()
+            self.__Model.Analyze.RunAnalysis()
             CaseStatus = self.GetCaseStatus()
             for Name in CaseRunFlags[1]:
                 allflag = True
@@ -76,7 +75,7 @@ class SapAnalyze:
         """
         Delete Results of CaseName(list)
         """
-        CaseStatus = self._Sapobj.Analyze.GetCaseStatus()
+        CaseStatus = self.__Model.Analyze.GetCaseStatus()
 
         # All CaseName
         if Casename == "All":
@@ -92,7 +91,7 @@ class SapAnalyze:
                 print('CaseName "{}"dosen\'t exist!'.format(Name))
                 nonameflag = True
             else:
-                self._Sapobj.Analyze.DeleteResults(Name)
+                self.__Model.Analyze.DeleteResults(Name)
 
         if nonameflag:
             print('You have entered the wrong CaseName, please check in the Caselist below:')
@@ -102,7 +101,7 @@ class SapAnalyze:
         """
         Get Case Status, All cases by default
         """
-        CaseStatus = self._Sapobj.Analyze.GetCaseStatus()
+        CaseStatus = self.__Model.Analyze.GetCaseStatus()
 
         # All CaseName
         if Casename == "All":
