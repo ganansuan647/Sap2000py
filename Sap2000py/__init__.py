@@ -12,7 +12,7 @@
 #  Environemet: Successfully executed in python 3.8
 #  Date: 2021-08-12
 #########################################################################
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 from .Saproject import Saproject
 __all__ = ["Saproject"]

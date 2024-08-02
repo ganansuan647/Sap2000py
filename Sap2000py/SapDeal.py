@@ -10,7 +10,7 @@ from typing import Union,Literal
 from loguru import logger
 
 class SapFile():
-    def __init__(self,Sapobj):
+    def __init__(self,Sapobj=None):
         """
         Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 
@@ -55,10 +55,11 @@ class SapFile():
         else:
             # open the sdbFile
             ret = self.__Model.File.OpenFile(str(FileName))  # open an existing file
-            if(ret!=0):logger.error(f"Cannot open file at path:{FileName}, Instead Creating new Blank Sap model")
-            # create new blank model
-            ret = self.__Model.File.NewBlank()
-            if(ret!=0):logger.error("Cannot create new Blank Sap model")
+            if(ret!=0):
+                logger.error(f"Cannot open file at path:{FileName}, Instead Creating new Blank Sap model")
+                # create new blank model
+                ret = self.__Model.File.NewBlank()
+                if(ret!=0):logger.error("Cannot create new Blank Sap model")
         self.Sapobj.setDefaultProjectInfo()
         return ret
 
@@ -665,7 +666,7 @@ class SapResults_Get:
         self.__Model = Sapobj._Model
         self.Option = SapResults_Get_Option(Sapobj)
       
-    def GetCaseSelectedForOutput(self,Name):
+    def CaseSelectedForOutput(self,Name):
         """
         ---This function checks if an load case is selected for output---
         inputs:
@@ -835,7 +836,7 @@ class SapResults_Set:
         self.__Model = Sapobj._Model
         self.Option = SapResults_Set_Option(Sapobj)
         
-    def SetCaseSelectedForOutput(self,Name,Selected=True):
+    def CaseSelectedForOutput(self,Name,Selected=True):
         """
         ---This function sets an load case selected for output flag---
         inputs:

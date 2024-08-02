@@ -26,8 +26,8 @@ class SapPointObj_Get:
         [numberItem,totalObject,objectTypeList,objectNameList,_]
 
         """
-        results=self.__Model.PointObj.GetConnectivity(name)
-        return results
+        ret=self.__Model.PointObj.GetConnectivity(name)
+        return ret
 
     def Constraint(self,name:str):
         """
@@ -38,7 +38,7 @@ class SapPointObj_Get:
         [numberItem,totalNumConstrait,pointNameturple,constraintNameTurple]
         """
         result=self.__Model.PointObj.GetConstraint(name)
-        return result
+        return ret
 
     def CoordCartesian(self,name:str,Csys="Global"):
         """
@@ -53,8 +53,8 @@ class SapPointObj_Get:
         [numItem,x,y,z]
         """
         x,y,z=0.0,0.0,0.0
-        result=self.__Model.PointObj.GetCoordCartesian(name,x,y,z,Csys)
-        return result
+        ret=self.__Model.PointObj.GetCoordCartesian(name,x,y,z,Csys)
+        return ret
 
     def CoordCylindrical(self,name:str,Csys="Global"):
         """
@@ -73,8 +73,8 @@ class SapPointObj_Get:
         z(float)-The Z-coordinate of the specified point object in the specified coordinate system. [L]
         """
         r,theta,z=0,0,0
-        result=self.__Model.PointObj.GetCoordCylindrical(name,r,theta,z,Csys)
-        return result
+        ret=self.__Model.PointObj.GetCoordCylindrical(name,r,theta,z,Csys)
+        return ret
 
     def CoordSpherical(self,name:str,Csys="Global"):
         """
@@ -96,8 +96,8 @@ class SapPointObj_Get:
             plane with the positive Y' axis pointing toward you, a positive b angle is counter clockwise. [deg]
         """
         r,a,b=0,0,0
-        result =self.__Model.PointObj.GetCoordSpherical(name,r,a,b,Csys)
-        return result
+        ret =self.__Model.PointObj.GetCoordSpherical(name,r,a,b,Csys)
+        return ret
 
     def GroupAssign(self,name:str):
         """
@@ -109,8 +109,8 @@ class SapPointObj_Get:
         NumberGroups(int)-The number of group names retrieved.
         Groups(str)-The names of the groups to which the point object is assigned.
         """
-        result=self.__Model.PointObj.GetGroupAssign(name)
-        return result
+        ret=self.__Model.PointObj.GetGroupAssign(name)
+        return ret
 
     def LoadDispl(self,name:str,ItemType=0):
         """
@@ -156,9 +156,9 @@ class SapPointObj_Get:
         CSys=[]
         U1,U2,U3,R1,R2,R3=[],[],[],[],[],[]
 
-        result=self.__Model.PointObj.GetLoadDispl(name,NumberItems, PointName, LoadPat, LCStep, CSys,
+        ret=self.__Model.PointObj.GetLoadDispl(name,NumberItems, PointName, LoadPat, LCStep, CSys,
                                                    U1, U2, U3, R1, R2, R3,ItemType)
-        return result
+        return ret
 
     def LocalAxes(self,name:str):
         """
@@ -175,8 +175,8 @@ class SapPointObj_Get:
         Advanced(bool)-This item is True if the point object local axes orientation was obtained using advanced local
             axes parameters.
         """
-        result=self.__Model.PointObj.GetLocalAxes(name)
-        return result
+        ret=self.__Model.PointObj.GetLocalAxes(name)
+        return ret
 
     def Mass(self,name:str):
         """
@@ -193,8 +193,8 @@ class SapPointObj_Get:
             Value(4) = R2 [ML2]
             Value(5) = R3 [ML2]
         """
-        result=self.__Model.PointObj.GetMass(name)
-        return result
+        ret=self.__Model.PointObj.GetMass(name)
+        return ret
 
     def NameList(self):
         """
@@ -204,8 +204,8 @@ class SapPointObj_Get:
         NumberNames(int)-The number of point object names retrieved by the program.
         MyName(str list)-This is a one-dimensional list of point object names.
         """
-        result=self.__Model.PointObj.GetNameList()
-        return result
+        ret=self.__Model.PointObj.GetNameList()
+        return ret
 
     def Restraint(self,name:str):
         """
@@ -216,8 +216,8 @@ class SapPointObj_Get:
         return:
         value
         """
-        result=self.__Model.PointObj.GetRestraint(name)
-        return result
+        ret=self.__Model.PointObj.GetRestraint(name)
+        return ret
 
     def Spring(self,name:str):
         """
@@ -231,8 +231,8 @@ class SapPointObj_Get:
             Value(2) = U3 [F/L],Value(3) = R1 [FL/rad],Value(4) = R2 [FL/rad],Value(5) = R3 [FL/rad]
         """
         k=[0,0,0,0,0,0]
-        result=self.__Model.PointObj.GetSpring(name,k)
-        return result
+        ret=self.__Model.PointObj.GetSpring(name,k)
+        return ret
 
     def SpringCoupled(self,name:str):
         """
@@ -267,8 +267,8 @@ class SapPointObj_Get:
             Value(20) = R3R3 [FL/rad]
         """
         k=[0 for each in range(21)]
-        result=self.__Model.PointObj.GetSpringCoupled(name,k)
-        return result
+        ret=self.__Model.PointObj.GetSpringCoupled(name,k)
+        return ret
 
 class SapPointObj_Set:
     def __init__(self,Sapobj):
@@ -582,7 +582,8 @@ class SapPointObj:
         MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
             are the same. By default all pointobjects have a merge number of zero.
         """
-        self.__Model.PointObj.AddCartesian(r,theta,z,Name,UserName,CSys,MergeOff,MergeNumber)
+        ret = self.__Model.PointObj.AddCartesian(r,theta,z,Name,UserName,CSys,MergeOff,MergeNumber)
+        return ret
 
     def AddSpherical(self,r,a,b,Name="",UserName="",CSys="Global",MergeOff=False,MergeNumber=0):
         """
@@ -614,7 +615,8 @@ class SapPointObj:
         MergeNumber(int)-Two points objects in the same location will merge only if their merge number assignments
             are the same. By default all pointobjects have a merge number of zero.
         """
-        self.__Model.PointObj.AddSpherical(r,a,b,Name,UserName,CSys,MergeOff,MergeNumber)
+        ret = self.__Model.PointObj.AddSpherical(r,a,b,Name,UserName,CSys,MergeOff,MergeNumber)
+        return ret
 
     def ChangeName(self,name:str,newName):
         """
@@ -623,7 +625,8 @@ class SapPointObj:
         name(str)-The existing name of a point object.
         newName(str)-The new name for the point object.
         """
-        self.__Model.PointObj.ChangeName(name,newName)
+        ret = self.__Model.PointObj.ChangeName(name,newName)
+        return ret
 
     def Count(self):
         """
@@ -643,8 +646,8 @@ class SapPointObj:
         IsCoupled(bool)-This item is True if the spring assigned to the specified point object is coupled, otherwise
             it is False.
         """
-        result=self.__Model.PointObj.IsSpringCoupled(name)
-        return result
+        ret=self.__Model.PointObj.IsSpringCoupled(name)
+        return ret
 
 
 class FrameObj_Set:
@@ -682,8 +685,9 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetAutoMesh(name,autoMesh,AutoMeshAtPoints,AutoMeshAtLines,
+        ret = self.__Model.FrameObj.SetAutoMesh(name,autoMesh,AutoMeshAtPoints,AutoMeshAtLines,
                                     umSegs,AutoMeshMaxLength,ItemType)
+        return ret
 
     def DesignProcedure(self,name,myType,itemType=0):
         """
@@ -698,7 +702,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetDesignProcedure(name,myType,itemType)
+        ret = self.__Model.FrameObj.SetDesignProcedure(name,myType,itemType)
+        return ret
 
     def EndLengthOffset(self,name,AutoOffset,Length1=0,Length2=0,rz=0,ItemType=0):
         """
@@ -717,7 +722,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetEndLengthOffset(name,AutoOffset,Length1,Length2,rz,ItemType)
+        ret = self.__Model.FrameObj.SetEndLengthOffset(name,AutoOffset,Length1,Length2,rz,ItemType)
+        return ret
 
     def EndSkew(self,name,skewI,skewJ,itemType=0):
         """
@@ -735,7 +741,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetEndSkew(name,skewI,skewJ,itemType)
+        ret = self.__Model.FrameObj.SetEndSkew(name,skewI,skewJ,itemType)
+        return ret
 
     def GroupAssign(self,name,groupName,remove=False,itemType=0):
         """
@@ -751,7 +758,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetGroupAssign(name,groupName,remove,itemType)
+        ret = self.__Model.FrameObj.SetGroupAssign(name,groupName,remove,itemType)
+        return ret
 
     def InsertionPoint(self,name,CardinalPoint,Mirror2,StiffTransform,Offset1,Offset2,
                                           CSys="Local",itemType=0):
@@ -796,7 +804,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetInsertionPoint(name,CardinalPoint,Mirror2,StiffTransform,Offset1,Offset2,CSys,itemType)
+        ret = self.__Model.FrameObj.SetInsertionPoint(name,CardinalPoint,Mirror2,StiffTransform,Offset1,Offset2,CSys,itemType)
+        return ret
 
     def LoadDeformation(self,name,loadPat,DOF,d,itemType=0):
         """
@@ -820,7 +829,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetLoadDeformation(name,loadPat,DOF,d,itemType)
+        ret = self.__Model.FrameObj.SetLoadDeformation(name,loadPat,DOF,d,itemType)
+        return ret
 
     def LoadDistributed(self,name,loadPat,myType,Dir,Dist1,Dist2,Val1,Val2,
                                            CSys="Global",RelDist=True,Replace=True,ItemType=0):
@@ -865,7 +875,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetLoadDistributed(name,loadPat,myType,Dir,Dist1,Dist2,Val1,Val2,CSys,RelDist,Replace,ItemType)
+        ret = self.__Model.FrameObj.SetLoadDistributed(name,loadPat,myType,Dir,Dist1,Dist2,Val1,Val2,CSys,RelDist,Replace,ItemType)
+        return ret
 
     def LoadGravity(self,name,loadPat,x,y,z,Replace=True,CSys="Global",itemType=0):
         """
@@ -883,7 +894,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.SetLoadGravity(name,loadPat,x,y,z,Replace,CSys,itemType)
+        ret = self.__Model.FrameObj.SetLoadGravity(name,loadPat,x,y,z,Replace,CSys,itemType)
+        return ret
 
     def LoadPoint(self,name,loadPat,myType,Dir,Dist,Val,
                                      CSys="Global",RelDist=True,Replace=True,itemType=0):
@@ -923,7 +935,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetLoadPoint(name,loadPat,myType,Dir,Dist,Val,CSys,RelDist,Replace,itemType)
+        ret = self.__Model.FrameObj.SetLoadPoint(name,loadPat,myType,Dir,Dist,Val,CSys,RelDist,Replace,itemType)
+        return ret
 
     def LoadStrain(self,name,loadPat,DOF,Val,Replace=True,PatternName="",itemType=0):
         """
@@ -946,7 +959,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetLoadStrain(name,loadPat,DOF,Val,Replace,PatternName,itemType)
+        ret = self.__Model.FrameObj.SetLoadStrain(name,loadPat,DOF,Val,Replace,PatternName,itemType)
+        return ret
 
     def LoadTargetForce(self,name,loadPat,DOF,f,RD,itemType=0):
         """
@@ -974,7 +988,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetLoadTargetForce(name,loadPat,DOF,f,RD,itemType)
+        ret = self.__Model.FrameObj.SetLoadTargetForce(name,loadPat,DOF,f,RD,itemType)
+        return ret
 
     def LoadTemperature(self,name,loadPat,myType,Val,PatternName="",Replace=True,itemType=0):
         """
@@ -997,7 +1012,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetLoadTemperature(name,loadPat,myType,Val,PatternName,Replace,itemType)
+        ret = self.__Model.FrameObj.SetLoadTemperature(name,loadPat,myType,Val,PatternName,Replace,itemType)
+        return ret
 
     def LoadTransfer(self,name,Val,itemType=0):
         """
@@ -1012,7 +1028,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetLoadTransfer(name,Val,itemType)
+        ret = self.__Model.FrameObj.SetLoadTransfer(name,Val,itemType)
+        return ret
 
     def LocalAxes(self,name,Ang,itemType=0):
         """
@@ -1029,7 +1046,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetLocalAxes(name,Ang,itemType)
+        ret = self.__Model.FrameObj.SetLocalAxes(name,Ang,itemType)
+        return ret
 
     def Mass(self,name,massOverL,Replace=False,itemType=0):
         """
@@ -1062,7 +1080,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetMaterialOverwrite(name,proName,itemType)
+        ret = self.__Model.FrameObj.SetMaterialOverwrite(name,proName,itemType)
+        return ret
 
     def MatTemp(self,name,temp,patternName="",itemType=0):
         """
@@ -1081,7 +1100,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetMatTemp(name,temp,patternName,itemType)
+        ret = self.__Model.FrameObj.SetMatTemp(name,temp,patternName,itemType)
+        return ret
 
     def Modifiers(self,name,value,itemType=0):
         """
@@ -1123,7 +1143,8 @@ class FrameObj_Set:
             size; for stype is “User”, the Value represents for the user-defined notional size [L]; for stype is “None”,
             the Value will not be used and can be set to 1.
         """
-        self.__Model.PropFrame.SetNotionalSize(name,stype,value)
+        ret = self.__Model.PropFrame.SetNotionalSize(name,stype,value)
+        return ret
 
     def OutputStations(self,name,myType,settingValue,NoOutPutAndDesignAtElementEnds=False,
                                           NoOutPutAndDesignAtPointLoads=False,itemType=0):
@@ -1147,8 +1168,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetOutputStations(name,myType,settingValue,NoOutPutAndDesignAtElementEnds,
-                                          NoOutPutAndDesignAtPointLoads,itemType)
+        ret = self.__Model.FrameObj.SetOutputStations(name,myType,settingValue,NoOutPutAndDesignAtElementEnds, NoOutPutAndDesignAtPointLoads,itemType)
+        return ret
 
     def PDeltaForce(self,name,PDeltaForce,Dir,Replace,CSys="Global",itemType=0):
         """
@@ -1173,7 +1194,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetPDeltaForce(name,PDeltaForce,Dir,Replace,CSys,itemType)
+        ret = self.__Model.FrameObj.SetPDeltaForce(name,PDeltaForce,Dir,Replace,CSys,itemType)
+        return ret
 
     def Releases(self,name,ii,jj,startValue=[0,0,0,0,0,0],endValue=[0,0,0,0,0,0],itemType=0):
         """
@@ -1212,7 +1234,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetReleases(name,ii,jj,startValue,endValue,itemType)
+        ret = self.__Model.FrameObj.SetReleases(name,ii,jj,startValue,endValue,itemType)
+        return ret
 
     def Section(self,name,propName,itemType=0,sVarTotalLength=0,sVarRelStartLoc=0):
         """
@@ -1232,7 +1255,8 @@ class FrameObj_Set:
             frame object. This item is ignored when the sVarTotalLengthitem is 0.This item is applicable only when the
             assigned frame section property is a nonprismatic section, and the sVarTotalLengthitem is greater than zero.
         """
-        self.__Model.FrameObj.SetSection(name,propName,itemType,sVarTotalLength,sVarRelStartLoc)
+        ret = self.__Model.FrameObj.SetSection(name,propName,itemType,sVarTotalLength,sVarRelStartLoc)
+        return ret
 
     def Spring(self,name,myType,s=0,simpleSpringType=1,LinkProp="",springLocalOneType=1,Dir=1,
                                   Plane23Angle=0,Vec=[1,0,0],Ang=0,Replace=False,CSys="Local",itemType=0):
@@ -1273,8 +1297,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetSpring(name,myType,s,simpleSpringType,LinkProp,springLocalOneType,Dir,
-                                  Plane23Angle,Vec,Ang,Replace,CSys,itemType)
+        ret = self.__Model.FrameObj.SetSpring(name,myType,s,simpleSpringType,LinkProp,springLocalOneType,Dir,Plane23Angle,Vec,Ang,Replace,CSys,itemType)
+        return ret
 
     def TCLimits(self,name,LimitCompressionExists,LimitCompression,LimitTensionExists,LimitTension,
                                     itemType=0):
@@ -1295,8 +1319,8 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.FrameObj.SetTCLimits(name,LimitCompressionExists,LimitCompression,LimitTensionExists,LimitTension,
-                                    itemType)
+        ret = self.__Model.FrameObj.SetTCLimits(name,LimitCompressionExists,LimitCompression,LimitTensionExists,LimitTension,itemType)
+        return ret
 
 class FrameObj_Get:
     def __init__(self,Sapobj):
@@ -1327,8 +1351,8 @@ class FrameObj_Get:
             of auto meshed frame elements. If this item is zero, the element length is not checked when the automatic
             meshing is done. [L]
         """
-        result=self.__Model.FrameObj.GetAutoMesh(name)
-        return result
+        ret=self.__Model.FrameObj.GetAutoMesh(name)
+        return ret
 
     def GroupAssign(self,name):
         """
@@ -1339,8 +1363,8 @@ class FrameObj_Get:
         numberGroups(int)-The number of group names retrieved.
         Groups(str list)-The names of the groups to which the frame object is assigned.
         """
-        result=self.__Model.FrameObj.GetGroupAssign(name)
-        return result
+        ret=self.__Model.FrameObj.GetGroupAssign(name)
+        return ret
 
     def LoadDeformation(self,name):
         """
@@ -1363,8 +1387,8 @@ class FrameObj_Get:
             R2 = R2 deformation [rad]
             R3 = R3 deformation [rad]
         """
-        result=self.__Model.FrameObj.GetLoadDeformation(name)
-        return result
+        ret=self.__Model.FrameObj.GetLoadDeformation(name)
+        return ret
 
     def LoadDistributed(self,name):
         """
@@ -1407,8 +1431,8 @@ class FrameObj_Get:
         Val2(float list)-This is an array that includes the load value at the end of the distributed load.
             [F/L] when MyType is 1 and [FL/L] when MyType is 2
         """
-        result=self.__Model.FrameObj.GetLoadDistributed(name)
-        return result
+        ret=self.__Model.FrameObj.GetLoadDistributed(name)
+        return ret
 
     def LoadGravity(self,name):
         """
@@ -1424,8 +1448,8 @@ class FrameObj_Get:
         x,y,z(float)-These are arrays of gravity load multipliers in the x, y and z directions of the specified
             coordinate system.
         """
-        result=self.__Model.FrameObj.GetLoadGravity(name)
-        return result
+        ret=self.__Model.FrameObj.GetLoadGravity(name)
+        return ret
 
     def LoadPoint(self,name):
         """
@@ -1463,8 +1487,8 @@ class FrameObj_Get:
         Val(float list)-This is an array that includes the value of the point load. [F] when MyType is 1 and [FL]
             when MyType is 2
         """
-        result=self.__Model.FrameObj.GetLoadPoint(name)
-        return result
+        ret=self.__Model.FrameObj.GetLoadPoint(name)
+        return ret
 
     def LoadStrain(self,name):
         """
@@ -1483,8 +1507,8 @@ class FrameObj_Get:
         Val(float list)-This is an array that includes the strain value. [L/L] for DOF = 1, 2 and 3 and [1/L] for
             DOF = 4, 5 and 6
         """
-        result=self.__Model.FrameObj.GetLoadStrain(name)
-        return result
+        ret=self.__Model.FrameObj.GetLoadStrain(name)
+        return ret
 
     def LoadTargetForce(self,name):
         """
@@ -1517,8 +1541,8 @@ class FrameObj_Get:
             T5 = relative location for M2 target force
             T6 = relative location for M3 target force
         """
-        result=self.__Model.FrameObj.GetLoadTargetForce(name)
-        return result
+        ret=self.__Model.FrameObj.GetLoadTargetForce(name)
+        return ret
 
     def LoadTemperature(self,name):
         """
@@ -1540,8 +1564,8 @@ class FrameObj_Get:
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the
             temperature load.
         """
-        result=self.__Model.FrameObj.GetLoadTemperature(name)
-        return result
+        ret=self.__Model.FrameObj.GetLoadTemperature(name)
+        return ret
 
     def LocalAxes(self,name):
         """
@@ -1558,8 +1582,8 @@ class FrameObj_Get:
         Advanced(bool)-This item is True if the line object local axes orientation was obtained using advanced
             local axes parameters.
         """
-        result=self.__Model.FrameObj.GetLocalAxes(name)
-        return result
+        ret=self.__Model.FrameObj.GetLocalAxes(name)
+        return ret
 
     def Mass(self,name):
         """
@@ -1570,8 +1594,8 @@ class FrameObj_Get:
         [index,MassOverL]
         MassOverL(float)-The mass per unit length assigned to the frame object. [M/L]
         """
-        result=self.__Model.FrameObj.GetMass(name)
-        return result
+        ret=self.__Model.FrameObj.GetMass(name)
+        return ret
 
     def MatTemp(self,name):
         """
@@ -1587,8 +1611,8 @@ class FrameObj_Get:
             The material temperature at each end of the object is equal to the specified temperature multiplied by the
             pattern value at the joint at the end of the frame object.
         """
-        result=self.__Model.FrameObj.GetMatTemp(name)
-        print(result)
+        ret=self.__Model.FrameObj.GetMatTemp(name)
+        print(ret)
 
     def NameList(self):
         """
@@ -1599,8 +1623,8 @@ class FrameObj_Get:
         NumberNames(int)-The number of frame object names retrieved by the program.
         MyName(str list)-This is a one-dimensional array of frame object names.
         """
-        result=self.__Model.FrameObj.GetNameList()
-        return result
+        ret=self.__Model.FrameObj.GetNameList()
+        return ret
 
     def PDeltaForce(self,name):
         """
@@ -1622,8 +1646,8 @@ class FrameObj_Get:
             force is defined. This item is blank when the Dir item is zero, that is, when the P-Delta force is defined
             in the frame object local 1-axis direction.
         """
-        result=self.__Model.FrameObj.GetPDeltaForce(name)
-        return result
+        ret=self.__Model.FrameObj.GetPDeltaForce(name)
+        return ret
 
     def Points(self,name):
         """
@@ -1635,8 +1659,8 @@ class FrameObj_Get:
         Point1(str)-The name of the point object at the I-End of the specified frame object.
         Point2(str)-The name of the point object at the J-End of the specified frame object.
         """
-        result=self.__Model.FrameObj.GetPoints(name)
-        return result
+        ret=self.__Model.FrameObj.GetPoints(name)
+        return ret
 
     def Releases(self,name):
         """
@@ -1661,8 +1685,8 @@ class FrameObj_Get:
             StartValue(4) and EndValue(4) = R2 partial fixity [FL/rad]
             StartValue(5) and EndValue(5) = R3 partial fixity [FL/rad]
         """
-        result=self.__Model.FrameObj.GetReleases(name)
-        return result
+        ret=self.__Model.FrameObj.GetReleases(name)
+        return ret
 
     def Section(self,name):
         """
@@ -1679,8 +1703,8 @@ class FrameObj_Get:
         SAuto(str)-This is the name of the auto select list assigned to the frame object, if any. If this item is
             returned as a blank string, no auto select list is assigned to the frame object.
         """
-        result=self.__Model.FrameObj.GetSection(name)
-        return result
+        ret=self.__Model.FrameObj.GetSection(name)
+        return ret
 
     def Spring(self,name):
         """
@@ -1731,8 +1755,8 @@ class FrameObj_Get:
         Ang(float list)-Each value in this array is the angle that the link local 2-axis is rotated from its default
             orientation. This item applies only when the corresponding MyType = 2. [deg]
         """
-        result=self.__Model.FrameObj.GetSpring(name)
-        return result
+        ret=self.__Model.FrameObj.GetSpring(name)
+        return ret
 
     def TCLimits(self,name):
         """
@@ -1749,8 +1773,8 @@ class FrameObj_Get:
         LimitTensionExists(bool)-This item is True if a tension force limit exists for the frame object.
         LimitTension(float)-The tension force limit for the frame object. [F]
         """
-        result=self.__Model.FrameObj.GetTCLimits(name)
-        return result
+        ret=self.__Model.FrameObj.GetTCLimits(name)
+        return ret
 
     def TransformationMatrix(self,name):
         """
@@ -1770,8 +1794,8 @@ class FrameObj_Get:
             present coordinate system is the same as that shown above for the global system if you substitute the
             present system for the global system.
         """
-        result=self.__Model.FrameObj.GetTransformationMatrix(name)
-        return result
+        ret=self.__Model.FrameObj.GetTransformationMatrix(name)
+        return ret
 
 class SapFrameObj:
     def __init__(self,Sapobj):
@@ -1806,7 +1830,8 @@ class SapFrameObj:
         #that name is not used for another frame, cable or tendon object, the UserName is assigned to the
         #frame object, otherwise a default name is assigned to the frame object.
         name=""
-        self.__Model.FrameObj.AddByCoord(xi,yi,zi,xj,yj,zj,name,propName,userName,Csys)
+        ret = self.__Model.FrameObj.AddByCoord(xi,yi,zi,xj,yj,zj,name,propName,userName,Csys)
+        return ret
 
     def AddByPoint(self,Point1,Point2,propName="Default",userName=""):
         """
@@ -1836,7 +1861,8 @@ class SapFrameObj:
         name(str)-The existing name of a defined frame object.
         newName(str)-The new name for the frame object.
         """
-        self.__Model.FrameObj.ChangeName(name,newName)
+        ret = self.__Model.FrameObj.ChangeName(name,newName)
+        return ret
 
     def Count(self,myType="All"):
         """
@@ -1863,7 +1889,8 @@ class SapFrameObj:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        self.__Model.FrameObj.Delete(name,itemType)
+        ret = self.__Model.FrameObj.Delete(name,itemType)
+        return ret
 
 
 
@@ -1912,7 +1939,8 @@ class CableObj_Set:
         ModelUsingFrames(bool)-If this item is True, the analysis model uses frame elements to model the cable
             instead of using cable elements.
         """
-        self.__Model.CableObj.SetCableData(name,CableType,NumSegs,Weight,ProjectedLoad,Value,UseDeformedGeom,ModelUsingFrames)
+        ret = self.__Model.CableObj.SetCableData(name,CableType,NumSegs,Weight,ProjectedLoad,Value,UseDeformedGeom,ModelUsingFrames)
+        return ret
 
     def GroupAssign(self,name,groupName,Remove=False,itemType=0):
         """
@@ -1928,7 +1956,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetGroupAssign(name,groupName,Remove,itemType)
+        ret = self.__Model.CableObj.SetGroupAssign(name,groupName,Remove,itemType)
+        return ret
 
     def LoadDeformation(self,name,loadPat,d,itemType=0):
         """
@@ -1943,7 +1972,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetLoadDeformation(name,loadPat,d,itemType)
+        ret = self.__Model.CableObj.SetLoadDeformation(name,loadPat,d,itemType)
+        return ret
 
     def LoadDistributed(self,name,loadPat,myType,Dir,Value,CSys="Global",Replace=True,itemType=0):
         """
@@ -1974,7 +2004,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetLoadDistributed(name,loadPat,myType,Dir,Value,CSys,Replace,itemType)
+        ret = self.__Model.CableObj.SetLoadDistributed(name,loadPat,myType,Dir,Value,CSys,Replace,itemType)
+        return ret
 
     def LoadGravity(self,name,loadPat,x,y,z,Replace=True,CSys="Global",itemType=0):
         """
@@ -1992,7 +2023,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetLoadGravity(name,loadPat,x,y,z,Replace,CSys,itemType)
+        ret = self.__Model.CableObj.SetLoadGravity(name,loadPat,x,y,z,Replace,CSys,itemType)
+        return ret
 
     def LoadStrain(self,name,loadPat,Strain,Replace=True,PatternName="",itemType=0):
         """
@@ -2013,7 +2045,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetLoadStrain(name,loadPat,Strain,Replace,PatternName,itemType)
+        ret = self.__Model.CableObj.SetLoadStrain(name,loadPat,Strain,Replace,PatternName,itemType)
+        return ret
 
     def LoadTargetForce(self,name,loadPat,P,RD,itemType=0):
         """
@@ -2030,7 +2063,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetLoadTargetForce(name,loadPat,P,RD,itemType)
+        ret = self.__Model.CableObj.SetLoadTargetForce(name,loadPat,P,RD,itemType)
+        return ret
 
     def LoadTemperature(self,name,loadPat,Val,PatternName="",Replace=True,itemType=0):
         """
@@ -2051,7 +2085,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetLoadTemperature(name,loadPat,Val,PatternName,Replace,itemType)
+        ret = self.__Model.CableObj.SetLoadTemperature(name,loadPat,Val,PatternName,Replace,itemType)
+        return ret
 
     def Mass(self,name,MassOverL,Replace=False,itemType=0):
         """
@@ -2068,7 +2103,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetMass(name,MassOverL,Replace,itemType)
+        ret = self.__Model.CableObj.SetMass(name,MassOverL,Replace,itemType)
+        return ret
 
     def MatTemp(self,name,Temp,PatternName="",itemType=0):
         """
@@ -2087,7 +2123,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetMatTemp(name,Temp,PatternName,itemType)
+        ret = self.__Model.CableObj.SetMatTemp(name,Temp,PatternName,itemType)
+        return ret
 
     def Property(self,name,PropName,itemType=0):
         """
@@ -2101,7 +2138,8 @@ class CableObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.CableObj.SetProperty(name,PropName,itemType)
+        ret = self.__Model.CableObj.SetProperty(name,PropName,itemType)
+        return ret
 
 class CableObj_Get:
     def __init__(self,Sapobj):
@@ -2150,8 +2188,8 @@ class CableObj_Get:
             Parameter(9) = Undeformed length [L]
             Parameter(10) = Undeformed relative length
         """
-        result=self.__Model.CableObj.GetCableData(name)
-        return result
+        ret=self.__Model.CableObj.GetCableData(name)
+        return ret
 
     def CableGeometry(self,name):
         """
@@ -2167,8 +2205,8 @@ class CableObj_Get:
         Distance(float)-The distance along the cable, measured from the cable I-End, to the considered point. [L]
         RD(float)-The relative distance along the cable, measured from the cable I-End, to the considered point.
         """
-        result=self.__Model.CableObj.GetCableGeometry(name)
-        return result
+        ret=self.__Model.CableObj.GetCableGeometry(name)
+        return ret
 
     def GroupAssign(self,name):
         """
@@ -2180,8 +2218,8 @@ class CableObj_Get:
         NumberGroups(int)-The number of group names retrieved.
         Groups(str)-The names of the groups to which the cable object is assigned.
         """
-        result=self.__Model.CableObj.GetGroupAssign(name)
-        return result
+        ret=self.__Model.CableObj.GetGroupAssign(name)
+        return ret
 
     def LoadDeformation(self,name):
         """
@@ -2195,8 +2233,8 @@ class CableObj_Get:
         LoadPat(str list)-This is an array that includes the name of the load pattern associated with each deformation load.
         U1(float list)-This is an array of axial deformation load values. [L]
         """
-        result=self.__Model.CableObj.GetLoadDeformation(name)
-        return result
+        ret=self.__Model.CableObj.GetLoadDeformation(name)
+        return ret
 
     def LoadDistributed(self,name):
         """
@@ -2227,8 +2265,8 @@ class CableObj_Get:
         Value(float)-This is the load value of the distributed load. The distributed load is applied over the full
             length of the cable. [F/L] when MyType is 1 and [FL/L] when MyType is 2
         """
-        result=self.__Model.CableObj.GetLoadDistributed(name)
-        return result
+        ret=self.__Model.CableObj.GetLoadDistributed(name)
+        return ret
 
     def LoadGravity(self,name):
         """
@@ -2245,8 +2283,8 @@ class CableObj_Get:
         x,y,z(float list)-These are arrays of gravity load multipliers in the x, y and z directions of the specified
             coordinate system.
         """
-        result=self.__Model.CableObj.GetLoadGravity(name)
-        return result
+        ret=self.__Model.CableObj.GetLoadGravity(name)
+        return ret
 
     def LoadStrain(self,name):
         """
@@ -2261,8 +2299,8 @@ class CableObj_Get:
         Strain(float list)-This is an array that includes the axial strain value. [L/L]
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the strain load.
         """
-        result=self.__Model.CableObj.GetLoadStrain(name)
-        return result
+        ret=self.__Model.CableObj.GetLoadStrain(name)
+        return ret
 
     def LoadTargetForce(self,name):
         """
@@ -2278,8 +2316,8 @@ class CableObj_Get:
         RD(float list)-This is an array of the relative distances along the cable objects where the axial target force
             values apply.
         """
-        result=self.__Model.CableObj.GetLoadTargetForce(name)
-        return result
+        ret=self.__Model.CableObj.GetLoadTargetForce(name)
+        return ret
 
     def LoadTemperature(self,name):
         """
@@ -2295,8 +2333,8 @@ class CableObj_Get:
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the
             temperature load.
         """
-        result=self.__Model.CableObj.GetLoadTemperature(name)
-        return result
+        ret=self.__Model.CableObj.GetLoadTemperature(name)
+        return ret
 
     def Mass(self,name):
         """
@@ -2307,8 +2345,8 @@ class CableObj_Get:
         [index,massOverL]
         massOverL(float)-The mass per unit length assigned to the cable object. [M/L]
         """
-        result=self.__Model.CableObj.GetMass(name)
-        return result
+        ret=self.__Model.CableObj.GetMass(name)
+        return ret
 
     def MatTemp(self,name):
         """
@@ -2324,8 +2362,8 @@ class CableObj_Get:
             The material temperature at each end of the object is equal to the specified temperature multiplied by the
             pattern value at the joint at the end of the cable object.
         """
-        result=self.__Model.CableObj.GetMatTemp(name)
-        return result
+        ret=self.__Model.CableObj.GetMatTemp(name)
+        return ret
 
     def NameList(self):
         """
@@ -2335,8 +2373,8 @@ class CableObj_Get:
         numberNames(int)-The number of cable object names retrieved by the program.
         myName(str list)-This is a one-dimensional array of cable object names.
         """
-        result=self.__Model.CableObj.GetNameList()
-        return result
+        ret=self.__Model.CableObj.GetNameList()
+        return ret
 
     def Points(self,name):
         """
@@ -2348,8 +2386,8 @@ class CableObj_Get:
         Point1(str)-The name of the point object at the I-End of the specified cable object.
         Point2(str)-The name of the point object at the J-End of the specified cable object.
         """
-        result=self.__Model.CableObj.GetPoints(name)
-        return result
+        ret=self.__Model.CableObj.GetPoints(name)
+        return ret
 
     def Property(self,name):
         """
@@ -2360,8 +2398,8 @@ class CableObj_Get:
         [index,PropName]
         PropName(str)-The name of the cable property assigned to the cable object.
         """
-        result=self.__Model.CableObj.GetProperty(name)
-        return result
+        ret=self.__Model.CableObj.GetProperty(name)
+        return ret
 
     def TransformationMatrix(self,name):
             """
@@ -2380,8 +2418,8 @@ class CableObj_Get:
                 from the local coordinate system to the present coordinate system is the same as that shown above for the
                 global system if you substitute the present system for the global system.
             """
-            result=self.__Model.CableObj.GetTransformationMatrix(name)
-            return result
+            ret=self.__Model.CableObj.GetTransformationMatrix(name)
+            return ret
 
 class SapCableObj:
     def __init__(self,Sapobj):
@@ -2415,7 +2453,8 @@ class SapCableObj:
         # used for another frame, cable or tendon object, the UserName is assigned to the cable object; otherwise a
         # default name is assigned to the cable object.
         name=""
-        self.__Model.CableObj.AddByCoord(xi,yi,zi,xj,yj,zj,name,propName,UserName,CSys)
+        ret = self.__Model.CableObj.AddByCoord(xi,yi,zi,xj,yj,zj,name,propName,UserName,CSys)
+        return ret
 
     def AddByPoint(self,Point1,Point2,PropName="Default",UserName=""):
         """
@@ -2434,7 +2473,8 @@ class SapCableObj:
         # used for another frame, cable or tendon object, the UserName is assigned to the cable object; otherwise a
         # default name is assigned to the cable object.
         name = ""
-        self.__Model.CableObj.AddByPoint(Point1,Point2,name,PropName,UserName)
+        ret = self.__Model.CableObj.AddByPoint(Point1,Point2,name,PropName,UserName)
+        return ret
 
     def ChangeName(self,name,newName):
         """
@@ -2443,14 +2483,15 @@ class SapCableObj:
         name(str)-The existing name of a defined cable object.
         newName(str)-The new name for the cable object.
         """
-        self.__Model.CableObj.ChangeName(name,newName)
+        ret = self.__Model.CableObj.ChangeName(name,newName)
+        return ret
 
     def Count(self):
         """
         ---This function returns a count of the cable objects in the model.---
         """
-        result=self.__Model.CableObj.Count()
-        return result
+        ret=self.__Model.CableObj.Count()
+        return ret
 
 
 
@@ -2476,7 +2517,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.TendonObj.SetDiscretization(name,Value,itemType)
+        ret = self.__Model.TendonObj.SetDiscretization(name,Value,itemType)
+        return ret
 
     def GroupAssign(self,name,GroupName,Remove=False,itemType=0):
         """
@@ -2492,7 +2534,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.TendonObj.SetGroupAssign(name,GroupName,Remove,itemType)
+        ret = self.__Model.TendonObj.SetGroupAssign(name,GroupName,Remove,itemType)
+        return ret
 
     def LoadDeformation(self,name,LoadPat,d,itemType=0):
         """
@@ -2507,7 +2550,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.TendonObj.SetLoadDeformation(name,LoadPat,d,itemType)
+        ret = self.__Model.TendonObj.SetLoadDeformation(name,LoadPat,d,itemType)
+        return ret
 
     def LoadedGroup(self,name,GroupName,itemType=0):
         """
@@ -2523,7 +2567,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored
         """
-        self.__Model.TendonObj.SetLoadedGroup(name,GroupName,itemType)
+        ret = self.__Model.TendonObj.SetLoadedGroup(name,GroupName,itemType)
+        return ret
 
     def LoadForceStress(self,name,loadPat,JackFrom,LoadType,Value,CurvatureCoeff,WobbleCoeff,
                                             LossAnchorage,LossShortening,LossCreep,LossShrinkage,LossSteelRelax,
@@ -2555,9 +2600,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetLoadForceStress(name,loadPat,JackFrom,LoadType,Value,CurvatureCoeff,WobbleCoeff,
-                                            LossAnchorage,LossShortening,LossCreep,LossShrinkage,LossSteelRelax,
-                                            Replace,itemType)
+        ret = self.__Model.TendonObj.SetLoadForceStress(name,loadPat,JackFrom,LoadType,Value,CurvatureCoeff,WobbleCoeff,LossAnchorage,LossShortening,LossCreep,LossShrinkage,LossSteelRelax,Replace,itemType)
+        return ret
 
     def LoadGravity(self,name,loadPat,x,y,z,Replace=True,CSys="Global",itemType=0):
         """
@@ -2575,7 +2619,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetLoadGravity(name,loadPat,x,y,z,Replace,CSys,itemType)
+        ret = self.__Model.TendonObj.SetLoadGravity(name,loadPat,x,y,z,Replace,CSys,itemType)
+        return ret
 
     def LoadStrain(self,name,LoadPat,Strain,Replace=True,PatternName="",itemType=0):
         """
@@ -2596,7 +2641,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetLoadStrain(name,LoadPat,Strain,Replace,PatternName,itemType)
+        ret = self.__Model.TendonObj.SetLoadStrain(name,LoadPat,Strain,Replace,PatternName,itemType)
+        return ret
 
     def LoadTemperature(self,name,LoadPat,Val,PatternName="",Replace=True,itemType=0):
         """
@@ -2617,7 +2663,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetLoadTemperature(name,LoadPat,Val,PatternName,Replace,itemType)
+        ret = self.__Model.TendonObj.SetLoadTemperature(name,LoadPat,Val,PatternName,Replace,itemType)
+        return ret
 
     def LocalAxes(self,name,Ang,itemType=0):
         """
@@ -2633,7 +2680,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetLocalAxes(name,Ang,itemType)
+        ret = self.__Model.TendonObj.SetLocalAxes(name,Ang,itemType)
+        return ret
 
     def MatTemp(self,name,Temp,PatternName="",itemType=0):
         """
@@ -2652,7 +2700,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetMatTemp(name,Temp,PatternName,itemType)
+        ret = self.__Model.TendonObj.SetMatTemp(name,Temp,PatternName,itemType)
+        return ret
 
     def Property(self,name,PropName,itemType=0):
         """
@@ -2667,7 +2716,8 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetProperty(name,PropName,itemType)
+        ret = self.__Model.TendonObj.SetProperty(name,PropName,itemType)
+        return ret
 
     def TCLimits(self,name,LimitCompressionExists,LimitCompression,
                                      LimitTensionExists,LimitTension,itemType=0):
@@ -2685,8 +2735,9 @@ class TendonObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.TendonObj.SetTCLimits(name,LimitCompressionExists,LimitCompression,
+        ret = self.__Model.TendonObj.SetTCLimits(name,LimitCompressionExists,LimitCompression,
                                      LimitTensionExists,LimitTension,itemType)
+        return ret
 
     def TendonData(self,name,NumberPoints,MyType,x,y,z,CSys="Global"):
         """
@@ -2716,7 +2767,8 @@ class TendonObj_Set:
             It is Local or the name of a defined coordinate system.Local means that the point coordinates
             are in the local system of the specified tendon object with the origin assumed to be at the I-End of the tendon.
         """
-        self.__Model.TendonObj.SetTendonData(name,NumberPoints,MyType,x,y,z,CSys)
+        ret = self.__Model.TendonObj.SetTendonData(name,NumberPoints,MyType,x,y,z,CSys)
+        return ret
 
 class TendonObj_Get:
     def __init__(self,Sapobj):
@@ -2737,8 +2789,8 @@ class TendonObj_Get:
         [index,Value]
         Value(float)-The maximum discretization length for the tendon. [L]
         """
-        result=self.__Model.TendonObj.GetDiscretization(name)
-        return result
+        ret=self.__Model.TendonObj.GetDiscretization(name)
+        return ret
 
     def GroupAssign(self,name):
         """
@@ -2750,8 +2802,8 @@ class TendonObj_Get:
         numberGroups(int)-The number of group names retrieved.
         Groups(str)-The names of the groups to which the tendon object is assigned
         """
-        result=self.__Model.TendonObj.GetGroupAssign(name)
-        return result
+        ret=self.__Model.TendonObj.GetGroupAssign(name)
+        return ret
 
     def LoadDeformation(self,name):
         """
@@ -2765,8 +2817,8 @@ class TendonObj_Get:
         LoadPat(str list)-This is an array that includes the name of the load pattern associated with each deformation load
         U1(float list)-This is an array of axial deformation load values. [L]
         """
-        result=self.__Model.TendonObj.GetLoadDeformation(name)
-        return result
+        ret=self.__Model.TendonObj.GetLoadDeformation(name)
+        return ret
 
     def LoadedGroup(self,name):
         """
@@ -2779,8 +2831,8 @@ class TendonObj_Get:
         [index,GroupName]
         GroupName(str)-This is the name of an existing group. All objects in the specified group can be loaded by the tendon.
         """
-        result=self.__Model.TendonObj.GetLoadedGroup(name)
-        return result
+        ret=self.__Model.TendonObj.GetLoadedGroup(name)
+        return ret
 
     def LoadForceStress(self,name):
         """
@@ -2808,8 +2860,8 @@ class TendonObj_Get:
         LossShrinkage(float list)-This is an array that includes the tendon stress loss due to shrinkage. [F/L2]
         LossSteelRelax(float list)-This is an array that includes the tendon stress loss due to tendon steel relaxation. [F/L2]
         """
-        result=self.__Model.TendonObj.GetLoadForceStress(name)
-        return result
+        ret=self.__Model.TendonObj.GetLoadForceStress(name)
+        return ret
 
     def LoadGravity(self,name):
         """
@@ -2826,8 +2878,8 @@ class TendonObj_Get:
         x,y,z(float list)-These are arrays of gravity load multipliers in the x, y and z directions of the specified
             coordinate system.
         """
-        result=self.__Model.TendonObj.GetLoadGravity(name)
-        return result
+        ret=self.__Model.TendonObj.GetLoadGravity(name)
+        return ret
 
     def LoadStrain(self,name):
         """
@@ -2842,8 +2894,8 @@ class TendonObj_Get:
         Strain(float)-This is an array that includes the axial strain value. [L/L]
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the strain load.
         """
-        result=self.__Model.TendonObj.GetLoadStrain(name)
-        return result
+        ret=self.__Model.TendonObj.GetLoadStrain(name)
+        return ret
 
     def LoadTemperature(self,name):
         """
@@ -2859,8 +2911,8 @@ class TendonObj_Get:
         Val(float list)-This is an array that includes the temperature load value. [T]
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the temperature load
         """
-        result=self.__Model.TendonObj.GetLoadTemperature(name)
-        return result
+        ret=self.__Model.TendonObj.GetLoadTemperature(name)
+        return ret
 
     def LocalAxes(self,name):
         """
@@ -2873,8 +2925,8 @@ class TendonObj_Get:
             the default orientation. The rotation for a positive angle appears counter clockwise when the local +1
             axis is pointing toward you. [deg]
         """
-        result=self.__Model.TendonObj.GetLocalAxes(name)
-        return result
+        ret=self.__Model.TendonObj.GetLocalAxes(name)
+        return ret
 
     def MatTemp(self,name):
         """
@@ -2888,8 +2940,8 @@ class TendonObj_Get:
             The material temperature at each end of the object is equal to the specified temperature multiplied by the
             pattern value at the joint at the end of the tendon object.
         """
-        result=self.__Model.TendonObj.GetMatTemp(name)
-        return result
+        ret=self.__Model.TendonObj.GetMatTemp(name)
+        return ret
 
     def NameList(self):
         """
@@ -2899,8 +2951,8 @@ class TendonObj_Get:
         NumberNames(int)-The number of tendon object names retrieved by the program.
         MyName(str list)-This is a one-dimensional array of tendon object names.
         """
-        result=self.__Model.TendonObj.GetNameList()
-        return result
+        ret=self.__Model.TendonObj.GetNameList()
+        return ret
 
     def Points(self,name):
         """
@@ -2912,8 +2964,8 @@ class TendonObj_Get:
         Point1(str)-The name of the point object at the I-End of the specified tendon object.
         Point2(str)-The name of the point object at the J-End of the specified tendon object.
         """
-        result=self.__Model.TendonObj.GetPoints(name)
-        return result
+        ret=self.__Model.TendonObj.GetPoints(name)
+        return ret
 
     def Property(self,name):
         """
@@ -2924,8 +2976,8 @@ class TendonObj_Get:
         [index,PropName]
         PropName(str)-The name of the tendon property assigned to the tendon object
         """
-        result=self.__Model.TendonObj.GetProperty(name)
-        return result
+        ret=self.__Model.TendonObj.GetProperty(name)
+        return ret
 
     def TCLimits(self,name):
         """
@@ -2939,8 +2991,8 @@ class TendonObj_Get:
         LimitTensionExists(bool)-This item is True if a tension force limit exists for the tendon object.
         LimitTension(float)-The tension force limit for the tendon object. [F]
         """
-        result=self.__Model.TendonObj.GetTCLimits(name)
-        return result
+        ret=self.__Model.TendonObj.GetTCLimits(name)
+        return ret
 
     def TendonData(self,name):
         """
@@ -2969,8 +3021,8 @@ class TendonObj_Get:
         z(float list)-This is an array of the Z (or local 3) coordinate of each point in the coordinate system
             specified by CSys. [L]
         """
-        result=self.__Model.TendonObj.GetTendonData(name)
-        return result
+        ret=self.__Model.TendonObj.GetTendonData(name)
+        return ret
 
     def TendonGeometry(self,name):
         """
@@ -2987,8 +3039,8 @@ class TendonObj_Get:
         z(float list)-This is an array of the Z (or local 3) coordinate of each point in the coordinate system
             specified by CSys. [L]
         """
-        result=self.__Model.TendonObj.GetTendonGeometry(name)
-        return result
+        ret=self.__Model.TendonObj.GetTendonGeometry(name)
+        return ret
 
     def TransformationMatrix(self,name):
         """
@@ -3007,8 +3059,8 @@ class TendonObj_Get:
             from the local coordinate system to the present coordinate system is the same as that shown above for the global
             system if you substitute the present system for the global system.
         """
-        result=self.__Model.TendonObj.GetTransformationMatrix(name)
-        return result
+        ret=self.__Model.TendonObj.GetTransformationMatrix(name)
+        return ret
 
 class SapTendonObj:
     def __init__(self,Sapobj):
@@ -3042,7 +3094,8 @@ class SapTendonObj:
         # used for another frame, cable or tendon object, the UserName is assigned to the tendon object; otherwise
         # a default name is assigned to the tendon object.
         name = ""
-        self.__Model.TendonObj.AddByCoord(xi,yi,zi,xj,yj,zj,name,PropName,UserName,CSsy)
+        ret = self.__Model.TendonObj.AddByCoord(xi,yi,zi,xj,yj,zj,name,PropName,UserName,CSsy)
+        return ret
 
     def AddByPoint(self,Point1,Point2,PropName="Default",UserName=""):
         """
@@ -3062,14 +3115,15 @@ class SapTendonObj:
         # used for another frame, cable or tendon object, the UserName is assigned to the tendon object; otherwise
         # a default name is assigned to the tendon object.
         name = ""
-        self.__Model.TendonObj.AddByPoint(Point1,Point2,name,PropName,UserName)
+        ret = self.__Model.TendonObj.AddByPoint(Point1,Point2,name,PropName,UserName)
+        return ret
 
     def Count(self):
         """
         ---This function returns a count of the tendon objects in the model---
         """
-        result=self.__Model.TendonObj.Count()
-        return result
+        ret=self.__Model.TendonObj.Count()
+        return ret
 
 
 class AreaObj_Set:
@@ -3152,9 +3206,10 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetAutoMesh(name,MeshType,n1,n2,MaxSize1,MaxSize2,PointOnEdgeFromLine,
+        ret = self.__Model.AreaObj.SetAutoMesh(name,MeshType,n1,n2,MaxSize1,MaxSize2,PointOnEdgeFromLine,
                                    PointOnEdgeFromPoint,ExtendCookieCutLines,Rotation,MaxSizeGeneral,LocalAxesOnEdge,
                                     LocalAxesOnFace,ResTraintsOnEdge,RestraintsOnFace,Group,SubMesh,SubMeshSize,itemType)
+        return ret
 
     def EdgeConstraint(self,name,ConstraintExists,itemType=0):
         """
@@ -3169,7 +3224,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetEdgeConstraint(name,ConstraintExists,itemType)
+        ret = self.__Model.AreaObj.SetEdgeConstraint(name,ConstraintExists,itemType)
+        return ret
 
     def GroupAssign(self,name,GroupName,Remove=False,itemType=0):
         """
@@ -3185,7 +3241,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetGroupAssign(name,GroupName,Remove,itemType)
+        ret = self.__Model.AreaObj.SetGroupAssign(name,GroupName,Remove,itemType)
+        return ret
 
     def LoadGravity(self,name,LoadPat,x,y,z,Replace=True,CSys="Global",itemType=0):
         """
@@ -3203,7 +3260,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadGravity(name,LoadPat,x,y,z,Replace,CSys,itemType)
+        ret = self.__Model.AreaObj.SetLoadGravity(name,LoadPat,x,y,z,Replace,CSys,itemType)
+        return ret
 
     def LoadPorePressure(self,name,LoadPat,Value,PatternName="",Replace=True,itemType=0):
         """
@@ -3224,7 +3282,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadPorePressure(name,LoadPat,Value,PatternName,Replace,itemType)
+        ret = self.__Model.AreaObj.SetLoadPorePressure(name,LoadPat,Value,PatternName,Replace,itemType)
+        return ret
 
     def LoadRotate(self,name,loadPat,Value,itemType=0):
         """
@@ -3239,7 +3298,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadRotate(name,loadPat,Value,itemType)
+        ret = self.__Model.AreaObj.SetLoadRotate(name,loadPat,Value,itemType)
+        return ret
 
     def LoadStrain(self,name,LoadPat,component,Value,Replace=True,PatternName="",itemType=0):
         """
@@ -3263,7 +3323,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadStrain(name,LoadPat,component,Value,Replace,PatternName,itemType)
+        ret = self.__Model.AreaObj.SetLoadStrain(name,LoadPat,component,Value,Replace,PatternName,itemType)
+        return ret
 
     def LoadSurfacePressure(self,name,LoadPat,Face,Value,PatternName="",Replace=True,itemType=0):
         """
@@ -3289,7 +3350,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadSurfacePressure(name,LoadPat,Face,Value,PatternName,Replace,itemType)
+        ret = self.__Model.AreaObj.SetLoadSurfacePressure(name,LoadPat,Face,Value,PatternName,Replace,itemType)
+        return ret
 
     def LoadTemperature(self,name,LoadPat,MyType,Value,PatternName="",Replace=True,itemType=0):
         """
@@ -3312,7 +3374,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadTemperature(name,LoadPat,MyType,Value,PatternName,Replace,itemType)
+        ret = self.__Model.AreaObj.SetLoadTemperature(name,LoadPat,MyType,Value,PatternName,Replace,itemType)
+        return ret
 
     def LoadUniform(self,name,LoadPat,Value,Dir,Replace=True,CSys="Global",itemType=0):
         """
@@ -3344,7 +3407,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadUniform(name,LoadPat,Value,Dir,Replace,CSys,itemType)
+        ret = self.__Model.AreaObj.SetLoadUniform(name,LoadPat,Value,Dir,Replace,CSys,itemType)
+        return ret
 
     def LoadUniformToFrame(self,name,LoadPat,Value,Dir,DistType,Replace=True,CSys="Global",itemType=0):
         """
@@ -3380,7 +3444,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadUniformToFrame(name,LoadPat,Value,Dir,DistType,Replace,CSys,itemType)
+        ret = self.__Model.AreaObj.SetLoadUniformToFrame(name,LoadPat,Value,Dir,DistType,Replace,CSys,itemType)
+        return ret
 
     def LoadWindPressure_1(self,name,LoadPat,MyType,Cp,DistributionType,itemType=0):
         """
@@ -3400,7 +3465,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLoadWindPressure_1(name,LoadPat,MyType,Cp,DistributionType,itemType)
+        ret = self.__Model.AreaObj.SetLoadWindPressure_1(name,LoadPat,MyType,Cp,DistributionType,itemType)
+        return ret
 
     def LocalAxes(self,name,Ang,itemType=0):
         """
@@ -3416,7 +3482,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetLocalAxes(name,Ang,itemType)
+        ret = self.__Model.AreaObj.SetLocalAxes(name,Ang,itemType)
+        return ret
 
     def Mass(self,name,MassOverL,Replace=False,itemType=0):
         """
@@ -3433,7 +3500,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetMass(name,MassOverL,Replace,itemType)
+        ret = self.__Model.AreaObj.SetMass(name,MassOverL,Replace,itemType)
+        return ret
 
     def MatTemp(self,name,Temp,PatternName="",itemType=0):
         """
@@ -3453,7 +3521,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetMatTemp(name,Temp,PatternName,itemType)
+        ret = self.__Model.AreaObj.SetMatTemp(name,Temp,PatternName,itemType)
+        return ret
 
     def Modifiers(self,name,Value,itemType=0):
         """
@@ -3477,7 +3546,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetModifiers(name,Value,itemType)
+        ret = self.__Model.AreaObj.SetModifiers(name,Value,itemType)
+        return ret
 
     def NotionalSize(self,name,style,Value):
         """
@@ -3495,7 +3565,8 @@ class AreaObj_Set:
             size; for stype is “User”, the Value represents for the user-defined notional size [L]; for stype is “None”,
             the Value will not be used and can be set to 1.
         """
-        self.__Model.PropArea.SetNotionalSize(name,style,Value)
+        ret = self.__Model.PropArea.SetNotionalSize(name,style,Value)
+        return ret
 
     def Offsets(self,name,OffsetType,OffsetPattern,OffsetPatternSF,Offset,itemType=0):
         """
@@ -3518,7 +3589,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetOffsets(name,OffsetType,OffsetPattern,OffsetPatternSF,Offset,itemType)
+        ret = self.__Model.AreaObj.SetOffsets(name,OffsetType,OffsetPattern,OffsetPatternSF,Offset,itemType)
+        return ret
 
     def Property(self,name,PropName,itemType=0):
         """
@@ -3533,7 +3605,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.AreaObj.SetProperty(name,PropName,itemType)
+        ret = self.__Model.AreaObj.SetProperty(name,PropName,itemType)
+        return ret
 
     def Spring(self,name,myType,s,simpleSpringType,LinkProp,Face,SpringLocalOneType,Dir,
                                  OutWard,Vec,Ang,Replace,CSys="Local",itemType=0):
@@ -3581,8 +3654,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignor
         """
-        self.__Model.AreaObj.SetSpring(name,myType,s,simpleSpringType,LinkProp,Face,SpringLocalOneType,Dir,
-                                 OutWard,Vec,Ang,Replace,CSys,itemType)
+        ret = self.__Model.AreaObj.SetSpring(name,myType,s,simpleSpringType,LinkProp,Face,SpringLocalOneType,Dir,OutWard,Vec,Ang,Replace,CSys,itemType)
+        return ret
 
     def Thickness(self,name,ThinknessType,ThinknessPattern,ThicknessPatternSF,Thickness,itemType=0):
         """
@@ -3605,7 +3678,8 @@ class AreaObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignor
         """
-        self.__Model.AreaObj.SetThickness(name,ThinknessType,ThinknessPattern,ThicknessPatternSF,Thickness,itemType)
+        ret = self.__Model.AreaObj.SetThickness(name,ThinknessType,ThinknessPattern,ThicknessPatternSF,Thickness,itemType)
+        return ret
 
 class AreaObj_Get:
     def __init__(self,Sapobj):
@@ -3682,8 +3756,8 @@ class AreaObj_Get:
             remain when the auto meshing is complete. [L]If this item is input as 0, the default value is used.
             The default value is 12 inches if the database units are English or 30 centimeters if the database units are metric.
         """
-        result=self.__Model.AreaObj.GetAutoMesh(name)
-        return result
+        ret=self.__Model.AreaObj.GetAutoMesh(name)
+        return ret
 
     def EdgeConstraint(self,name):
         """
@@ -3695,8 +3769,8 @@ class AreaObj_Get:
         ConstraintExists(bool)-This item is True if an automatic edge constraint is generated by the program for
             the area object in the analysis model.
         """
-        result=self.__Model.AreaObj.GetEdgeConstraint(name)
-        return result
+        ret=self.__Model.AreaObj.GetEdgeConstraint(name)
+        return ret
 
     def Elm(self,name):
         """
@@ -3710,8 +3784,8 @@ class AreaObj_Get:
         nelm(int)-The number of area elements created from the specified area object
         Elm(str list)-An array that includes the name of a area element created from the specified area object.
         """
-        result=self.__Model.AreaObj.GetElm(name)
-        return result
+        ret=self.__Model.AreaObj.GetElm(name)
+        return ret
 
     def GroupAssign(self,name):
         """
@@ -3723,8 +3797,8 @@ class AreaObj_Get:
         NumberGroups(int)-The number of group names retrieved.
         Groups(str list)-The names of the groups to which the area object is assigned
         """
-        result=self.__Model.AreaObj.GetGroupAssign(name)
-        return result
+        ret=self.__Model.AreaObj.GetGroupAssign(name)
+        return ret
 
     def LoadGravity(self,name):
         """
@@ -3741,8 +3815,8 @@ class AreaObj_Get:
         x,y,z(float list)-These are arrays of gravity load multipliers in the x, y and z directions of the specified
             coordinate system
         """
-        result=self.__Model.AreaObj.GetLoadGravity(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadGravity(name)
+        return ret
 
     def LoadPorePressure(self,name):
         """
@@ -3758,8 +3832,8 @@ class AreaObj_Get:
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the pore
             pressure load
         """
-        result=self.__Model.AreaObj.GetLoadPorePressure(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadPorePressure(name)
+        return ret
 
     def LoadRotate(self,name):
         """
@@ -3773,8 +3847,8 @@ class AreaObj_Get:
         LoadPat(str list)-This is an array that includes the name of the load pattern associated with each rotate load
         Value(float list)-This is an array that includes the angular velocity value. [Cyc/T]
         """
-        result=self.__Model.AreaObj.GetLoadRotate(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadRotate(name)
+        return ret
 
     def LoadStrain(self,name):
         """
@@ -3794,8 +3868,8 @@ class AreaObj_Get:
             and [1/L] for Component = 4, 5 and 6
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the strain load.
         """
-        result=self.__Model.AreaObj.GetLoadStrain(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadStrain(name)
+        return ret
 
     def LoadSurfacePressure(self,name):
         """
@@ -3816,8 +3890,8 @@ class AreaObj_Get:
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify
             the surface pressure load.
         """
-        result=self.__Model.AreaObj.GetLoadSurfacePressure(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadSurfacePressure(name)
+        return ret
 
     def LoadTemperature(self,name):
         """
@@ -3834,8 +3908,8 @@ class AreaObj_Get:
         Value(float list)-This is an array that includes the temperature load value. [T] for MyType= 1 and [T/L] for MyType= 3
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the temperature load.
         """
-        result=self.__Model.AreaObj.GetLoadTemperature(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadTemperature(name)
+        return ret
 
     def LoadUniform(self,name):
         """
@@ -3864,8 +3938,8 @@ class AreaObj_Get:
             The positive gravity direction (see Dir = 10 and 11) is in the negative Global Z direction.
         Value(float)-The uniform load value. [F/L2]
         """
-        result=self.__Model.AreaObj.GetLoadUniform(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadUniform(name)
+        return ret
 
     def LoadUniformToFrame(self,name):
         """
@@ -3897,8 +3971,8 @@ class AreaObj_Get:
             One-way distribution is parallel to the area object local 1 axis. Two-way distribution is parallel
             to the area object local 1 and 2 axes.
         """
-        result=self.__Model.AreaObj.GetLoadUniformToFrame(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadUniformToFrame(name)
+        return ret
 
     def LoadWindPressure_1(self,name):
         """
@@ -3919,8 +3993,8 @@ class AreaObj_Get:
             2 = To Frames – One-way
             3 = To Frames – Two-way
         """
-        result=self.__Model.AreaObj.GetLoadWindPressure_1(name)
-        return result
+        ret=self.__Model.AreaObj.GetLoadWindPressure_1(name)
+        return ret
 
     def LocalAxes(self,name):
         """
@@ -3935,8 +4009,8 @@ class AreaObj_Get:
         Advanced(bool)-This item is True if the area object local axes orientation was obtained using advanced
             local axes parameters.
         """
-        result=self.__Model.AreaObj.GetLocalAxes(name)
-        return result
+        ret=self.__Model.AreaObj.GetLocalAxes(name)
+        return ret
 
     def Mass(self,name):
         """
@@ -3947,8 +4021,8 @@ class AreaObj_Get:
         [index,MassOverL2]
         MassOverL2(float)-The mass per unit area assigned to the area object. [M/L2]
         """
-        result=self.__Model.AreaObj.GetMass(name)
-        return result
+        ret=self.__Model.AreaObj.GetMass(name)
+        return ret
 
     def MatTemp(self,name):
         """
@@ -3965,8 +4039,8 @@ class AreaObj_Get:
             multiplied by the pattern value at the associated point object. The material temperature at other points
             in the area object is calculated by interpolation from the corner points.
         """
-        result=self.__Model.AreaObj.GetMatTemp(name)
-        return result
+        ret=self.__Model.AreaObj.GetMatTemp(name)
+        return ret
 
     def Modifiers(self,name):
         """
@@ -3987,8 +4061,8 @@ class AreaObj_Get:
             Value(8) = Mass modifier
             Value(9) = Weight modifier
         """
-        result=self.__Model.AreaObj.GetModifiers(name)
-        return result
+        ret=self.__Model.AreaObj.GetModifiers(name)
+        return ret
 
     def NameList(self):
         """
@@ -3998,8 +4072,8 @@ class AreaObj_Get:
         NumberNames(int)-The number of area object names retrieved by the program
         MyName(str list)-This is a one-dimensional array of area object names
         """
-        result=self.__Model.AreaObj.GetNameList()
-        return result
+        ret=self.__Model.AreaObj.GetNameList()
+        return ret
 
     def NotionalSize(self,name):
         """
@@ -4019,8 +4093,8 @@ class AreaObj_Get:
             notional size; for stype is “User”, the Value represents for the user-defined notional size [L];
             for stype is “None”, the Value will not be used and can be set to 1.
         """
-        result=self.__Model.PropArea.GetNotionalSize(name)
-        return result
+        ret=self.__Model.PropArea.GetNotionalSize(name)
+        return ret
 
     def Offsets(self,name):
         """
@@ -4040,8 +4114,8 @@ class AreaObj_Get:
         Offset(float list)-This item applies only when OffsetType = 2. It is an array of joint offsets for
             each of the points that define the area object. [L]
         """
-        result=self.__Model.AreaObj.GetOffsets(name)
-        return result
+        ret=self.__Model.AreaObj.GetOffsets(name)
+        return ret
 
     def Points(self,name):
         """
@@ -4054,8 +4128,8 @@ class AreaObj_Get:
         Point(str list)-This is an array containing the names of the point objects that define the area object.
             The point names are in order around the area object
         """
-        result=self.__Model.AreaObj.GetPoints(name)
-        return result
+        ret=self.__Model.AreaObj.GetPoints(name)
+        return ret
 
     def Property(self,name):
         """
@@ -4067,8 +4141,8 @@ class AreaObj_Get:
         PropName(str)-The name of the area property assigned to the area object. This item is None if no area
             property is assigned to the area object.
         """
-        result=self.__Model.AreaObj.GetProperty(name)
-        return result
+        ret=self.__Model.AreaObj.GetProperty(name)
+        return ret
 
     def Spring(self,name):
         """
@@ -4111,8 +4185,8 @@ class AreaObj_Get:
         Ang(float)-This is the angle that the link local 2-axis is rotated from its default orientation. This item
             applies only when MyType = 2. [deg]
         """
-        result=self.__Model.AreaObj.GetSpring(name)
-        return result
+        ret=self.__Model.AreaObj.GetSpring(name)
+        return ret
 
     def Thickness(self,name):
         """
@@ -4132,8 +4206,8 @@ class AreaObj_Get:
         Thickness(float list)-This item applies only when ThicknessType = 2. It is an array of thicknesses at each
             of the points that define the area object. [L]
         """
-        result=self.__Model.AreaObj.GetThickness(name)
-        return result
+        ret=self.__Model.AreaObj.GetThickness(name)
+        return ret
 
     def TransformationMatrix(self,name):
         """
@@ -4146,8 +4220,8 @@ class AreaObj_Get:
             following matrix equation shows how the transformation matrix is used to convert items from the area
             object local coordinate system to the global coordinate system.
         """
-        result=self.__Model.AreaObj.GetTransformationMatrix(name)
-        return result
+        ret=self.__Model.AreaObj.GetTransformationMatrix(name)
+        return ret
 
 class SapAreaObj:
     def __init__(self,Sapobj):
@@ -4181,7 +4255,8 @@ class SapAreaObj:
         # used for another area object, the UserName is assigned to the area object; otherwise a default name is
         # assigned to the area object.
         name = ""
-        self.__Model.AreaObj.AddByCoord(NumberPoints,x,y,z,name,PropName,UserName,CSys)
+        ret = self.__Model.AreaObj.AddByCoord(NumberPoints,x,y,z,name,PropName,UserName,CSys)
+        return ret
 
     def AddByPoint(self,NumberPoints,Point,PropName="Default",UserName=""):
         """
@@ -4201,7 +4276,8 @@ class SapAreaObj:
         # used for another area object, the UserName is assigned to the area object; otherwise a default name is
         # assigned to the area object.
         name = ""
-        self.__Model.AreaObj.AddByPoint(NumberPoints,Point,name,PropName,UserName)
+        ret = self.__Model.AreaObj.AddByPoint(NumberPoints,Point,name,PropName,UserName)
+        return ret
 
     def ChangeName(self,name,NewName):
         """
@@ -4210,14 +4286,15 @@ class SapAreaObj:
         name(str)-The existing name of a defined area object.
         NewName(str)-The new name for the area object.
         """
-        self.__Model.AreaObj.ChangeName(name,NewName)
+        ret = self.__Model.AreaObj.ChangeName(name,NewName)
+        return ret
 
     def Count(self):
         """
         ---This function returns a count of the area objects in the model---
         """
-        result=self.__Model.AreaObj.Count()
-        return result
+        ret=self.__Model.AreaObj.Count()
+        return ret
 
 
 class SolidObj_Set:
@@ -4265,7 +4342,8 @@ class SolidObj_Set:
             restraint/constraint, then, if an added point on that face and the original corner points for the face
             have the same local axes definition, the program assigns the restraint/constraint to the added point.
         """
-        self.__Model.SolidObj.SetAutoMesh(name,MeshType,n1,n2,n3,MaxSize1,MaxSize2,MaxSize3,RestraintsOnEdge,RestraintOnFace)
+        ret = self.__Model.SolidObj.SetAutoMesh(name,MeshType,n1,n2,n3,MaxSize1,MaxSize2,MaxSize3,RestraintsOnEdge,RestraintOnFace)
+        return ret
 
     def EdgeConstraint(self,Name,ConstraintExists,itemType=0):
         """
@@ -4280,7 +4358,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetEdgeConstraint(Name,ConstraintExists,itemType)
+        ret = self.__Model.SolidObj.SetEdgeConstraint(Name,ConstraintExists,itemType)
+        return ret
 
     def GroupAssign(self,Name,GroupName,Remove=False,itemType=0):
         """
@@ -4296,7 +4375,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetGroupAssign(Name,GroupName,Remove,itemType)
+        ret = self.__Model.SolidObj.SetGroupAssign(Name,GroupName,Remove,itemType)
+        return ret
 
     def LoadGravity(self,Name,LoadPat,x,y,z,Replace=True,CSys="Global",itemType=0):
         """
@@ -4314,7 +4394,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetLoadGravity(Name,LoadPat,x,y,z,Replace,CSys,itemType)
+        ret = self.__Model.SolidObj.SetLoadGravity(Name,LoadPat,x,y,z,Replace,CSys,itemType)
+        return ret
 
     def LoadPorePressure(self,Name,LoadPat,Value,PatternName="",Replace=True,itemType=0):
         """
@@ -4335,7 +4416,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetLoadPorePressure(Name,LoadPat,Value,PatternName,Replace,itemType)
+        ret = self.__Model.SolidObj.SetLoadPorePressure(Name,LoadPat,Value,PatternName,Replace,itemType)
+        return ret
 
     def LoadStrain(self,Name,LoadPat,Component,Value,Replace=True,PatternName="",itemType=0):
         """
@@ -4363,7 +4445,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetLoadStrain(Name,LoadPat,Component,Value,Replace,PatternName,itemType)
+        ret = self.__Model.SolidObj.SetLoadStrain(Name,LoadPat,Component,Value,Replace,PatternName,itemType)
+        return ret
 
     def LoadSurfacePressure(self,Name,LoadPat,Face,Value,PatternName="",Replace=True,itemType=0):
         """
@@ -4385,7 +4468,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetLoadSurfacePressure(Name,LoadPat,Face,Value,PatternName,Replace,itemType)
+        ret = self.__Model.SolidObj.SetLoadSurfacePressure(Name,LoadPat,Face,Value,PatternName,Replace,itemType)
+        return ret
 
     def LoadTemperature(self,Name,LoadPat,Value,PatternName="",Replace=True,itemType=0):
         """
@@ -4406,7 +4490,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetLoadTemperature(Name,LoadPat,Value,PatternName,Replace,itemType)
+        ret = self.__Model.SolidObj.SetLoadTemperature(Name,LoadPat,Value,PatternName,Replace,itemType)
+        return ret
 
     def LocalAxes(self,Name,a,b,c,itemType=0):
         """
@@ -4424,7 +4509,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetLocalAxes(Name,a,b,c,itemType)
+        ret = self.__Model.SolidObj.SetLocalAxes(Name,a,b,c,itemType)
+        return ret
 
     def MatTemp(self,Name,Temp,PatternName="",itemType=0):
         """
@@ -4444,7 +4530,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetMatTemp(Name,Temp,PatternName,itemType)
+        ret = self.__Model.SolidObj.SetMatTemp(Name,Temp,PatternName,itemType)
+        return ret
 
     def Property(self,Name,PropName,itemType=0):
         """
@@ -4458,7 +4545,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetProperty(Name,PropName,itemType)
+        ret = self.__Model.SolidObj.SetProperty(Name,PropName,itemType)
+        return ret
 
     def Spring(self,Name,MyType,s,SimpleSpringType,LinkProp,Face,SpringLocalOneType,Dir,
                                   Outward,Vec,Ang,Replace,CSys="Local",itemType=0):
@@ -4502,8 +4590,8 @@ class SolidObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.SolidObj.SetSpring(Name,MyType,s,SimpleSpringType,LinkProp,Face,SpringLocalOneType,Dir,
-                                  Outward,Vec,Ang,Replace,CSys,itemType)
+        ret = self.__Model.SolidObj.SetSpring(Name,MyType,s,SimpleSpringType,LinkProp,Face,SpringLocalOneType,Dir,Outward,Vec,Ang,Replace,CSys,itemType)
+        return ret
 
 class SolidObj_Get:
     def __init__(self,Sapobj):
@@ -4552,8 +4640,8 @@ class SolidObj_Get:
             restraint/constraint, then, if an added point on that face and the original corner points for the face
             have the same local axes definition, the program assigns the restraint/constraint to the added point.
         """
-        result=self.__Model.SolidObj.GetAutoMesh(name)
-        return result
+        ret=self.__Model.SolidObj.GetAutoMesh(name)
+        return ret
 
     def EdgeConstraint(self,name):
         """
@@ -4566,8 +4654,8 @@ class SolidObj_Get:
         ConstraintExists(bool)-This item is True if an automatic edge constraint is generated by the
             program for the solid object in the analysis model
         """
-        result=self.__Model.SolidObj.GetEdgeConstraint(name)
-        return result
+        ret=self.__Model.SolidObj.GetEdgeConstraint(name)
+        return ret
 
     def Elm(self,Name):
         """
@@ -4582,8 +4670,8 @@ class SolidObj_Get:
         nelm(int)-The number of solid elements created from the specified solid object
         Elm(str list)-An array that includes the name of a solid element created from the specified solid object
         """
-        result=self.__Model.SolidObj.GetElm(Name)
-        return result
+        ret=self.__Model.SolidObj.GetElm(Name)
+        return ret
 
     def GroupAssign(self,Name):
         """
@@ -4596,8 +4684,8 @@ class SolidObj_Get:
         NumberGroups(int)-The number of group names retrieved
         Groups(str list)-The names of the groups to which the solid object is assigned
         """
-        result=self.__Model.SolidObj.GetGroupAssign(Name)
-        return result
+        ret=self.__Model.SolidObj.GetGroupAssign(Name)
+        return ret
 
     def LoadGravity(self,Name):
         """
@@ -4615,8 +4703,8 @@ class SolidObj_Get:
         x,y,z(float list)-These are arrays of gravity load multipliers in the x, y and z directions of the specified
             coordinate system
         """
-        result=self.__Model.SolidObj.GetLoadGravity(Name)
-        return result
+        ret=self.__Model.SolidObj.GetLoadGravity(Name)
+        return ret
 
     def LoadPorePressure(self,Name):
         """
@@ -4633,8 +4721,8 @@ class SolidObj_Get:
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the pore
             pressure load
         """
-        result=self.__Model.SolidObj.GetLoadPorePressure(Name)
-        return result
+        ret=self.__Model.SolidObj.GetLoadPorePressure(Name)
+        return ret
 
     def LoadStrain(self,Name):
         """
@@ -4652,8 +4740,8 @@ class SolidObj_Get:
         Value(float list)-This is an array that includes the strain value. [L/L]
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the strain load
         """
-        result=self.__Model.SolidObj.GetLoadStrain(Name)
-        return result
+        ret=self.__Model.SolidObj.GetLoadStrain(Name)
+        return ret
 
     def LoadSurfacePressure(self,Name):
         """
@@ -4672,8 +4760,8 @@ class SolidObj_Get:
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the
             surface pressure load
         """
-        result=self.__Model.SolidObj.GetLoadSurfacePressure(Name)
-        return result
+        ret=self.__Model.SolidObj.GetLoadSurfacePressure(Name)
+        return ret
 
     def LoadTemperature(self,Name):
         """
@@ -4689,8 +4777,8 @@ class SolidObj_Get:
         Value(float list)-This is an array that includes the temperature load value. [T]
         PatternName(str list)-This is an array that includes the joint pattern name, if any, used to specify the temperature load
         """
-        result=self.__Model.SolidObj.GetLoadTemperature(Name)
-        return result
+        ret=self.__Model.SolidObj.GetLoadTemperature(Name)
+        return ret
 
     def LocalAxes(self,Name):
         """
@@ -4708,8 +4796,8 @@ class SolidObj_Get:
         Advanced(bool)-This item is True if the solid object local axes orientation was obtained using advanced
             local axes parameters
         """
-        result=self.__Model.SolidObj.GetLocalAxes(Name)
-        return result
+        ret=self.__Model.SolidObj.GetLocalAxes(Name)
+        return ret
 
     def MatTemp(self,Name):
         """
@@ -4727,8 +4815,8 @@ class SolidObj_Get:
             at the associated point object. The material temperature at other points in the solid object is calculated by
             interpolation from the corner points.
         """
-        result=self.__Model.SolidObj.GetMatTemp(Name)
-        return result
+        ret=self.__Model.SolidObj.GetMatTemp(Name)
+        return ret
 
     def NameList(self):
         """
@@ -4739,8 +4827,8 @@ class SolidObj_Get:
         NumberNames(int)-The number of solid object names retrieved by the program
         MyName(str list)-This is a one-dimensional array of solid object names
         """
-        result=self.__Model.SolidObj.GetNameList()
-        return result
+        ret=self.__Model.SolidObj.GetNameList()
+        return ret
 
     def Points(self,Name):
         """
@@ -4752,8 +4840,8 @@ class SolidObj_Get:
 
         Point(str list)-This is an array containing the names of the corner point objects of the solid object
         """
-        result=self.__Model.SolidObj.GetPoints(Name)
-        return result
+        ret=self.__Model.SolidObj.GetPoints(Name)
+        return ret
 
     def Property(self,Name):
         """
@@ -4765,8 +4853,8 @@ class SolidObj_Get:
 
         PropName(str)-The name of the solid property assigned to the solid object
         """
-        result=self.__Model.SolidObj.GetProperty(Name)
-        return result
+        ret=self.__Model.SolidObj.GetProperty(Name)
+        return ret
 
     def Spring(self,Name):
         """
@@ -4814,8 +4902,8 @@ class SolidObj_Get:
         Ang(float)-This is the angle that the link local 2-axis is rotated from its default orientation.
             This item applies only when MyType = 2. [deg]
         """
-        result=self.__Model.SolidObj.GetSpring(Name)
-        return result
+        ret=self.__Model.SolidObj.GetSpring(Name)
+        return ret
 
     def TransformationMatrix(self,Name):
         """
@@ -4833,8 +4921,8 @@ class SolidObj_Get:
             from the local coordinate system to the present coordinate system is the same as that shown above for the global
             system if you substitute the present system for the global system.
         """
-        result=self.__Model.SolidObj.GetTransformationMatrix(Name)
-        return result
+        ret=self.__Model.SolidObj.GetTransformationMatrix(Name)
+        return ret
 
 class SapSolidObj:
     def __init__(self,Sapobj):
@@ -4868,7 +4956,8 @@ class SapSolidObj:
         # used for another solid object, the UserName is assigned to the solid object; otherwise a default name is
         # assigned to the solid object.
         name = ""
-        self.__Model.SolidObj.AddByCoord(x,y,z,name,PropName,UserName,CSys)
+        ret = self.__Model.SolidObj.AddByCoord(x,y,z,name,PropName,UserName,CSys)
+        return ret
 
     def AddByPoint(self,Point,PropName="Default",UserName=""):
         """
@@ -4885,14 +4974,15 @@ class SapSolidObj:
         # used for another solid object, the UserName is assigned to the solid object; otherwise a default name is
         # assigned to the solid object.
         name = ""
-        self.__Model.SolidObj.AddByPoint(Point,name,PropName,UserName)
+        ret = self.__Model.SolidObj.AddByPoint(Point,name,PropName,UserName)
+        return ret
 
     def Count(self):
         """
         ---This function returns a count of the solid objects in the model---
         """
-        result=self.__Model.SolidObj.Count()
-        return result
+        ret=self.__Model.SolidObj.Count()
+        return ret
 
 
 class LinkObj_Set:
@@ -4919,7 +5009,8 @@ class LinkObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.LinkObj.SetGroupAssign(Name,GroupName,Remove,itemType)
+        ret = self.__Model.LinkObj.SetGroupAssign(Name,GroupName,Remove,itemType)
+        return ret
 
     def LoadDeformation(self,Name,LoadPat,DOF,d,itemType=0):
         """
@@ -4943,7 +5034,8 @@ class LinkObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.LinkObj.SetLoadDeformation(Name,LoadPat,DOF,d,itemType)
+        ret = self.__Model.LinkObj.SetLoadDeformation(Name,LoadPat,DOF,d,itemType)
+        return ret
 
     def LoadGravity(self,Name,LoadPat,x,y,z,Replace=True,CSys="Global",itemType=0):
         """
@@ -4961,7 +5053,8 @@ class LinkObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.LinkObj.SetLoadGravity(Name,LoadPat,x,y,z,Replace,CSys,itemType)
+        ret = self.__Model.LinkObj.SetLoadGravity(Name,LoadPat,x,y,z,Replace,CSys,itemType)
+        return ret
 
     def LoadTargetForce(self,Name,LoadPat,DOF,f,RD,itemType=0):
         """
@@ -4994,7 +5087,8 @@ class LinkObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.LinkObj.SetLoadTargetForce(Name,LoadPat,DOF,f,RD,itemType)
+        ret = self.__Model.LinkObj.SetLoadTargetForce(Name,LoadPat,DOF,f,RD,itemType)
+        return ret
 
     def LocalAxes(self,Name,Ang,itemType=0):
         """
@@ -5011,7 +5105,8 @@ class LinkObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.LinkObj.SetLocalAxes(Name,Ang,itemType)
+        ret = self.__Model.LinkObj.SetLocalAxes(Name,Ang,itemType)
+        return ret
 
     def Property(self,Name,PropName,itemType=0):
         """
@@ -5025,7 +5120,8 @@ class LinkObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.LinkObj.SetProperty(Name,PropName,itemType)
+        ret = self.__Model.LinkObj.SetProperty(Name,PropName,itemType)
+        return ret
 
     def PropertyFD(self,Name,PropName,itemType=0):
         """
@@ -5040,7 +5136,8 @@ class LinkObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        self.__Model.LinkObj.SetPropertyFD(Name,PropName,itemType)
+        ret = self.__Model.LinkObj.SetPropertyFD(Name,PropName,itemType)
+        return ret
 
 class LinkObj_Get:
     def __init__(self,Sapobj):
@@ -5064,8 +5161,8 @@ class LinkObj_Get:
 
         Elm(str)-The name of the link element created from the specified link object
         """
-        result=self.__Model.LinkObj.GetElm(Name)
-        return result
+        ret=self.__Model.LinkObj.GetElm(Name)
+        return ret
 
     def GroupAssign(self,Name):
         """
@@ -5078,8 +5175,8 @@ class LinkObj_Get:
         NumberGroups(int)-The number of group names retrieved
         Groups(str list)-The names of the groups to which the link object is assigned
         """
-        result=self.__Model.LinkObj.GetGroupAssign(Name)
-        return result
+        ret=self.__Model.LinkObj.GetGroupAssign(Name)
+        return ret
 
     def LoadDeformation(self,Name):
         """
@@ -5114,8 +5211,8 @@ class LinkObj_Get:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignore
         """
-        result=self.__Model.LinkObj.GetLoadDeformation(Name)
-        return result
+        ret=self.__Model.LinkObj.GetLoadDeformation(Name)
+        return ret
 
     def LoadGravity(self,Name):
         """
@@ -5132,8 +5229,8 @@ class LinkObj_Get:
         CSys(str list)-This is an array that includes the name of the coordinate system associated with each gravity load
         x,y,z(float)-These are arrays of gravity load multipliers in the x, y and z directions of the specified coordinate system
         """
-        result=self.__Model.LinkObj.GetLoadGravity(Name)
-        return result
+        ret=self.__Model.LinkObj.GetLoadGravity(Name)
+        return ret
 
     def LoadTargetForce(self,Name):
         """
@@ -5172,8 +5269,8 @@ class LinkObj_Get:
             T5 = relative location for M2 target force
             T6 = relative location for M3 target force
         """
-        result=self.__Model.LinkObj.GetLoadTargetForce(Name)
-        return result
+        ret=self.__Model.LinkObj.GetLoadTargetForce(Name)
+        return ret
 
     def LocalAxes(self,Name):
         """
@@ -5189,8 +5286,8 @@ class LinkObj_Get:
             you. [deg]
         Advanced(bool)-This item is True if the link object local axes orientation was obtained using advanced local axes parameters
         """
-        result=self.__Model.LinkObj.GetLocalAxes(Name)
-        return result
+        ret=self.__Model.LinkObj.GetLocalAxes(Name)
+        return ret
 
     def NameList(self):
         """
@@ -5201,8 +5298,8 @@ class LinkObj_Get:
         NumberNames(int)-The number of link object names retrieved by the program
         MyName(str list)-This is a one-dimensional array of link object names
         """
-        result=self.__Model.LinkObj.GetNameList()
-        return result
+        ret=self.__Model.LinkObj.GetNameList()
+        return ret
 
     def Points(self,Name):
         """
@@ -5215,8 +5312,8 @@ class LinkObj_Get:
         Point1(str)-The name of the point object at the I-End of the specified link object
         Point2(str)-The name of the point object at the J-End of the specified link object
         """
-        result=self.__Model.LinkObj.GetPoints(Name)
-        return result
+        ret=self.__Model.LinkObj.GetPoints(Name)
+        return ret
 
     def Property(self,Name):
         """
@@ -5228,8 +5325,8 @@ class LinkObj_Get:
 
         PropName(str)-The name of the link property assigned to the link object
         """
-        result=self.__Model.LinkObj.GetProperty(Name)
-        return result
+        ret=self.__Model.LinkObj.GetProperty(Name)
+        return ret
 
     def PropertyFD(self,Name):
         """
@@ -5242,8 +5339,8 @@ class LinkObj_Get:
         PropName(str)-The name of the frequency dependent link property assigned to the link object. This item is
             None if there is no frequency dependent link property assigned to the link object
         """
-        result=self.__Model.LinkObj.GetPropertyFD(Name)
-        return result
+        ret=self.__Model.LinkObj.GetPropertyFD(Name)
+        return ret
 
     def TransformationMatrix(self,Name):
         """
@@ -5263,8 +5360,8 @@ class LinkObj_Get:
             from the local coordinate system to the present coordinate system is the same as that shown above for the global
             system if you substitute the present system for the global system.
         """
-        result=self.__Model.LinkObj.GetTransformationMatrix(Name)
-        return result
+        ret=self.__Model.LinkObj.GetTransformationMatrix(Name)
+        return ret
 
 class SapLinkObj:
     def __init__(self,Sapobj):
@@ -5300,7 +5397,8 @@ class SapLinkObj:
         # used for another link object, the UserName is assigned to the link object; otherwise a default name is
         # assigned to the link object
         Name=""
-        self.__Model.LinkObj.AddByCoord(xi,yi,zi,xj,yj,zj,Name,IsSingleJoint,PropName,UserName,CSys)
+        ret = self.__Model.LinkObj.AddByCoord(xi,yi,zi,xj,yj,zj,Name,IsSingleJoint,PropName,UserName,CSys)
+        return ret
 
     def AddByPoint(self,Point1,Point2,IsSingleJoint=False,PropName="Default",UserName=""):
         """
@@ -5328,5 +5426,5 @@ class SapLinkObj:
         """
         ---This function returns a count of the link objects in the model---
         """
-        result=self.__Model.LinkObj.Count()
-        return result
+        ret=self.__Model.LinkObj.Count()
+        return ret

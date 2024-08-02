@@ -24,7 +24,7 @@ class GetResults:
         """
         # get result by group name
         GroupElm = 2
-        ret = self._Sapobj.Results.JointReact(Name,GroupElm)
+        ret = self._Sapobj.Results.Joint.React(Name,GroupElm)
         colstart,colend = 6,12
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -72,7 +72,7 @@ class GetResults:
         """
         # get result by group name
         GroupElm = 2
-        ret = self._Sapobj.Results.FrameJointForce(Name,GroupElm)
+        ret = self._Sapobj.Results.Frame.JointForce(Name,GroupElm)
         colstart,colend = 7,13
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -96,7 +96,7 @@ class GetResults:
         """
         # get result by group name
         GroupElm = 2
-        ret = self._Sapobj.Results.LinkForce(Name,GroupElm)
+        ret = self._Sapobj.Results.Link.Force(Name,GroupElm)
         colstart,colend = 7,13
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -144,7 +144,7 @@ class GetResults:
         """
         # get result by group name
         GroupElm = 2
-        ret = self._Sapobj.Results.LinkDeformation(Name,GroupElm)
+        ret = self._Sapobj.Results.Link.Deformation(Name,GroupElm)
         colstart,colend = 6,12
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)

@@ -4,3 +4,4 @@ comtypes>=1.1.11
 rich
 loguru
 pathlib
+sectionproperties>=3.3.0

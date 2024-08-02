@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-__version__="0.1.2"
+__version__="0.1.3"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -16,7 +16,7 @@ setup(
     url="https://github.com/ganansuan647/Sap2000py",
     license="GPL Licence",
     keywords="Sap2000 API python",
-    python_requires=">=3.4.3",
+    python_requires=">=3.9.0",
     package_dir={"": "Sap2000py"},
     packages=find_packages("Sap2000py"),
     classifiers=[
@@ -32,5 +32,6 @@ setup(
         "loguru",
         "pathlib",
         "rich",
+        "sectionproperties>=3.3.0",
     ],
 )

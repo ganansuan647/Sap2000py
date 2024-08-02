@@ -10,13 +10,25 @@ from datetime import datetime
 from pathlib import Path
 import json
 
+class SapMeta(type):
+    __instance = None
+    def __init__(self,class_name,class_bases,class_dic):
+        self.__instance=object.__new__(self)  # Initialize the object corresponding to the singleton Saproject class.
+        self.__init__(self.__instance)
 
+    def __call__(self, *args, **kwargs):
+        if args or kwargs:
+            obj = object.__new__(self)
+            self.__init__(obj, *args, **kwargs)
+            return obj
+        else:
+            return self.__instance
 
 class Saproject(object):
     """---SAP2000 project class---"""
 
-    def __init__(self):
-        self.createSap(AttachToInstance = True)
+    def __init__(self,AttachToInstance = True):
+        self.createSap(AttachToInstance)
         from Sap2000py.SapDeal import SapFile,SapDefinitions,SapAssign,SapAnalyze,SapResults
         self.File = SapFile(self)
         self.Define = SapDefinitions(self)
@@ -24,7 +36,7 @@ class Saproject(object):
         self.Analyze = SapAnalyze(self)
         self.Results = SapResults(self)
         self.Scripts = SapScripts(self)
-        
+    
     @property
     def SapVersion(self):
         """
@@ -151,11 +163,11 @@ class Saproject(object):
             try:
                 # get the active SapObject(something went wrong)
                 sap_object = helper.GetObject("CSI.SAP2000.API.SapObject")
-                # get sap model from sap_object
-                sap_model = sap_object.SapModel
             except (OSError,AttributeError,comtypes.COMError):
                 logger.warning("No running API instance of the program found or failed to attach.")
                 logger.info("Trying to open a new instance...")
+                AttachToInstance = False
+            if sap_object == None:
                 AttachToInstance = False
         if not AttachToInstance:
             if SpecifyPath:
@@ -361,12 +373,14 @@ class SapScripts:
         Select combo or case you need for out put
         """
         self.Sapobj.Results.Setup.DeselectAllCasesAndCombosForOutput()
+        if isinstance(Combo_CaseList,str):
+            Combo_CaseList = [Combo_CaseList]
         for combo_case in Combo_CaseList:
-            self.Sapobj.Results.Setup.SetComboSelectedForOutput(combo_case,True)
-            ret = self.Sapobj.Results.Setup.GetComboSelectedForOutput(combo_case)
+            self.Sapobj.Results.Setup.Set.ComboSelectedForOutput(combo_case,True)
+            ret = self.Sapobj.Results.Setup.Get.ComboSelectedForOutput(combo_case)
             if ret[1]!=0:
-                self.Sapobj.Results.Setup.SetCaseSelectedForOutput(combo_case,True)
-                ret = self.Sapobj.Results.Setup.GetCaseSelectedForOutput(combo_case)
+                self.Sapobj.Results.Setup.Set.CaseSelectedForOutput(combo_case,True)
+                ret = self.Sapobj.Results.Setup.Get.CaseSelectedForOutput(combo_case)
             if ret[0]==False:
                 logger.warning(f"[orange1]{combo_case}[/orange1] may not be name of a combo/case, please check!")
 
