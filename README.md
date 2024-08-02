@@ -23,7 +23,7 @@ This Demo below shows how to interact with SAP2000 using the Sap2000py library. 
 2. Install the dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install Sap2000py
 ```
 
 ## Usage
@@ -124,7 +124,7 @@ Sap.closeSap()
 
 ## Dependencies
 
-- python>=3.4.3
+- python>=3.9
 
 This project requires the following Python libraries:
 
@@ -137,5 +137,6 @@ This project requires the following Python libraries:
 - loguru
 - pathlib
 - json
+- sectionproperties>=3.3.0
 
 For more information, please check [Sap2000pyDemo.py](./Sap2000pyDemo.py).

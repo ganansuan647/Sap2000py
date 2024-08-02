@@ -24,6 +24,8 @@ class Saproject(object):
         self.Analyze = SapAnalyze(self)
         self.Results = SapResults(self)
         self.Scripts = SapScripts(self)
+        from Sap2000py.Bridge.SapBridge import SapBridge
+        self.Bridge = SapBridge(self)
         
     @property
     def SapVersion(self):
@@ -361,12 +363,14 @@ class SapScripts:
         Select combo or case you need for out put
         """
         self.Sapobj.Results.Setup.DeselectAllCasesAndCombosForOutput()
+        if isinstance(Combo_CaseList,str):
+            Combo_CaseList = [Combo_CaseList]
         for combo_case in Combo_CaseList:
-            self.Sapobj.Results.Setup.SetComboSelectedForOutput(combo_case,True)
-            ret = self.Sapobj.Results.Setup.GetComboSelectedForOutput(combo_case)
+            self.Sapobj.Results.Setup.Set.ComboSelectedForOutput(combo_case,True)
+            ret = self.Sapobj.Results.Setup.Get.ComboSelectedForOutput(combo_case)
             if ret[1]!=0:
-                self.Sapobj.Results.Setup.SetCaseSelectedForOutput(combo_case,True)
-                ret = self.Sapobj.Results.Setup.GetCaseSelectedForOutput(combo_case)
+                self.Sapobj.Results.Setup.Set.CaseSelectedForOutput(combo_case,True)
+                ret = self.Sapobj.Results.Setup.Get.CaseSelectedForOutput(combo_case)
             if ret[0]==False:
                 logger.warning(f"[orange1]{combo_case}[/orange1] may not be name of a combo/case, please check!")
 
