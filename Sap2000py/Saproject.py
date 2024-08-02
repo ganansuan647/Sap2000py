@@ -10,13 +10,25 @@ from datetime import datetime
 from pathlib import Path
 import json
 
+class SapMeta(type):
+    __instance = None
+    def __init__(self,class_name,class_bases,class_dic):
+        self.__instance=object.__new__(self)  # Initialize the object corresponding to the singleton Saproject class.
+        self.__init__(self.__instance)
 
+    def __call__(self, *args, **kwargs):
+        if args or kwargs:
+            obj = object.__new__(self)
+            self.__init__(obj, *args, **kwargs)
+            return obj
+        else:
+            return self.__instance
 
 class Saproject(object):
     """---SAP2000 project class---"""
 
-    def __init__(self):
-        self.createSap(AttachToInstance = True)
+    def __init__(self,AttachToInstance = True):
+        self.createSap(AttachToInstance)
         from Sap2000py.SapDeal import SapFile,SapDefinitions,SapAssign,SapAnalyze,SapResults
         self.File = SapFile(self)
         self.Define = SapDefinitions(self)
@@ -24,9 +36,7 @@ class Saproject(object):
         self.Analyze = SapAnalyze(self)
         self.Results = SapResults(self)
         self.Scripts = SapScripts(self)
-        from Sap2000py.Bridge.SapBridge import SapBridge
-        self.Bridge = SapBridge(self)
-        
+    
     @property
     def SapVersion(self):
         """
@@ -153,11 +163,11 @@ class Saproject(object):
             try:
                 # get the active SapObject(something went wrong)
                 sap_object = helper.GetObject("CSI.SAP2000.API.SapObject")
-                # get sap model from sap_object
-                sap_model = sap_object.SapModel
             except (OSError,AttributeError,comtypes.COMError):
                 logger.warning("No running API instance of the program found or failed to attach.")
                 logger.info("Trying to open a new instance...")
+                AttachToInstance = False
+            if sap_object == None:
                 AttachToInstance = False
         if not AttachToInstance:
             if SpecifyPath:

@@ -1,57 +1,24 @@
-from .Continuous_Bridge import Section_General,Sap_Bearing_Linear,Sap_Double_Box_Pier,SapBase_6Spring,SapPoint,Sap_Box_Girder
-
-class SapBridge:
-    def __init__(self,Sapobj):
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        self.Basic = SapBasic(Sapobj)
-        self.Base = SapBase(Sapobj)
-        self.Section = SapSection(Sapobj)
-        self.Bearing = SapBearing(Sapobj)
-        self.Pier = SapPier(Sapobj)
-        self.Girder = SapGirder(Sapobj)
+from Bridge.Continuous_Bridge import Section_General,Sap_Bearing_Linear,Sap_Double_Box_Pier,SapBase_6Spring,SapPoint,Sap_Box_Girder
 
 class SapBase:
-    def __init__(self,Sapobj):
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        self.Six_Spring = SapBase_6Spring(Sapobj)
+    Six_Spring = SapBase_6Spring
 
 class SapGirder:
-    def __init__(self,Sapobj):
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        self.Box = Sap_Box_Girder(Sapobj)
-
+    Box = Sap_Box_Girder
+    
 class SapPier:
-    def __init__(self,Sapobj):
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        self.DoubleBox = Sap_Double_Box_Pier(Sapobj)
+    DoubleBox = Sap_Double_Box_Pier
 
 class SapBearing:
-    def __init__(self,Sapobj):
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        self.Linear = Sap_Bearing_Linear(Sapobj)
-
-class SapBasic:
-    def __init__(self,Sapobj):
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        self.Point = SapPoint(Sapobj)
+    Linear = Sap_Bearing_Linear
 
 class SapSection:
-    def __init__(self,Sapobj):
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        self.General = Section_General(Sapobj)
-        
-        
+    General = Section_General
+
+class SapBridge:
+    Point = SapPoint
+    Base = SapBase
+    Section = SapSection
+    Bearing = SapBearing
+    Pier = SapPier
+    Girder = SapGirder

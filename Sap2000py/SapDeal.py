@@ -10,7 +10,7 @@ from typing import Union,Literal
 from loguru import logger
 
 class SapFile():
-    def __init__(self,Sapobj):
+    def __init__(self,Sapobj=None):
         """
         Passing in the parent class object directly is to avoid 
         getting only the last opened SAP2000 window when initializing the 

@@ -15,13 +15,13 @@ from rich.console import Console
 from rich.table import Table
 
 #full path to the model
-ModelPath = Path('.\Test\5SpanSteelBoxPierBridge.sdb')
+ModelPath = Path('.\Test\Span5SteelBoxPierBridge.sdb')
 
 # Create a Sap2000py obj (default: attatch to instance and create if not exist)
 Sap = Saproject()
 
 # Change Sap api settings if you want
-# Sap.createSap(AttachToInstance = True,SpecifyPath = False,ProgramPath = "your sap2000 path")
+# SapSap(AttachToInstance = True,SpecifyPath = False,ProgramPath = "your sap2000 path")
 
 # Open Sap2000program
 Sap.openSap()
@@ -42,8 +42,10 @@ Sap.Scripts.AddCommonMaterialSet(standard = "JTG")
 # Build 5 Span Steel Bouble Box Pier Continuous Bridge
 # filepath of the spring data
 SixSpringFile = Path('.\Examples\ContinuousBridge6spring.txt')
+
+from Sap2000py.Bridge.SapBridge import SapBridge as Bridge
 # Build Piers and connect with base springs
-pier1 = Sap.Bridge.Pier.DoubleBox.create(
+pier1 = Bridge.Pier.DoubleBox(
     name="#1",
     station=0,
     Distance_between_piers=20.75,
@@ -56,10 +58,10 @@ pier1 = Sap.Bridge.Pier.DoubleBox.create(
     is_intermediate_pier = True,
     offset = 1.0
 )
-pier1base = Sap.Bridge.Base.Six_Spring.create(pier1.base_point,pier1.name,spring_data_name='1',spring_file_path=SixSpringFile)
+pier1base = Bridge.Base.Six_Spring(pier1.base_point,pier1.name,spring_data_name='1',spring_file_path=SixSpringFile)
 pier1.connect_with_base(pier1base)
 
-pier2 = Sap.Bridge.Pier.DoubleBox.create(
+pier2 = Bridge.Pier.DoubleBox(
     name="#2",
     station=90,
     Distance_between_piers=20.75,
@@ -71,10 +73,10 @@ pier2 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier2base = Sap.Bridge.Base.Six_Spring.create(pier2.base_point,pier2.name,spring_data_name='2',spring_file_path=SixSpringFile)
+pier2base = Bridge.Base.Six_Spring(pier2.base_point,pier2.name,spring_data_name='2',spring_file_path=SixSpringFile)
 pier2.connect_with_base(pier2base)
 
-pier3 = Sap.Bridge.Pier.DoubleBox.create(
+pier3 = Bridge.Pier.DoubleBox(
     name="#3",
     station=180,
     Distance_between_piers=20.75,
@@ -86,10 +88,10 @@ pier3 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier3base = Sap.Bridge.Base.Six_Spring.create(pier3.base_point,pier3.name,spring_data_name='3',spring_file_path=SixSpringFile)
+pier3base = Bridge.Base.Six_Spring(pier3.base_point,pier3.name,spring_data_name='3',spring_file_path=SixSpringFile)
 pier3.connect_with_base(pier3base)
 
-pier4 = Sap.Bridge.Pier.DoubleBox.create(
+pier4 = Bridge.Pier.DoubleBox(
     name="#4",
     station=270,
     Distance_between_piers=20.75,
@@ -101,10 +103,10 @@ pier4 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier4base = Sap.Bridge.Base.Six_Spring.create(pier4.base_point,pier4.name,spring_data_name='4',spring_file_path=SixSpringFile)
+pier4base = Bridge.Base.Six_Spring(pier4.base_point,pier4.name,spring_data_name='4',spring_file_path=SixSpringFile)
 pier4.connect_with_base(pier4base)
 
-pier5 = Sap.Bridge.Pier.DoubleBox.create(
+pier5 = Bridge.Pier.DoubleBox(
     name="#5",
     station=360,
     Distance_between_piers=20.75,
@@ -116,10 +118,10 @@ pier5 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier5base = Sap.Bridge.Base.Six_Spring.create(pier5.base_point,pier5.name,spring_data_name='5',spring_file_path=SixSpringFile)
+pier5base = Bridge.Base.Six_Spring(pier5.base_point,pier5.name,spring_data_name='5',spring_file_path=SixSpringFile)
 pier5.connect_with_base(pier5base)
 
-pier6 = Sap.Bridge.Pier.DoubleBox.create(
+pier6 = Bridge.Pier.DoubleBox(
     name="#6",
     station=450,
     Distance_between_piers=20.75,
@@ -132,10 +134,10 @@ pier6 = Sap.Bridge.Pier.DoubleBox.create(
     is_intermediate_pier = True,
     offset=1.0
 )
-pier6base = Sap.Bridge.Base.Six_Spring.create(pier6.base_point,pier6.name,spring_data_name='6',spring_file_path=SixSpringFile)
+pier6base = Bridge.Base.Six_Spring(pier6.base_point,pier6.name,spring_data_name='6',spring_file_path=SixSpringFile)
 pier6.connect_with_base(pier6base)
 
-pier7 = Sap.Bridge.Pier.DoubleBox.create(
+pier7 = Bridge.Pier.DoubleBox(
     name="#7",
     station=540,
     Distance_between_piers=20.75,
@@ -147,10 +149,10 @@ pier7 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier7base = Sap.Bridge.Base.Six_Spring.create(pier7.base_point,pier7.name,spring_data_name='7',spring_file_path=SixSpringFile)
+pier7base = Bridge.Base.Six_Spring(pier7.base_point,pier7.name,spring_data_name='7',spring_file_path=SixSpringFile)
 pier7.connect_with_base(pier7base)
 
-pier8 = Sap.Bridge.Pier.DoubleBox.create(
+pier8 = Bridge.Pier.DoubleBox(
     name="#8",
     station=630,
     Distance_between_piers=20.75,
@@ -162,10 +164,10 @@ pier8 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier8base = Sap.Bridge.Base.Six_Spring.create(pier8.base_point,pier8.name,spring_data_name='8',spring_file_path=SixSpringFile)
+pier8base = Bridge.Base.Six_Spring(pier8.base_point,pier8.name,spring_data_name='8',spring_file_path=SixSpringFile)
 pier8.connect_with_base(pier8base)
 
-pier9 = Sap.Bridge.Pier.DoubleBox.create(
+pier9 = Bridge.Pier.DoubleBox(
     name="#9",
     station=720,
     Distance_between_piers=20.75,
@@ -177,10 +179,10 @@ pier9 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier9base = Sap.Bridge.Base.Six_Spring.create(pier9.base_point,pier9.name,spring_data_name='9',spring_file_path=SixSpringFile)
+pier9base = Bridge.Base.Six_Spring(pier9.base_point,pier9.name,spring_data_name='9',spring_file_path=SixSpringFile)
 pier9.connect_with_base(pier9base)
 
-pier10 = Sap.Bridge.Pier.DoubleBox.create(
+pier10 = Bridge.Pier.DoubleBox(
     name="#10",
     station=810,
     Distance_between_piers=20.75,
@@ -192,10 +194,10 @@ pier10 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier10base = Sap.Bridge.Base.Six_Spring.create(pier10.base_point,pier10.name,spring_data_name='10',spring_file_path=SixSpringFile)
+pier10base = Bridge.Base.Six_Spring(pier10.base_point,pier10.name,spring_data_name='10',spring_file_path=SixSpringFile)
 pier10.connect_with_base(pier10base)
 
-pier11 = Sap.Bridge.Pier.DoubleBox.create(
+pier11 = Bridge.Pier.DoubleBox(
     name="#11",
     station=900,
     Distance_between_piers=20.75,
@@ -208,10 +210,10 @@ pier11 = Sap.Bridge.Pier.DoubleBox.create(
     is_intermediate_pier = True,
     offset=1.0
 )
-pier11base = Sap.Bridge.Base.Six_Spring.create(pier11.base_point,pier11.name,spring_data_name='11',spring_file_path=SixSpringFile)
+pier11base = Bridge.Base.Six_Spring(pier11.base_point,pier11.name,spring_data_name='11',spring_file_path=SixSpringFile)
 pier11.connect_with_base(pier11base)
 
-pier12 = Sap.Bridge.Pier.DoubleBox.create(
+pier12 = Bridge.Pier.DoubleBox(
     name="#12",
     station=990,
     Distance_between_piers=20.75,
@@ -223,10 +225,10 @@ pier12 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier12base = Sap.Bridge.Base.Six_Spring.create(pier12.base_point,pier12.name,spring_data_name='12',spring_file_path=SixSpringFile)
+pier12base = Bridge.Base.Six_Spring(pier12.base_point,pier12.name,spring_data_name='12',spring_file_path=SixSpringFile)
 pier12.connect_with_base(pier12base)
 
-pier13 = Sap.Bridge.Pier.DoubleBox.create(
+pier13 = Bridge.Pier.DoubleBox(
     name="#13",
     station=1080,
     Distance_between_piers=20.75,
@@ -238,10 +240,10 @@ pier13 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier13base = Sap.Bridge.Base.Six_Spring.create(pier13.base_point,pier13.name,spring_data_name='13',spring_file_path=SixSpringFile)
+pier13base = Bridge.Base.Six_Spring(pier13.base_point,pier13.name,spring_data_name='13',spring_file_path=SixSpringFile)
 pier13.connect_with_base(pier13base)
 
-pier14 = Sap.Bridge.Pier.DoubleBox.create(
+pier14 = Bridge.Pier.DoubleBox(
     name="#14",
     station=1170,
     Distance_between_piers=20.75,
@@ -253,10 +255,10 @@ pier14 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier14base = Sap.Bridge.Base.Six_Spring.create(pier14.base_point,pier14.name,spring_data_name='14',spring_file_path=SixSpringFile)
+pier14base = Bridge.Base.Six_Spring(pier14.base_point,pier14.name,spring_data_name='14',spring_file_path=SixSpringFile)
 pier14.connect_with_base(pier14base)
 
-pier15 = Sap.Bridge.Pier.DoubleBox.create(
+pier15 = Bridge.Pier.DoubleBox(
     name="#15",
     station=1260,
     Distance_between_piers=20.75,
@@ -268,10 +270,10 @@ pier15 = Sap.Bridge.Pier.DoubleBox.create(
     num_of_hollow_elements=3,
     is_intermediate_pier = False,
 )
-pier15base = Sap.Bridge.Base.Six_Spring.create(pier15.base_point,pier15.name,spring_data_name='15',spring_file_path=SixSpringFile)
+pier15base = Bridge.Base.Six_Spring(pier15.base_point,pier15.name,spring_data_name='15',spring_file_path=SixSpringFile)
 pier15.connect_with_base(pier15base)
 
-pier16 = Sap.Bridge.Pier.DoubleBox.create(
+pier16 = Bridge.Pier.DoubleBox(
     name="#16",
     station=1350,
     Distance_between_piers=20.75,
@@ -284,24 +286,24 @@ pier16 = Sap.Bridge.Pier.DoubleBox.create(
     is_intermediate_pier = True,
     offset=1.0
 )
-pier16base = Sap.Bridge.Base.Six_Spring.create(pier16.base_point,pier16.name,spring_data_name='16',spring_file_path=SixSpringFile)
+pier16base = Bridge.Base.Six_Spring(pier16.base_point,pier16.name,spring_data_name='16',spring_file_path=SixSpringFile)
 pier16.connect_with_base(pier16base)
 
-girderleft = Sap.Bridge.Girder.Box.create(
+girderleft = Bridge.Girder.Box(
     name = "SpanLeft",
     pierlist=[pier1,pier2,pier3,pier4,pier5,pier6],
     fixedpier = [pier3,pier4],
     Plan = '方案一')
 girderleft.add_bearing_links(strategy = 'ideal')        
 
-girdermain = Sap.Bridge.Girder.Box.create(
+girdermain = Bridge.Girder.Box(
     name = "SpanMain",
     pierlist=[pier6,pier7,pier8,pier9,pier10,pier11],
     fixedpier = [pier8,pier9],
     Plan = '方案一')
 girdermain.add_bearing_links(strategy = 'ideal')
 
-girderright = Sap.Bridge.Girder.Box.create(
+girderright = Bridge.Girder.Box(
     name = "SpanRight",
     pierlist=[pier11,pier12,pier13,pier14,pier15,pier16],
     fixedpier = [pier13,pier14],

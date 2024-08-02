@@ -10,40 +10,27 @@ import numpy as np
 import math
 from rich.console import Console
 from rich.table import Table
+from dataclasses import dataclass
+from Sap2000py.Saproject import Saproject
 
-
+@dataclass
 class Section_General:
-    def __init__(self,Sapobj):
-        """
-        Get Results from Sap easily, you just need to relax
-        """
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        
-    def create(self,name:str,material:str,
-               Area:float,Depth:float,Width:float,
-               As2:float,As3:float,
-               I22:float,I33:float,I23:float,J:float=1e10,
-               geom:Geometry=None,sec: Section = None,
-               unit_of_sec:Literal['mm','cm','m'] = 'm',
-               notes:str=""):
-        self.name = name
-        self.material = material
-        self.Area = Area
-        self.Depth = Depth
-        self.Width = Width
-        self.As2 = As2
-        self.As3 = As3
-        self.I22 = I22
-        self.I33 = I33
-        self.J = J
-        self.geom = geom
-        self.sec = sec
-        self.unit_of_sec = unit_of_sec
-        self.notes = notes
-        return self
-    
+    name:str
+    material:str
+    Area:float
+    Depth:float
+    Width:float
+    As2:float
+    As3:float
+    I22:float
+    I33:float
+    I23:float
+    J:float=1e10
+    geom:Geometry = None
+    sec: Section = None
+    unit_of_sec:Literal['mm','cm','m'] = 'm'
+    notes:str=""
+
     @property
     def t3(self):
         return self.Depth
@@ -54,15 +41,15 @@ class Section_General:
 
     def define(self):
         if self.unit_of_sec == 'mm':
-            self._Sapobj.setUnits("KN_mm_C")
+            Saproject().setUnits("KN_mm_C")
         elif self.unit_of_sec == 'cm':
-            self._Sapobj.setUnits("KN_cm_C")
+            Saproject().setUnits("KN_cm_C")
         elif self.unit_of_sec == 'm':
-            self._Sapobj.setUnits("KN_m_C")
-        ret = self._Sapobj.Define.section.PropFrame_SetGeneral(self.name, self.material, self.t3, self.t2, self.Area, self.As2, self.As3, self.I22, self.I33, self.J, notes=self.notes)
+            Saproject().setUnits("KN_m_C")
+        ret = Saproject().Define.section.PropFrame_SetGeneral(self.name, self.material, self.t3, self.t2, self.Area, self.As2, self.As3, self.I22, self.I33, self.J, notes=self.notes)
         if ret == 0:
             logger.opt(colors=True).success(f"Section <yellow>{self.name}</yellow> added!")
-        self._Sapobj.setUnits("KN_m_C")
+        Saproject().setUnits("KN_m_C")
         return ret
     
     def plot_geometry(self):
@@ -87,25 +74,16 @@ class Section_General:
     def get_elements_with_this_section(self):
         raise NotImplementedError
 
+@dataclass
 class SapPoint:
-    def __init__(self,Sapobj):
-        """
-        Get Results from Sap easily, you just need to relax
-        """
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        
-    def create(self,x:float,y:float,z:float,name:str="",mass:float=0.0):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.name = name
-        self.mass = mass
-        return self
-  
+    x:float
+    y:float
+    z:float
+    name:str=""
+    mass:float=0.0
+
     def add(self):
-        ret = self._Sapobj.Assign.PointObj.AddCartesian(self.x, self.y, self.z, UserName=self.name)
+        ret = Saproject().Assign.PointObj.AddCartesian(self.x, self.y, self.z, UserName=self.name)
         if ret[1] == 0:
             logger.opt(colors=True).success(f"Point <yellow>{self.name}</yellow> : <cyan>({self.x}, {self.y}, {self.z})</cyan> added.")
         else:
@@ -113,7 +91,7 @@ class SapPoint:
         return ret
     
     def defineMass(self):
-        ret = self._Sapobj.Assign.PointObj.Set.Mass(self.name, [self.mass for i in range(6)])
+        ret = Saproject().Assign.PointObj.Set.Mass(self.name, [self.mass for i in range(6)])
         if ret == 0:
             logger.success(f"Mass {self.mass} added to Point {self.name}")
         else:
@@ -121,18 +99,11 @@ class SapPoint:
         return ret
 
     def exists(self):
-        return self._Sapobj.Assign.PointObj.Get.CoordCartesian(self.name)[-1] == 0
+        return Saproject().Assign.PointObj.Get.CoordCartesian(self.name)[-1] == 0
+
 
 class SapBase_6Spring:
-    def __init__(self,Sapobj):
-        """
-        Get Results from Sap easily, you just need to relax
-        """
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        
-    def create(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path(".\Examples\ContinuousBridge6spring.txt")):
+    def __init__(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path(".\Examples\ContinuousBridge6spring.txt")):
         self.point = point
         self.pier_name = pier_name
         self.name = self.pier_name + "_Base"
@@ -142,7 +113,6 @@ class SapBase_6Spring:
             self.spring_data_name = self.pier_name.split("_")[0].split("#")[-1]
         else:
             self.spring_data_name = spring_data_name
-        return self
     
     def auto_build(self):
         self.add_point()
@@ -182,9 +152,9 @@ class SapBase_6Spring:
         """
         if not hasattr(self, "spring_data"):
             self.get_spring_data()
-        if unit != self._Sapobj.Units:
-            self._Sapobj.setUnits(unit)
-        ret = self._Sapobj.Assign.PointObj.Set.SpringCoupled(self.name, self.spring_data, Replace=True)
+        if unit != Saproject().Units:
+            Saproject().setUnits(unit)
+        ret = Saproject().Assign.PointObj.Set.SpringCoupled(self.name, self.spring_data, Replace=True)
         if ret[1] == 0:
             logger.opt(colors=True).success(f"Spring for Joint: <yellow>{self.name}</yellow> Added! K = <cyan>{self.spring_data}</cyan>")
         else:
@@ -194,52 +164,22 @@ class SapBase_6Spring:
     def connect_with_pier(self):
         raise NotImplementedError
 
+@dataclass
 class Sap_Double_Box_Pier:
-    def __init__(self,Sapobj):
-        """
-        Get Results from Sap easily, you just need to relax
-        """
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
+    name:str
+    station:float
+    Height_of_pier_bottom:float
+    Height_of_pier:float
+    bottom_solid_length:float
+    top_solid_length:float
+    Distance_between_bearings:float
+    Distance_between_piers:float
+    Height_of_cap:float=None
+    num_of_hollow_elements:int =1
+    is_intermediate_pier:bool =False
+    offset:float =1.0
         
-    def create(self,name:str,station:float,Height_of_pier_bottom:float,Height_of_pier:float,
-               bottom_solid_length:float,top_solid_length:float,Distance_between_bearings:float,
-               Distance_between_piers:float,Height_of_cap:float=None,num_of_hollow_elements:int =1,
-               is_intermediate_pier:bool =False,offset:float =1.0):
-        """_summary_
-
-        Args:
-            name (str): name of the pier
-            station (float): station of the pier, like K100+000 -> 100000
-            Height_of_pier_bottom (float): ASL of the bottom of the pier
-            Height_of_pier (float): height of the pier
-            bottom_solid_length (float): length of the solid part at the bottom of the pier
-            top_solid_length (float): length of the solid part at the top of the pier
-            Distance_between_bearings (float):
-            Height_of_cap (float, optional): 
-            Distance_between_piers (float, optional):
-            num_of_hollow_elements (int, optional):  Defaults to 1.
-            is_intermediate_pier (bool, optional): whether the pier is an intermediate pier, if true, the pier will have 4 bearings otherwise 2. Defaults to False.
-            offset (float, optional): the distance between the centerline of the support (bearing) and the centerline of the pier. Defaults to 1.0.
-
-        """
-        self.name = name
-        self.station = station
-        self.Height_of_pier_bottom = Height_of_pier_bottom
-        self.Height_of_pier = Height_of_pier
-        self.bottom_solid_length = bottom_solid_length
-        self.top_solid_length = top_solid_length
-        self.Distance_between_bearings = Distance_between_bearings
-        self.Height_of_cap = Height_of_cap
-        self.Distance_between_piers = Distance_between_piers
-        self.num_of_hollow_elements = num_of_hollow_elements
-        self.is_intermediate_pier = is_intermediate_pier
-        self.offset = offset
-        self.__build_pier()
-        return self
-    
-    def __build_pier(self):
+    def __post_init__(self):
         self.addsome_empty_attr()
         
         self.generate_pier_points(side = 'both')
@@ -250,7 +190,7 @@ class Sap_Double_Box_Pier:
         
         self.add_body_constraint()
         # self.add_mass()
-        self._Sapobj.RefreshView()
+        Saproject().RefreshView()
     
     def connect_with_base(self,baseobj:Literal['SapBase_6Spring']):
         self.base = baseobj
@@ -266,15 +206,15 @@ class Sap_Double_Box_Pier:
         x = self.station
         y = 0
         # base point
-        self.base_point = self._Sapobj.Bridge.Basic.Point.create(x, y, self.Height_of_pier_bottom-self.Height_of_cap, f"{self.name}_Base")
+        self.base_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap, f"{self.name}_Base")
         
         # cap points
         if not hasattr(self, "Mass_of_cap_in_ton"):
             self.get_cap_section()
-        self.cap_point = self._Sapobj.Bridge.Basic.Point.create(x, y, self.Height_of_pier_bottom-self.Height_of_cap/2, f"{self.name}_Cap",mass=self.Mass_of_cap_in_ton)
+        self.cap_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap/2, f"{self.name}_Cap",mass=self.Mass_of_cap_in_ton)
         
         # cap top points
-        self.cap_top_point = self._Sapobj.Bridge.Basic.Point.create(x, y, self.Height_of_pier_bottom, f"{self.name}_CapTop")
+        self.cap_top_point = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name}_CapTop")
         
         self.base_points = [self.base_point, self.cap_point, self.cap_top_point]
         for point in self.base_points:
@@ -305,25 +245,25 @@ class Sap_Double_Box_Pier:
 
         points = []
         # pier points
-        self.pier_bottom_point[side] = self._Sapobj.Bridge.Basic.Point.create(x, y, self.Height_of_pier_bottom, f"{self.name+'_'+side}_Bottom")
+        self.pier_bottom_point[side] = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name+'_'+side}_Bottom")
         points.append(self.pier_bottom_point[side])
         
-        self.pier_hollow_bottom[side] = self._Sapobj.Bridge.Basic.Point.create(x, y, self.Height_of_pier_bottom + self.bottom_solid_length, f"{self.name+'_'+side}_HollowBottom")
+        self.pier_hollow_bottom[side] = SapPoint(x, y, self.Height_of_pier_bottom + self.bottom_solid_length, f"{self.name+'_'+side}_HollowBottom")
         points.append(self.pier_hollow_bottom[side])
         
         hollow_points = []
         for i,h in enumerate(self.__hollow_points_to_define()):
-            middle_point = self._Sapobj.Bridge.Basic.Point.create(x, y, h, f"{self.name+'_'+side}_HollowMiddle_{i}")
+            middle_point = SapPoint(x, y, h, f"{self.name+'_'+side}_HollowMiddle_{i}")
             points.append(middle_point)
             hollow_points.append(middle_point)
         self.hollow_points[side] = hollow_points
         
         h_piertop = self.Height_of_pier_bottom + self.Height_of_pier
         
-        self.pier_hollow_top[side] = self._Sapobj.Bridge.Basic.Point.create(x, y, h_piertop - self.top_solid_length, f"{self.name+'_'+side}_HollowTop")
+        self.pier_hollow_top[side] = SapPoint(x, y, h_piertop - self.top_solid_length, f"{self.name+'_'+side}_HollowTop")
         points.append(self.pier_hollow_top[side])
         
-        self.pier_top[side] = self._Sapobj.Bridge.Basic.Point.create(x, y, h_piertop, f"{self.name+'_'+side}_Top")
+        self.pier_top[side] = SapPoint(x, y, h_piertop, f"{self.name+'_'+side}_Top")
         points.append(self.pier_top[side])
 
         # bearing bottom points
@@ -334,15 +274,15 @@ class Sap_Double_Box_Pier:
             y_outer = y - self.Distance_between_bearings/2
             y_inner = y + self.Distance_between_bearings/2
         if self.is_intermediate_pier:
-            self.bearing_bottom_point_outer[side] = [self._Sapobj.Bridge.Basic.Point.create(x-self.offset, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter_1"),
-                                               self._Sapobj.Bridge.Basic.Point.create(x+self.offset, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter_2")]
-            self.bearing_bottom_point_inner[side] = [self._Sapobj.Bridge.Basic.Point.create(x-self.offset, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner_1"),
-                                               self._Sapobj.Bridge.Basic.Point.create(x+self.offset, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner_2")]
+            self.bearing_bottom_point_outer[side] = [SapPoint(x-self.offset, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter_1"),
+                                               SapPoint(x+self.offset, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter_2")]
+            self.bearing_bottom_point_inner[side] = [SapPoint(x-self.offset, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner_1"),
+                                               SapPoint(x+self.offset, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner_2")]
             points.extend(self.bearing_bottom_point_outer[side])
             points.extend(self.bearing_bottom_point_inner[side])
         else: 
-            self.bearing_bottom_point_outer[side] = self._Sapobj.Bridge.Basic.Point.create(x, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter")
-            self.bearing_bottom_point_inner[side] = self._Sapobj.Bridge.Basic.Point.create(x, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner")
+            self.bearing_bottom_point_outer[side] = SapPoint(x, y_outer, h_piertop, f"{self.name+'_'+side}_BearingBottom_outter")
+            self.bearing_bottom_point_inner[side] = SapPoint(x, y_inner, h_piertop, f"{self.name+'_'+side}_BearingBottom_inner")
             points.append(self.bearing_bottom_point_outer[side])
             points.append(self.bearing_bottom_point_inner[side])
         
@@ -458,7 +398,7 @@ class Sap_Double_Box_Pier:
         J = sec.get_j() if sec.get_j() != math.nan else ixx_c + iyy_c
         asx, asy = sec.get_as()
 
-        self.solid_section = self._Sapobj.Bridge.Section.General.create(
+        self.solid_section = Section_General(
             name=self.name+"_pier_box",
             material="C40",
             Area=sec.get_area(),
@@ -495,7 +435,7 @@ class Sap_Double_Box_Pier:
         ixx_c, iyy_c, ixy_c = sec.get_ic()
         asx,asy = sec.get_as()
 
-        self.box_section = self._Sapobj.Bridge.Section.General.create(
+        self.box_section = Section_General(
             name = self.name+"_pier_box",
             material = "C40",
             Area = sec.get_area(),
@@ -511,7 +451,7 @@ class Sap_Double_Box_Pier:
         width = 12 if self.Height_of_pier >= 50 else 10.794
         depth = 37.25
         self.Mass_of_cap_in_ton = width * depth * self.Height_of_cap * 2.5
-        ret = self._Sapobj._Model.PropFrame.SetRectangle(self.name+"_Cap", "C30", width, depth)
+        ret = Saproject()._Model.PropFrame.SetRectangle(self.name+"_Cap", "C30", width, depth)
         if ret == 0:
             logger.success(f"Cap section {self.name}_Cap added!")
         self.cap_section = self.name+"_Cap"
@@ -522,7 +462,7 @@ class Sap_Double_Box_Pier:
             if not point.exists():
                 logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
                 point.add()
-            ret = self._Sapobj.Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
+            ret = Saproject().Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
             if ret[1] == 0:
                 logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to Body constraint : <yellow>{constraint_name}</yellow>")
             else:
@@ -534,25 +474,25 @@ class Sap_Double_Box_Pier:
         
         # add body constraint between capTop and pier
         
-        self._Sapobj.Define.jointConstraints.SetBody(self.name+"_Cap_Pier", body_dof)
+        Saproject().Define.jointConstraints.SetBody(self.name+"_Cap_Pier", body_dof)
         self.__add_body_constraints_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
         
         # add body constraint between pier top and bearing bottom
         left_points = flatten([self.pier_top['left'], self.bearing_bottom_point_outer['left'], self.bearing_bottom_point_inner['left']])
         right_points = flatten([self.pier_top['right'], self.bearing_bottom_point_outer['right'], self.bearing_bottom_point_inner['right']])
         # left
-        self._Sapobj.Define.jointConstraints.SetBody(self.name+"_left_Pier_Bearing", body_dof)
+        Saproject().Define.jointConstraints.SetBody(self.name+"_left_Pier_Bearing", body_dof)
         self.__add_body_constraints_for_points(self.name+"_left_Pier_Bearing", left_points)
         # right
-        self._Sapobj.Define.jointConstraints.SetBody(self.name+"_right_Pier_Bearing", body_dof)
+        Saproject().Define.jointConstraints.SetBody(self.name+"_right_Pier_Bearing", body_dof)
         self.__add_body_constraints_for_points(self.name+"_right_Pier_Bearing", right_points)
         
     def generate_cap_elements(self):
         cap_section_name = self.get_cap_section()
         
         # define solid cap
-        self._Sapobj.Assign.FrameObj.AddByPoint(self.base_point.name, self.cap_point.name, propName=cap_section_name, userName = self.name+"base2cap")
-        self._Sapobj.Assign.FrameObj.AddByPoint(self.cap_point.name, self.cap_top_point.name, propName=cap_section_name, userName = self.name+"cap2bottom")
+        Saproject().Assign.FrameObj.AddByPoint(self.base_point.name, self.cap_point.name, propName=cap_section_name, userName = self.name+"base2cap")
+        Saproject().Assign.FrameObj.AddByPoint(self.cap_point.name, self.cap_top_point.name, propName=cap_section_name, userName = self.name+"cap2bottom")
     
     def generate_pier_elements(self,side = Literal['left','right','both']):
         if side == 'both':
@@ -566,72 +506,46 @@ class Sap_Double_Box_Pier:
         box_section.define()
         
         # define pier
-        self._Sapobj.Assign.FrameObj.AddByPoint(self.pier_bottom_point[side].name, self.pier_hollow_bottom[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_bottom2hollowBottom")
+        Saproject().Assign.FrameObj.AddByPoint(self.pier_bottom_point[side].name, self.pier_hollow_bottom[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_bottom2hollowBottom")
         for i,h in enumerate(self.hollow_points[side]):
             if i == 0:
-                self._Sapobj.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
+                Saproject().Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
             else:
-                self._Sapobj.Assign.FrameObj.AddByPoint(self.hollow_points[side][i-1].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
+                Saproject().Assign.FrameObj.AddByPoint(self.hollow_points[side][i-1].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
         if len(self.hollow_points[side]) == 0:
-            self._Sapobj.Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+"_hollowBottom2Top")
+            Saproject().Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+"_hollowBottom2Top")
         else:
-            self._Sapobj.Assign.FrameObj.AddByPoint(self.hollow_points[side][-1].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
-        self._Sapobj.Assign.FrameObj.AddByPoint(self.pier_hollow_top[side].name, self.pier_top[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_hollowTop2Top")
+            Saproject().Assign.FrameObj.AddByPoint(self.hollow_points[side][-1].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
+        Saproject().Assign.FrameObj.AddByPoint(self.pier_hollow_top[side].name, self.pier_top[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_hollowTop2Top")
 
+@dataclass
 class Sap_Bearing_Linear:
-    def __init__(self,Sapobj):
-        """
-        Get Results from Sap easily, you just need to relax
-        """
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-        
-    def create(self,name:str,start_point:SapPoint,end_point:SapPoint,link_name:str):
-        self.name = name
-        self.start_point = start_point
-        self.end_point = end_point
-        self.link_name = link_name
-        return self
+    name:str
+    start_point:SapPoint
+    end_point:SapPoint
+    link_name:str
     
     def __post_init__(self):
         self.add()
         
     def add(self):
-        ret = self._Sapobj.Assign.Link.AddByPoint(self.start_point.name, self.end_point.name, IsSingleJoint=False, PropName = self.link_name, UserName=self.name)
+        ret = Saproject().Assign.Link.AddByPoint(self.start_point.name, self.end_point.name, IsSingleJoint=False, PropName = self.link_name, UserName=self.name)
         if ret[1] == 0:
             logger.opt(colors=True).success(f"Link <yellow>{self.name}</yellow> Added!")
         else:
             logger.opt(colors=True).error(f"Link <yellow>{self.name}</yellow> Failed to Add!")
-    
+
+@dataclass
 class Sap_Box_Girder:
-    def __init__(self,Sapobj):
-        """
-        Get Results from Sap easily, you just need to relax
-        """
-        self.__Object = Sapobj._Object
-        self.__Model = Sapobj._Model
-        self._Sapobj = Sapobj
-    
-    def create(self,
-               name: str,
-               pierlist: list,
-               fixedpier: list,
-               num_of_ele_foreach_girder: int = 6,
-               Thickness_of_bearing: float = 0.3,
-               Height_of_girder: float = 2.678,
-               Plan:Literal['方案一','方案二','方案三'] = '方案一',):
-        self.name = name
-        self.pierlist = pierlist
-        self.fixedpier = fixedpier
-        self.num_of_ele_foreach_girder = num_of_ele_foreach_girder
-        self.Thickness_of_bearing = Thickness_of_bearing
-        self.Height_of_girder = Height_of_girder
-        self.Plan = Plan
-        self.__build_girder()
-        return self
-    
-    def __build_girder(self):
+    name: str
+    pierlist: list
+    fixedpier: list
+    num_of_ele_foreach_girder: int = 6
+    Thickness_of_bearing: float = 0.3
+    Height_of_girder: float = 2.678
+    Plan:Literal['方案一','方案二','方案三'] = '方案一'
+           
+    def __post_init__(self):
         # sort pierlist by station
         self.pierlist = sorted(self.pierlist, key=lambda x: x.station)
         # makesure the 1st and last pier is intermediate pier
@@ -646,7 +560,7 @@ class Sap_Box_Girder:
         self.generate_girder_elements()
         self.add_body_constraint()
         # self.add_bearing_links(strategy='ideal')
-        self._Sapobj.RefreshView()
+        Saproject().RefreshView()
     
     def __define_ideal_links(self):
         # 刚度取大值，不直接固定,暂时不考虑阻尼
@@ -657,22 +571,22 @@ class Sap_Box_Girder:
         DOF = ['U1', 'U2', 'U3']
         uncoupleKe = {"U1":1e10,"U2":1e10,"U3":1e10}
         fixed_link = "Fixed"
-        self._Sapobj.Define.section.PropLink.SetLinear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        Saproject().Define.section.PropLink.SetLinear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         # 横桥向（y）滑动支座
         DOF = ['U1', 'U2']
         uncoupleKe = {"U1":1e10,"U2":1e10}
         y_sliding_link = "y_sliding"
-        self._Sapobj.Define.section.PropLink.SetLinear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        Saproject().Define.section.PropLink.SetLinear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         # 纵桥向（x）滑动支座
         DOF = ['U1', 'U3']
         uncoupleKe = {"U1":1e10,"U3":1e10}
         x_sliding_link = "x_sliding"
-        self._Sapobj.Define.section.PropLink.SetLinear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        Saproject().Define.section.PropLink.SetLinear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         # 双向滑动支座
         DOF = ['U1']
         uncoupleKe = {"U1":1e10}
         both_sliding_link = "Both_sliding"
-        self._Sapobj.Define.section.PropLink.SetLinear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        Saproject().Define.section.PropLink.SetLinear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
     
     def add_ideal_bearing_links(self):
@@ -701,14 +615,14 @@ class Sap_Box_Girder:
                 else:
                     inner_bearing_bottom = pier.bearing_bottom_point_inner[side]
 
-                link_inner = self._Sapobj.Bridge.Bearing.Linear.create(f"{pier.name}_{side}_inner_Bearing", inner_bearing_bottom, inner_bearing_top, inner_link)
+                link_inner = Sap_Bearing_Linear(f"{pier.name}_{side}_inner_Bearing", inner_bearing_bottom, inner_bearing_top, inner_link)
                 
                 outer_bearing_top = self.girder_bearing_top_points[pier.name][side]['outer']
                 if type(pier.bearing_bottom_point_outer[side]) == list:
                     outer_bearing_bottom = [p for p in pier.bearing_bottom_point_outer[side] if p.x == inner_bearing_top.x][0]
                 else:
                     outer_bearing_bottom = pier.bearing_bottom_point_outer[side]
-                link_outer = self._Sapobj.Bridge.Bearing.Linear.create(f"{pier.name}_{side}_outer_Bearing", outer_bearing_bottom, outer_bearing_top, outer_link)
+                link_outer = Sap_Bearing_Linear(f"{pier.name}_{side}_outer_Bearing", outer_bearing_bottom, outer_bearing_top, outer_link)
                 
                 self.bearings[pier.name][side] = {'inner':link_inner, 'outer':link_outer}
     
@@ -729,7 +643,7 @@ class Sap_Box_Girder:
             if not point.exists():
                 logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
                 point.add()
-            ret = self._Sapobj.Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
+            ret = Saproject().Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
             if ret[1] == 0:
                 logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to Body constraint : <yellow>{constraint_name}</yellow>")
             else:
@@ -740,7 +654,7 @@ class Sap_Box_Girder:
         flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
         for side in ['left','right']:
             for pier in self.pierlist:
-                self._Sapobj.Define.jointConstraints.SetBody(f"{pier.name}_{side}_Girder", body_dof)
+                Saproject().Define.jointConstraints.SetBody(f"{pier.name}_{side}_Girder", body_dof)
                 girder_point = self.girder_points[pier.name][side]
                 bearing_top_points = list(self.girder_bearing_top_points[pier.name][side].values())
                 self.__add_body_constraints_for_points(pier.name+"_"+side+"_girder", flatten([girder_point,bearing_top_points]))
@@ -761,14 +675,14 @@ class Sap_Box_Girder:
         points_to_connect = self.girder_points[gidername][side]
         i = 1
         for point1,point2 in zip(points_to_connect[0:-1],points_to_connect[1:]):
-            ret = self._Sapobj.Assign.FrameObj.AddByPoint(point1.name, point2.name, propName = self.girder_section.name, userName = f"{gidername}_{side}_girder_{i}")
+            ret = Saproject().Assign.FrameObj.AddByPoint(point1.name, point2.name, propName = self.girder_section.name, userName = f"{gidername}_{side}_girder_{i}")
             if ret[1] == 0:
                 logger.opt(colors=True).success(f"Girder element <yellow>{gidername}_{side}_girder_{i}</yellow> added!")
             else:
                 logger.opt(colors=True).error(f"Girder element <yellow>{gidername}_{side}_girder_{i}</yellow> failed to add!")
             
             # add line mass manually instead(一期+二期恒载)
-            ret = self._Sapobj.Assign.FrameObj.Set.Mass(f"{gidername}_{side}_girder_{i}",(self.q1+self.q2)/9.81,Replace=True)
+            ret = Saproject().Assign.FrameObj.Set.Mass(f"{gidername}_{side}_girder_{i}",(self.q1+self.q2)/9.81,Replace=True)
             if ret == 0:
                 logger.opt(colors=True).success(f"Girder element <yellow>{gidername}_{side}_girder_{i}</yellow> mass set!")
             else:
@@ -817,7 +731,7 @@ class Sap_Box_Girder:
         self.girder_section.define()
             
         # do not consider mass and weight of girder automatically
-        ret = self._Sapobj._Model.PropFrame.SetModifiers(self.girder_section.name,[1,1,1,1,1,1,0,0])
+        ret = Saproject()._Model.PropFrame.SetModifiers(self.girder_section.name,[1,1,1,1,1,1,0,0])
         if ret[1] == 0:
             logger.opt(colors=True).success(f"Girder element <yellow>{self.girder_section.name}</yellow> modifiers set!")
         else:
@@ -882,26 +796,26 @@ class Sap_Box_Girder:
             z = h_start + (h_end - h_start) * i / num
             
             if i==1:
-                self.girder_points[pier_start.name][side] = self._Sapobj.Bridge.Basic.Point.create(x_start, y, h_start, f"{self.name}_{pier_start.name}_{side}_girder_point")
+                self.girder_points[pier_start.name][side] = SapPoint(x_start, y, h_start, f"{self.name}_{pier_start.name}_{side}_girder_point")
                 points.append(self.girder_points[pier_start.name][side])
                 
                 y_outer,y_inner = calc_y_bearing(y_start,pier_start)
                 self.girder_bearing_top_points[pier_start.name][side] = {
-                    'inner':self._Sapobj.Bridge.Basic.Point.create(x_start, y_inner, h_start - self.Height_of_girder, f"{self.name}_{pier_start.name}_{side}_BearingTop_inner"),
-                    'outer':self._Sapobj.Bridge.Basic.Point.create(x_start, y_outer, h_start - self.Height_of_girder, f"{self.name}_{pier_start.name}_{side}_BearingTop_outer")}
+                    'inner':SapPoint(x_start, y_inner, h_start - self.Height_of_girder, f"{self.name}_{pier_start.name}_{side}_BearingTop_inner"),
+                    'outer':SapPoint(x_start, y_outer, h_start - self.Height_of_girder, f"{self.name}_{pier_start.name}_{side}_BearingTop_outer")}
                 for point in self.girder_bearing_top_points[pier_start.name][side].values():
                     point.add()
             
-            points.append(self._Sapobj.Bridge.Basic.Point.create(x, y, z, f"{gidername}_girder_{side}_{i}"))
+            points.append(SapPoint(x, y, z, f"{gidername}_girder_{side}_{i}"))
             
             if i==num-1:
-                self.girder_points[pier_end.name][side] = self._Sapobj.Bridge.Basic.Point.create(x_end, y, h_end, f"{self.name}_{pier_end.name}_{side}_girder_point")
+                self.girder_points[pier_end.name][side] = SapPoint(x_end, y, h_end, f"{self.name}_{pier_end.name}_{side}_girder_point")
                 points.append(self.girder_points[pier_end.name][side])
                 
                 y_outer,y_inner = calc_y_bearing(y_end,pier_end)
                 self.girder_bearing_top_points[pier_end.name][side] = {
-                    'inner':self._Sapobj.Bridge.Basic.Point.create(x_end, y_inner, h_end - self.Height_of_girder, f"{self.name}_{pier_end.name}_{side}_BearingTop_inner"),
-                    'outer':self._Sapobj.Bridge.Basic.Point.create(x_end, y_outer, h_end - self.Height_of_girder, f"{self.name}_{pier_end.name}_{side}_BearingTop_outer")}
+                    'inner':SapPoint(x_end, y_inner, h_end - self.Height_of_girder, f"{self.name}_{pier_end.name}_{side}_BearingTop_inner"),
+                    'outer':SapPoint(x_end, y_outer, h_end - self.Height_of_girder, f"{self.name}_{pier_end.name}_{side}_BearingTop_outer")}
                 for point in self.girder_bearing_top_points[pier_end.name][side].values():
                     point.add()
             
