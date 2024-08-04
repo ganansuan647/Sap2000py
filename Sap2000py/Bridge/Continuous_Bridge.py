@@ -566,28 +566,37 @@ class Sap_Box_Girder:
         # 刚度取大值，不直接固定,暂时不考虑阻尼
         # U1为竖向，U2为纵桥向，U3为横桥向
         FixedDOF = []
+        DOF = ['U1', 'U2', 'U3', 'R1', 'R2', 'R3']
         # dampingCe = {}
         # 固定支座:
-        DOF = ['U1', 'U2', 'U3']
-        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":1e10}
+        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0}
         fixed_link = "Fixed"
         Saproject().Define.section.PropLink.SetLinear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         # 横桥向（y）滑动支座
-        DOF = ['U1', 'U2']
-        uncoupleKe = {"U1":1e10,"U2":1e10}
+        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":0,"R1":0,"R2":0,"R3":0}
         y_sliding_link = "y_sliding"
         Saproject().Define.section.PropLink.SetLinear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         # 纵桥向（x）滑动支座
-        DOF = ['U1', 'U3']
-        uncoupleKe = {"U1":1e10,"U3":1e10}
+        uncoupleKe = {"U1":1e10,"U2":0,"U3":1e10,"R1":0,"R2":0,"R3":0}
         x_sliding_link = "x_sliding"
         Saproject().Define.section.PropLink.SetLinear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         # 双向滑动支座
-        DOF = ['U1']
-        uncoupleKe = {"U1":1e10}
+        uncoupleKe = {"U1":1e10,"U2":0,"U3":0,"R1":0,"R2":0,"R3":0}
         both_sliding_link = "Both_sliding"
         Saproject().Define.section.PropLink.SetLinear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
         return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
+    
+    def update_ideal_links(self,mu:float = 0.03):
+        """update bilinear ideal links for girder
+        mu(float): frictional coefficient
+        """
+        for pier in self.pierlist:
+            bearings = self.bearings[pier.name]
+            for side in ['left','right']:
+                raise NotImplementedError
+                Saproject().Define.section.PropLink.SetMultiLinearElastic("#6_x_sliding", DOF=['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], Fixed=[], Nonlinear = ["U2"],Ke={"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0})
+
+                Saproject().Define.section.PropLink.SetMultiLinearPoints("#6_x_sliding", DOF='U2', forceList=[-1,-1,0,1,1],dispList=[-30,-0.03,0,0.03,30],Type='Isotropic')
     
     def add_ideal_bearing_links(self):
         fixed_link, y_sliding_link, x_sliding_link, both_sliding_link = self.__define_ideal_links()

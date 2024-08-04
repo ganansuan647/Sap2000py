@@ -292,21 +292,21 @@ pier16.connect_with_base(pier16base)
 girderleft = Bridge.Girder.Box(
     name = "SpanLeft",
     pierlist=[pier1,pier2,pier3,pier4,pier5,pier6],
-    fixedpier = [pier3,pier4],
+    fixedpier = [pier3],
     Plan = '方案一')
 girderleft.add_bearing_links(strategy = 'ideal')        
 
 girdermain = Bridge.Girder.Box(
     name = "SpanMain",
     pierlist=[pier6,pier7,pier8,pier9,pier10,pier11],
-    fixedpier = [pier8,pier9],
+    fixedpier = [pier8],
     Plan = '方案一')
 girdermain.add_bearing_links(strategy = 'ideal')
 
 girderright = Bridge.Girder.Box(
     name = "SpanRight",
     pierlist=[pier11,pier12,pier13,pier14,pier15,pier16],
-    fixedpier = [pier13,pier14],
+    fixedpier = [pier13],
     Plan = '方案一')
 girderright.add_bearing_links(strategy = 'ideal')
 
@@ -324,8 +324,6 @@ bearing_names = [girdermain.bearings[pier.name]['left']['inner'].name for pier i
 Sap.Scripts.Group.AddtoGroup('Bearing',bearing_names,type='Link')
 
 # set Modal analysis
-Sap.Define.loadcases.ModalEigen.SetInitialCase('MODAL', None)
-Sap.Define.loadcases.ModalEigen.SetLoads('MODAL',NumberLoads=3,LoadType=['Accel','Accel','Accel'],LoadName=['UX','UY','UZ'])
 Sap.Define.loadcases.ModalEigen.SetNumberModes('MODAL',MaxModes=500)
 # Remove all cases for analysis
 Sap.Scripts.Analyze.RemoveCases("All")
@@ -376,6 +374,11 @@ period_z_2 = [periods[i] for i in range(len(periods)) if PartiMassRatios[10][i]>
 # print table
 console = Console()
 console.print(table)
+
+logger.opt(colors=True).success(f"Rayleigh damping Control Period of X direction is {period_x_1:.2f}s and {period_x_2:.2f}s (actually {min(period_x_2,period_z_2):.2f}s)")
+logger.opt(colors=True).success(f"Rayleigh damping Control Period of Y direction is {period_y_1:.2f}s and {period_y_2:.2f}s (actually {min(period_y_2,period_z_2):.2f}s)")
+logger.opt(colors=True).success(f"Rayleigh damping Control Period of Z direction is {period_z_1:.2f}s and {period_z_2:.2f}s")
+
 # unlck the model to make more settings
 ret = Sap._Model.SetModelIsLocked(False)
 
@@ -413,13 +416,13 @@ Sap.Define.function.ResponseSpectrum.Set_User('E2Spectrum',times,values,0.02)
 Sap.Define.loadcases.ResponseSpectrum.SetCase("E2X")
 Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2X',0.02)
 Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2X','SRSS')
-Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2X',NumberLoads=2,LoadName=['U1','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,1*0.65])
+Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2X',NumberLoads=2,LoadName=['U1','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
 
 # E2Y Spectrum
 Sap.Define.loadcases.ResponseSpectrum.SetCase("E2Y")
 Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2Y',0.02)
 Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2Y','SRSS')
-Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2Y',NumberLoads=2,LoadName=['U2','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,1*0.65])
+Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2Y',NumberLoads=2,LoadName=['U2','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
 TH_names = []
 time_history_folder_path = Path('.\Examples\waves')
 TH_files = time_history_folder_path.glob('*.txt')
@@ -428,20 +431,27 @@ for file_path in TH_files:
     time_history_name = 'E2'+file_path.stem.split('.')[0]
     TH_names.append(time_history_name)
     Sap.Define.function.TimeHistory.Set_User(time_history_name,times,values)
-    # E2X Time History
-    Sap.Define.loadcases.DirHistNonlinear.SetCase('E2X'+time_history_name)
-    Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2X'+time_history_name,'Newmark')
-    Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=3,LoadType=['Load','Accel','Accel'],LoadName=['DEAD','U1','U3'],Func=["RAMPTH",time_history_name,time_history_name],SF=[1,1,0.65])
-    Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2X'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.05
-    # E2Y Time History
-    Sap.Define.loadcases.DirHistNonlinear.SetCase('E2Y'+time_history_name)
-    Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2Y'+time_history_name,'Newmark')
-    Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2Y'+time_history_name,NumberLoads=3,LoadType=['Load','Accel','Accel'],LoadName=['DEAD','U2','U3'],Func=["RAMPTH",time_history_name,time_history_name],SF=[1,1,0.65])
-    Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2Y'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_y_1, Dampf2=min(period_y_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.05
+    # E2X Modal History
+    Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2X'+time_history_name)
+    Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2X'+time_history_name,0.02)
+    Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2X'+time_history_name,nstep=8192, dt=0.02)
+    Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
+    # # E2X Time History
+    # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2X'+time_history_name)
+    # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2X'+time_history_name,'Newmark')
+    # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
+    # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2X'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
+    # E2Y Modal History
+    Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2Y'+time_history_name)
+    Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2Y'+time_history_name,0.02)
+    Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2Y'+time_history_name,nstep=8192, dt=0.02)
+    Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2Y'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U2','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
+    # # E2Y Time History
+    # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2Y'+time_history_name)
+    # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2Y'+time_history_name,'Newmark')
+    # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2Y'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U2','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
+    # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2Y'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_y_1, Dampf2=min(period_y_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
     
-logger.opt(colors=True).success(f"Rayleigh damping Control Period of X direction is {period_x_1:.2f}s and {period_x_2:.2f}s (actually {min(period_x_2,period_z_2):.2f}s)")
-logger.opt(colors=True).success(f"Rayleigh damping Control Period of Y direction is {period_y_1:.2f}s and {period_y_2:.2f}s (actually {min(period_y_2,period_z_2):.2f}s)")
-logger.opt(colors=True).success(f"Rayleigh damping Control Period of Z direction is {period_z_1:.2f}s and {period_z_2:.2f}s")
 
 Sap.Define.LoadCombo.Add('E2纵向+竖向', comboType = 'AbsAdd')
 ret = [Sap.Define.LoadCombo.SetCaseList('E2纵向+竖向',CNameType="LoadCase",CName = 'E2X'+name, SF = 1/len(TH_names)) for name in TH_names]
@@ -457,10 +467,8 @@ if all([r[1] == 0 for r in ret]):
 else:
     logger.opt(colors=True).error(f"An error occurred while defining the Load Combination E2横向.")
 
-print("程序暂停,等待用户确认已重设MODAL工况...")
-user_input = input("请操作并按下回车键: ")
-
 Sap.File.Save(ModelPath)
+
 # Sap.Scripts.Analyze.AddCases(CaseName = ['DEAD', 'MODAL','E2X','E2Y'])
 # Sap.Analyze.RunAnalysis()
 Sap.Scripts.Analyze.RunAll()
@@ -488,14 +496,15 @@ if True:
     for i in sorted_indices:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
-                f"{max(LinkAbsDeformationS[i][1:2]):.2f}",
-                f"{max(LinkAbsForceS[i][1:2]):.2f}",
-                f"{max(LinkAbsDeformationTH[i][1:2]):.2f}",
-                f"{max(LinkAbsForceTH[i][1:2]):.2f}",
+                f"{max(LinkAbsDeformationS[i][1:3]):.2f}",
+                f"{max(LinkAbsForceS[i][1:3]):.2f}",
+                f"{max(LinkAbsDeformationTH[i][1:3]):.2f}",
+                f"{max(LinkAbsForceTH[i][1:3]):.2f}",
             )
 # print table
 console = Console()
 console.print(table)
+
 
 table = Table(title="横桥向+竖向支座反应比较", show_header=True, header_style="bold magenta")
 table.add_column("墩号", justify="left", style="cyan", no_wrap=True)
@@ -520,10 +529,10 @@ if True:
     for i in sorted_indices:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
-                f"{max(LinkAbsDeformationS[i][1:2]):.2f}",
-                f"{max(LinkAbsForceS[i][1:2]):.2f}",
-                f"{max(LinkAbsDeformationTH[i][1:2]):.2f}",
-                f"{max(LinkAbsForceTH[i][1:2]):.2f}",
+                f"{max(LinkAbsDeformationS[i][1:3]):.2f}",
+                f"{max(LinkAbsForceS[i][1:3]):.2f}",
+                f"{max(LinkAbsDeformationTH[i][1:3]):.2f}",
+                f"{max(LinkAbsForceTH[i][1:3]):.2f}",
             )
 # print table
 console = Console()
@@ -551,10 +560,10 @@ if True:
     for i in sorted_indices:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
-                f"{max(EleAbsForceS1[i][1:2]):.2f}",
-                f"{max(EleAbsForceS2[i][1:2]):.2f}",
-                f"{max(EleAbsForceTH1[i][1:2]):.2f}",
-                f"{max(EleAbsForceTH2[i][1:2]):.2f}",
+                f"{max(EleAbsForceS1[i][1:3]):.2f}",
+                f"{max(EleAbsForceS2[i][1:3]):.2f}",
+                f"{max(EleAbsForceTH1[i][1:3]):.2f}",
+                f"{max(EleAbsForceTH2[i][1:3]):.2f}",
             )
 # print table
 console = Console()
@@ -581,10 +590,10 @@ if True:
     for i in sorted_indices:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
-                f"{max(EleAbsForceS1[i][1:2]):.2f}",
-                f"{max(EleAbsForceS2[i][1:2]):.2f}",
-                f"{max(EleAbsForceTH1[i][1:2]):.2f}",
-                f"{max(EleAbsForceTH2[i][1:2]):.2f}",
+                f"{max(EleAbsForceS1[i][1:3]):.2f}",
+                f"{max(EleAbsForceS2[i][1:3]):.2f}",
+                f"{max(EleAbsForceTH1[i][1:3]):.2f}",
+                f"{max(EleAbsForceTH2[i][1:3]):.2f}",
             )
 # print table
 console = Console()
@@ -613,11 +622,11 @@ if True:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
                 f"{JointAbsReacS[i][2]:.2f}",
-                f"{max(JointAbsReacS[i][0:1]):.2f}",
-                f"{max(JointAbsReacS[i][3:4]):.2f}",
+                f"{max(JointAbsReacS[i][0:2]):.2f}",
+                f"{max(JointAbsReacS[i][3:4]):.2e}",
                 f"{JointAbsReacTH[i][2]:.2f}",
-                f"{max(JointAbsReacTH[i][0:1]):.2f}",
-                f"{max(JointAbsReacTH[i][3:4]):.2f}",
+                f"{max(JointAbsReacTH[i][0:2]):.2f}",
+                f"{max(JointAbsReacTH[i][3:4]):.2e}",
             )
 
 # print table
@@ -648,11 +657,11 @@ if True:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
                 f"{JointAbsReacS[i][2]:.2f}",
-                f"{max(JointAbsReacS[i][0:1]):.2f}",
-                f"{max(JointAbsReacS[i][3:4]):.2f}",
+                f"{max(JointAbsReacS[i][0:2]):.2f}",
+                f"{max(JointAbsReacS[i][3:4]):.2e}",
                 f"{JointAbsReacTH[i][2]:.2f}",
-                f"{max(JointAbsReacTH[i][0:1]):.2f}",
-                f"{max(JointAbsReacTH[i][3:4]):.2f}",
+                f"{max(JointAbsReacTH[i][0:2]):.2f}",
+                f"{max(JointAbsReacTH[i][3:4]):.2e}",
             )
 
 # print table

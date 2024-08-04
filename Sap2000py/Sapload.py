@@ -1060,7 +1060,7 @@ class load_ModalHistNonlinear:
         """
         self.__Model.LoadCases.ModHistNonlinear.SetSolControlParameters(name,tstat,dtmax,dtmin,ftol,etol,itmax,itmin,Cf)
 
-    def SetTimeStep(self,name,nstep,DT):
+    def SetTimeStep(self,name:str,nstep:int,dt:float):
         """
         ---This function sets the time step data for the specified load case---
         inputs:
@@ -1068,7 +1068,7 @@ class load_ModalHistNonlinear:
         nstep(int)-The number of output time steps.
         DT(float)-The output time step size.
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetTimeStep(name,nstep,DT)
+        self.__Model.LoadCases.ModHistNonlinear.SetTimeStep(name,nstep,dt)
 
 class load_ResponseSpectrum:
     def __init__(self,Sapobj):

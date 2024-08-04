@@ -1,4 +1,4 @@
-
+from typing import Literal
 class SapSection:
     def __init__(self,Sapobj):
         """
@@ -112,7 +112,8 @@ class SapSection:
         incompatible(bool)-If this item is True, incompatible bending modes are included in the stiffness
             formulation. In general, incompatible modes significantly improve the bending behavior of the object.
         """
-        self.__Model.PropSolid.SetProp(name,matProp,a,b,c,incompatible)
+        ret = self.__Model.PropSolid.SetProp(name,matProp,a,b,c,incompatible)
+        return ret
 
 
 class PropLink:
@@ -186,7 +187,8 @@ class PropLink:
             for each5 in key5:
                 indexNum5=keCoupleDict[each5]
                 ceInput[indexNum5]=Ce[each5]
-        self.__Model.PropLink.SetLinear(name,DOFFinal,FixedFinal,keInput,ceInput,dj2,dj3,KeCoupled,CeCoupled)
+        ret = self.__Model.PropLink.SetLinear(name,DOFFinal,FixedFinal,keInput,ceInput,dj2,dj3,KeCoupled,CeCoupled)
+        return ret
 
     def SetMultiLinearElastic(self,name,DOF,Fixed,Nonlinear,Ke={},Ce={},dj2=0,dj3=0):
         """
@@ -230,10 +232,10 @@ class PropLink:
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        self.__Model.PropLink.SetMultiLinearElastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3)
+        ret = self.__Model.PropLink.SetMultiLinearElastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3)
+        return ret
 
-    def SetMultiLinearPoints(self,name,DOF,forceList,dispList,myType=0,
-                                                        a1=0,a2=0,b1=0,b2=0,eta=0):
+    def SetMultiLinearPoints(self,name,DOF:Literal['U1','U2','U3','R1','R2','R3'],forceList:list[float],dispList:list[float],Type:Literal['Isotropic','Kinematic','Takeda','Pivot']='Isotropic',a1=0,a2=0,b1=0,b2=0,eta=0):
         """
         ---This function sets the force-deformation data for a specified degree of freedom in multilinear
         elastic and multilinear plastic link properties.---
@@ -248,11 +250,16 @@ class PropLink:
         myType(int)-This item applies only to multilinear plastic link properties. It is 1, 2 or 3, indicating
             the hysteresis type.0=Isotropic,1 = Kinematic,2 = Takeda,3 = Pivot
         a1,a2,b1,b2,eta(float)-This item applies only to multilinear plastic link properties that have a pivot
-        hysteresis type (MyType = 3).
+        hysteresis type (MyType = Pivot).
         """
+        DOFDict = {"U1": 1, "U2": 2, "U3": 3, "R1": 4, "R2": 5, "R3": 6}
+        dof = DOFDict[DOF]
+        TypeDict = {"Isotropic": 0, "Kinematic": 1, "Takeda": 2, "Pivot": 3}
+        Typeid = TypeDict[Type]
         numberPoints=len(forceList)
-        self.__Model.PropLink.SetMultiLinearPoints(name,DOF,numberPoints,forceList,dispList,myType,
+        ret = self.__Model.PropLink.SetMultiLinearPoints(name,dof,numberPoints,forceList,dispList,Typeid,
                                                     a1,a2,b1,b2,eta)
+        return ret
 
     def SetDamper(self,name,DOF,Fixed,Nonliear,Ke={},Ce={},k={},c={},cexp={},dj2=0,dj3=0):
         """
@@ -384,8 +391,9 @@ class PropLink:
         for each7 in key7:
             indexNum7 = keDict[each7]
             forceLimitInput[indexNum7] = ForceLimit[each7]
-        self.__Model.PropLink.SetDamperBilinear(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,cInput,
+        ret = self.__Model.PropLink.SetDamperBilinear(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,cInput,
                                                     cyInput,forceLimitInput,dj2,dj3)
+        return ret
 
     def SetGap(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},disp={},dj2=0,dj3=0):
         """
@@ -440,7 +448,8 @@ class PropLink:
         for each5 in key5:
             indexNum5 = keDict[each5]
             dispInput[indexNum5] = disp[each5]
-        self.__Model.PropLink.SetGap(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,dispInput,dj2,dj3)
+        ret = self.__Model.PropLink.SetGap(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,dispInput,dj2,dj3)
+        return ret
 
     def SetHook(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},disp={},dj2=0,dj3=0):
         """
@@ -495,7 +504,8 @@ class PropLink:
         for each5 in key5:
             indexNum5 = keDict[each5]
             dispInput[indexNum5] = disp[each5]
-        self.__Model.PropLink.SetHook(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,dispInput,dj2,dj3)
+        ret = self.__Model.PropLink.SetHook(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,dispInput,dj2,dj3)
+        return ret
 
     def SetPlasticWen(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},yieldF={},Ratio={},
                                                 exp={},dj2=0,dj3=0):
@@ -565,8 +575,9 @@ class PropLink:
         for each7 in key7:
             indexNum7 = keDict[each7]
             expInput[indexNum7] = exp[each7]
-        self.__Model.PropLink.SetPlasticWen(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,
+        ret = self.__Model.PropLink.SetPlasticWen(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,
                                                 yieldFInput,RatioInput,expInput,dj2,dj3)
+        return ret
 
     def SetRubberIsolator(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},YieldF={},
                                                     Ratio={},dj2=0,dj3=0):
@@ -634,8 +645,9 @@ class PropLink:
         for each6 in key6:
             indexNum6 = keDict[each6]
             RatioInput[indexNum6] = Ratio[each6]
-        self.__Model.PropLink.SetRubberIsolator(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,
+        ret = self.__Model.PropLink.SetRubberIsolator(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,
                                                 yieldFInput,RatioInput,dj2,dj3)
+        return ret
 
     def SetFrictionIsolator(self,name,DOF,Fixed,Nonlinear,Ke={},Ce={},k={},slow={},fast={},
                                                     Rate={},Radius={},damping=0,dj2=0,dj3=0):
@@ -720,8 +732,9 @@ class PropLink:
         for each8 in key8:
             indexNum8 = keDict[each8]
             radiusInput[indexNum8] = Radius[each8]
-        self.__Model.PropLink.SetFrictionIsolator(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,
+        ret = self.__Model.PropLink.SetFrictionIsolator(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,
                                                     slowInput,fastInput,rateInput,radiusInput,damping,dj2,dj3)
+        return ret
 
     def SetWeightAndMass(self,name,w,mass=0,R1=0,R2=0,R3=0):
         """
@@ -732,4 +745,5 @@ class PropLink:
         mass(float)-The translational mass of the link. [M]
         R1,R2,R3(float)-The rotational inertia of the link about its local 1,2,3 axis. [ML2]
         """
-        self.__Model.PropLink.SetWeightAndMass(name,w,mass,R1,R2,R3)
+        ret = self.__Model.PropLink.SetWeightAndMass(name,w,mass,R1,R2,R3)
+        return ret
