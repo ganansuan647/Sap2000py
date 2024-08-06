@@ -1,4 +1,4 @@
-from Bridge.Continuous_Bridge import Section_General,Sap_Bearing_Linear,Sap_Double_Box_Pier,SapBase_6Spring,SapPoint,Sap_Box_Girder
+from Sap2000py.Bridge.Continuous_Bridge import Section_General,Sap_Bearing_Linear,Sap_Double_Box_Pier,SapBase_6Spring,SapPoint,Sap_Box_Girder
 
 class SapBase:
     Six_Spring = SapBase_6Spring

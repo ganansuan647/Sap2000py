@@ -115,8 +115,7 @@ class SapSection:
         ret = self.__Model.PropSolid.SetProp(name,matProp,a,b,c,incompatible)
         return ret
 
-
-class PropLink:
+class PropLink_Set:
     def __init__(self,Sapobj):
         """
         Passing in the parent class object directly is to avoid 
@@ -125,7 +124,7 @@ class PropLink:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model 
-
+        
     def SetLinear(self,name,DOF,Fixed,Ke={},Ce={},dj2=0,dj3=0,KeCoupled=False,CeCoupled=False):
         """
         ---This function initializes a linear-type link property. If this function is called for
@@ -190,7 +189,17 @@ class PropLink:
         ret = self.__Model.PropLink.SetLinear(name,DOFFinal,FixedFinal,keInput,ceInput,dj2,dj3,KeCoupled,CeCoupled)
         return ret
 
-    def SetMultiLinearElastic(self,name,DOF,Fixed,Nonlinear,Ke={},Ce={},dj2=0,dj3=0):
+    def MultiLinearElastic(self,name:str,
+                           DOF:list[Literal['U1','U2','U3','R1','R2','R3']] = [],
+                           Fixed:list[Literal['U1','U2','U3','R1','R2','R3']] = [],
+                           Nonlinear:list[Literal['U1','U2','U3','R1','R2','R3']] = [],
+                           Ke:dict[Literal['U1','U2','U3','R1','R2','R3'],float] = {},
+                           Ce:dict[Literal['U1','U2','U3','R1','R2','R3'],float] = {},
+                           dj2:float = 0.0,
+                           dj3:float = 0.0,
+                           notes:str = "",
+                           GUID:str = ""):
+        
         """
         ---This function initializes a multilinear elastic-type link property. If this function is called for an
         existing link property, all items for the property are reset to their default value.---
@@ -232,10 +241,10 @@ class PropLink:
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        ret = self.__Model.PropLink.SetMultiLinearElastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3)
+        ret = self.__Model.PropLink.SetMultiLinearElastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3,notes,GUID)
         return ret
 
-    def SetMultiLinearPoints(self,name,DOF:Literal['U1','U2','U3','R1','R2','R3'],forceList:list[float],dispList:list[float],Type:Literal['Isotropic','Kinematic','Takeda','Pivot']='Isotropic',a1=0,a2=0,b1=0,b2=0,eta=0):
+    def MultiLinearPoints(self,name,DOF:Literal['U1','U2','U3','R1','R2','R3'],forceList:list[float],dispList:list[float],Type:Literal['Isotropic','Kinematic','Takeda','Pivot']='Isotropic',a1=0,a2=0,b1=0,b2=0,eta=0):
         """
         ---This function sets the force-deformation data for a specified degree of freedom in multilinear
         elastic and multilinear plastic link properties.---
@@ -257,11 +266,11 @@ class PropLink:
         TypeDict = {"Isotropic": 0, "Kinematic": 1, "Takeda": 2, "Pivot": 3}
         Typeid = TypeDict[Type]
         numberPoints=len(forceList)
-        ret = self.__Model.PropLink.SetMultiLinearPoints(name,dof,numberPoints,forceList,dispList,Typeid,
-                                                    a1,a2,b1,b2,eta)
-        return ret
+        TypeDict={"Isotropic":0,"Kinematic":1,"Takeda":2,"Pivot":3}
+        myType=TypeDict[Type]
+        self.__Model.PropLink.SetMultiLinearPoints(name,DOF,numberPoints,forceList,dispList,myType,a1,a2,b1,b2,eta)
 
-    def SetDamper(self,name,DOF,Fixed,Nonliear,Ke={},Ce={},k={},c={},cexp={},dj2=0,dj3=0):
+    def Damper(self,name,DOF,Fixed,Nonliear,Ke={},Ce={},k={},c={},cexp={},dj2=0,dj3=0):
         """
         ---This function initializes an exponential damper-type link property---
         inputs:
@@ -324,7 +333,7 @@ class PropLink:
         self.__Model.PropLink.SetDamper(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,cInput,
                                             cexpInput,dj2,dj3)
 
-    def SetDamperBilinear(self,name,DOF,Fixed,Nonliear,Ke={},Ce={},k={},c={},
+    def DamperBilinear(self,name,DOF,Fixed,Nonliear,Ke={},Ce={},k={},c={},
                                                     cy={},ForceLimit={},dj2=0,dj3=0):
         """
         ---This function initializes a bilinear damper-type link property---
@@ -395,7 +404,7 @@ class PropLink:
                                                     cyInput,forceLimitInput,dj2,dj3)
         return ret
 
-    def SetGap(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},disp={},dj2=0,dj3=0):
+    def Gap(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},disp={},dj2=0,dj3=0):
         """
         ---This function initializes a gap-type link property---
         inputs:
@@ -451,7 +460,7 @@ class PropLink:
         ret = self.__Model.PropLink.SetGap(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,dispInput,dj2,dj3)
         return ret
 
-    def SetHook(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},disp={},dj2=0,dj3=0):
+    def Hook(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},disp={},dj2=0,dj3=0):
         """
         ---This function initializes a hook-type link property---
         inputs:
@@ -507,7 +516,7 @@ class PropLink:
         ret = self.__Model.PropLink.SetHook(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,kInput,dispInput,dj2,dj3)
         return ret
 
-    def SetPlasticWen(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},yieldF={},Ratio={},
+    def PlasticWen(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},yieldF={},Ratio={},
                                                 exp={},dj2=0,dj3=0):
         """
         ---This function initializes a plastic Wen-type link property---
@@ -579,7 +588,7 @@ class PropLink:
                                                 yieldFInput,RatioInput,expInput,dj2,dj3)
         return ret
 
-    def SetRubberIsolator(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},YieldF={},
+    def RubberIsolator(self,name,DOF,Fixed,NonLinear,Ke={},Ce={},k={},YieldF={},
                                                     Ratio={},dj2=0,dj3=0):
         """
         ---This function initializes a rubber isolator-type link property---
@@ -649,7 +658,7 @@ class PropLink:
                                                 yieldFInput,RatioInput,dj2,dj3)
         return ret
 
-    def SetFrictionIsolator(self,name,DOF,Fixed,Nonlinear,Ke={},Ce={},k={},slow={},fast={},
+    def FrictionIsolator(self,name,DOF,Fixed,Nonlinear,Ke={},Ce={},k={},slow={},fast={},
                                                     Rate={},Radius={},damping=0,dj2=0,dj3=0):
         """
         ---This function initializes a friction isolator-type link proper---
@@ -736,7 +745,7 @@ class PropLink:
                                                     slowInput,fastInput,rateInput,radiusInput,damping,dj2,dj3)
         return ret
 
-    def SetWeightAndMass(self,name,w,mass=0,R1=0,R2=0,R3=0):
+    def WeightAndMass(self,name,w,mass=0,R1=0,R2=0,R3=0):
         """
         ---This function assigns weight and mass values to a link property.---
         inputs:
@@ -745,5 +754,532 @@ class PropLink:
         mass(float)-The translational mass of the link. [M]
         R1,R2,R3(float)-The rotational inertia of the link about its local 1,2,3 axis. [ML2]
         """
-        ret = self.__Model.PropLink.SetWeightAndMass(name,w,mass,R1,R2,R3)
+        ret = self.__Model.PropLink.SetWeightAndMass(name)
         return ret
+
+class PropLink_Get:
+    def __init__(self,Sapobj):
+        """
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model 
+    
+    def GetDamper(self, name: str) -> list:
+        """
+        Retrieves link property data for an exponential damper-type link property.
+        
+        Parameters:
+        name (str): The name of an existing exponential damper-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, k, c, cexp, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - c (list of float): An array of nonlinear damping coefficient terms for the link property. The nonlinear damping coefficient applies for nonlinear analyses.
+            - cexp (list of float): An array of the nonlinear damping exponent terms. The nonlinear damping exponent applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetDamper(name)
+        return ret
+
+    def GetDamperBilinear(self, name: str) -> list:
+        """
+        Retrieves link property data for a bilinear damper-type link property.
+        
+        Parameters:
+        name (str): The name of an existing bilinear damper-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, k, c, cy, ForceLimit, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - c (list of float): An array of nonlinear initial damping coefficient terms for the link property. The nonlinear initial damping coefficient applies for nonlinear analyses.
+            - cy (list of float): An array of nonlinear yielded damping coefficient terms for the link property. The nonlinear yielded damping coefficient applies for nonlinear analyses.
+            - ForceLimit (list of float): An array of nonlinear linear force limit terms for the link property. The linear force limit applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetDamperBilinear(name)
+        return ret
+
+    def GetDamperFrictionSpring(self, name: str) -> list:
+        """
+        Retrieves link property data for a friction spring damper-type link property.
+        
+        Parameters:
+        name (str): The name of an existing friction spring damper-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, k, k1, k2, u0, us, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial (nonslipping) stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - k1 (list of float): An array of slipping stiffness when loading terms for the link property. The slipping stiffness when loading applies for nonlinear analyses.
+            - k2 (list of float): An array of slipping stiffness when unloading terms for the link property. The slipping stiffness when unloading applies for nonlinear analyses.
+            - u0 (list of float): An array of precompression displacement terms for the link property. The nonlinear precompression displacement applies for nonlinear analyses.
+            - us (list of float): An array of stop displacement terms for the link property. The nonlinear stop displacement applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetDamperFrictionSpring(name)
+        return ret
+
+    def GetDamperLinearExponential(self, name: str) -> list:
+        """
+        Retrieves link property data for a linear exponential damper-type link property.
+        
+        Parameters:
+        name (str): The name of an existing linear exponential damper-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, k, c, cexp, ForceLimit, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - c (list of float): An array of nonlinear damping coefficient terms for the link property. The nonlinear damping coefficient applies for nonlinear analyses.
+            - cexp (list of float): An array of the nonlinear damping exponent terms. The nonlinear damping exponent applies for nonlinear analyses.
+            - ForceLimit (list of float): An array of nonlinear linear force limit terms for the link property. The linear force limit applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetDamperLinearExponential(name)
+        return ret
+
+    def GetFrictionIsolator(self, name: str) -> list:
+        """
+        Retrieves link property data for a friction isolator-type link property.
+        
+        Parameters:
+        name (str): The name of an existing friction isolator-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, k, Slow, Fast, Rate, Radius, Damping, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - Slow (list of float): An array of the friction coefficient at zero velocity terms for the link property. This coefficient applies for nonlinear analyses.
+            - Fast (list of float): An array of the friction coefficient at fast velocity terms for the link property. This coefficient applies for nonlinear analyses.
+            - Rate (list of float): An array of the inverse of the characteristic sliding velocity terms for the link property. This item applies for nonlinear analyses.
+            - Radius (list of float): An array of the radius of the sliding contact surface terms for the link property. Inputting 0 means there is an infinite radius, that is, the slider is flat. This item applies for nonlinear analyses.
+            - Damping (float): The nonlinear damping coefficient used for the axial translational degree of freedom, U1. This item applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetFrictionIsolator(name)
+        return ret
+
+    def GetGap(self, name: str) -> list:
+        """
+        Retrieves link property data for a gap-type link property.
+        
+        Parameters:
+        name (str): The name of an existing gap-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, k, dis, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - dis (list of float): An array of initial gap opening terms for the link property. The initial gap opening applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetGap(name)
+        return ret
+
+    def GetHook(self, name: str) -> list:
+        """
+        Retrieves link property data for a hook-type link property.
+        
+        Parameters:
+        name (str): The name of an existing hook-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, k, dis, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - dis (list of float): An array of initial hook opening terms for the link property. The initial hook opening applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetHook(name)
+        return ret
+
+    def GetLinear(self, name: str) -> list:
+        """
+        Retrieves link property data for a linear-type link property.
+        
+        Parameters:
+        name (str): The name of an existing linear-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, Ke, Ce, dj2, dj3, KeCoupled, CeCoupled, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - Ke (list of float): An array of stiffness terms for the link property. There are 6 terms if the stiffness is uncoupled and 21 if it is coupled.
+            - Ce (list of float): An array of damping terms for the link property. There are 6 terms if the damping is uncoupled and 21 if it is coupled.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - KeCoupled (bool): Indicates if the link stiffness, Ke, is coupled.
+            - CeCoupled (bool): Indicates if the link damping, Ce, is coupled.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetLinear(name)
+        return ret
+
+    def GetMultiLinearElastic(self, name: str) -> list:
+        """
+        Retrieves link property data for a multilinear elastic-type link property.
+        
+        Parameters:
+        name (str): The name of an existing multilinear elastic-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetMultiLinearElastic(name)
+        return ret
+
+    def GetMultiLinearPlastic(self, name: str) -> list:
+        """
+        Retrieves link property data for a multilinear plastic-type link property.
+        
+        Parameters:
+        name (str): The name of an existing multilinear plastic-type link property.
+        
+        Returns:
+        List: [ret, DOF, Fixed, NonLinear, Ke, Ce, dj2, dj3, Notes, GUID]
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+        """
+        ret = self.__Model.PropLink.GetMultiLinearPlastic(name)
+        return ret
+
+    def GetMultiLinearPoints(self, name: str) -> list:
+        """
+        Retrieves the force-deformation data for a specified degree of freedom in multilinear elastic and multilinear plastic link properties.
+        
+        Parameters:
+        name (str): The name of an existing multilinear elastic or multilinear plastic link property.
+        
+        Returns:
+        List: [ret, DOF, NumberPoints, F, D, MyType, a1, a2, b1, b2, eta]
+            - ret (int): Returns zero if the data is successfully retrieved; otherwise returns a nonzero value.
+            - DOF (int): 1, 2, 3, 4, 5, or 6, indicating the degree of freedom to which the multilinear points apply.
+            - NumberPoints (int): The number of force-deformation points for the specified degree of freedom.
+            - F (list of float): An array, dimensioned to NumberPoints - 1, that includes the force at each point.
+            - D (list of float): An array, dimensioned to NumberPoints - 1, that includes the displacement at each point.
+            - MyType (int): This item applies only to multilinear plastic link properties. It is 1, 2, or 3, indicating the hysteresis type.
+            - a1 (float): This item only applies to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Alpha1 hysteresis parameter.
+            - a2 (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Alpha2 hysteresis parameter.
+            - b1 (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Beta1 hysteresis parameter.
+            - b2 (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Beta2 hysteresis parameter.
+            - eta (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Eta hysteresis parameter.
+        """
+        ret = self.__Model.PropLink.GetMultiLinearPoints(name)
+        return ret
+
+    def GetNameList(self) -> list:
+        """
+        Retrieves the names of all defined link properties of the specified type.
+        
+        Parameters:
+        None
+        
+        Returns:
+        List: [ret, NumberNames, MyName]
+            - ret (int): Returns zero if the names are successfully retrieved; otherwise returns a nonzero value.
+            - NumberNames (int): The number of link property names retrieved by the program.
+            - MyName (list of str): A one-dimensional array of link property names.
+        """
+        ret = self.__Model.PropLink.GetNameList()
+        return ret
+
+    def GetPDelta(self, name: str) -> list:
+        """
+        Retrieves P-delta parameters for a link property.
+        
+        Parameters:
+        name (str): The name of an existing link property.
+        
+        Returns:
+        List: [Value, ret]
+            - Value (list of float): An array of P-delta parameters.
+                - Value[0] = M2 P-delta to I-end of link as moment, M2I
+                - Value[1] = M2 P-delta to J-end of link as moment, M2J
+                - Value[2] = M3 P-delta to I-end of link as moment, M3I
+                - Value[3] = M3 P-delta to J-end of link as moment, M3J
+            - ret (int): Returns zero if the data is successfully retrieved; otherwise returns a nonzero value.
+        """
+        ret = self.__Model.PropLink.GetPDelta(name)
+        return ret
+
+    def GetPlasticWen(self, name: str) -> list:
+        """
+        Retrieves link property data for a plastic Wen-type link property.
+        
+        Parameters:
+        name (str): The name of an existing plastic Wen-type link property.
+        
+        Returns:
+        List: [DOF, Fixed, NonLinear, Ke, Ce, k, Yield, Ratio, exp, dj2, dj3, Notes, GUID, ret]
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - Yield (list of float): An array of yield force terms for the link property. The yield force applies for nonlinear analyses.
+            - Ratio (list of float): An array of post-yield stiffness ratio terms for the link property. The post-yield stiffness ratio applies for nonlinear analyses.
+            - exp (list of float): An array of yield exponent terms for the link property. The yield exponent applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+        """
+        ret = self.__Model.PropLink.GetPlasticWen(name,)
+        return ret
+
+    def GetRubberIsolator(self, name: str) -> list:
+        """
+        Retrieves link property data for a rubber isolator-type link property.
+        
+        Parameters:
+        name (str): The name of an existing rubber isolator-type link property.
+        
+        Returns:
+        List: [DOF, Fixed, NonLinear, Ke, Ce, k, Yield, Ratio, dj2, dj3, Notes, GUID, ret]
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - Yield (list of float): An array of yield force terms for the link property. The yield force applies for nonlinear analyses.
+            - Ratio (list of float): An array of post-yield stiffness ratio terms for the link property. The post-yield stiffness ratio applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+        """
+        ret = self.__Model.PropLink.GetRubberIsolator(name)
+        return ret
+
+    def GetSpringData(self, name: str) -> list:
+        """
+        Retrieves length and area values for a link property that are used if the link property is specified in line and area spring assignments.
+        
+        Parameters:
+        name (str): The name of an existing link property.
+        
+        Returns:
+        List: [DefinedForThisLength, DefinedForThisArea, ret]
+            - DefinedForThisLength (float): The link property is defined for this length in a line (frame) spring. [L]
+            - DefinedForThisArea (float): The link property is defined for this area in an area spring. [L2]
+            - ret (int): Returns zero if the data is successfully retrieved; otherwise returns a nonzero value.
+        """
+        ret = self.__Model.PropLink.GetSpringData(name)
+        return ret
+
+    def GetTCFrictionIsolator(self, name: str) -> list:
+        """
+        Retrieves link property data for a T/C friction isolator-type link property.
+        
+        Parameters:
+        name (str): The name of an existing T/C friction isolator-type link property.
+        
+        Returns:
+        List: [DOF, Fixed, NonLinear, Ke, Ce, k, Slow, Fast, Rate, Radius, SlowT, FastT, RateT, kt, dis, dist, Damping, dj2, dj3, Notes, GUID, ret]
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - k (list of float): An array of initial stiffness terms for the link property. The initial stiffness applies for nonlinear analyses.
+            - Slow (list of float): An array of the friction coefficient at zero velocity terms when U1 is in compression for the link property. This coefficient applies for nonlinear analyses.
+            - Fast (list of float): An array of the friction coefficient at fast velocity terms when U1 is in compression for the link property. This coefficient applies for nonlinear analyses.
+            - Rate (list of float): An array of the inverse of the characteristic sliding velocity terms when U1 is in compression for the link property. This item applies for nonlinear analyses.
+            - Radius (list of float): An array of the radius of the sliding contact surface terms for the link property. Inputting 0 means there is an infinite radius, that is, the slider is flat. This item applies for nonlinear analyses.
+            - SlowT (list of float): An array of the friction coefficient at zero velocity terms when U1 is in tension for the link property. This coefficient applies for nonlinear analyses.
+            - FastT (list of float): An array of the friction coefficient at fast velocity terms when U1 is in tension for the link property. This coefficient applies for nonlinear analyses.
+            - RateT (list of float): An array of the inverse of the characteristic sliding velocity terms when U1 is in tension for the link property. This item applies for nonlinear analyses.
+            - kt (float): The axial translational tension stiffness for the U1 degree of freedom. This item applies for nonlinear analyses.
+            - dis (float): The U1 degree of freedom gap opening for compression. This item applies for nonlinear analyses.
+            - dist (float): The U1 degree of freedom gap opening for tension. This item applies for nonlinear analyses.
+            - Damping (float): The nonlinear damping coefficient used for the axial translational degree of freedom, U1. This item applies for nonlinear analyses.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+        """
+        ret = self.__Model.PropLink.GetTCFrictionIsolator(name)
+        return ret
+
+    def GetTriplePendulumIsolator(self, name: str) -> list:
+        """
+        Retrieves link property data for a Triple Pendulum Isolator type link property.
+        
+        Parameters:
+        name (str): The name of an existing Triple Pendulum Isolator type link property.
+        
+        Returns:
+        List: [DOF, Fixed, NonLinear, Ke, Ce, K1, Damping, K, Slow, Fast, Rate, Radius, StopDist, HeightOut, HeightIn, dj2, dj3, Notes, GUID, ret]
+            - DOF (list of bool): A boolean array, dimensioned to 5, indicating if properties exist for a specified degree of freedom.
+            - Fixed (list of bool): A boolean array, dimensioned to 5, indicating if the specified degree of freedom is fixed (restrained).
+            - NonLinear (list of bool): A boolean array, dimensioned to 5, indicating if nonlinear properties exist for a specified degree of freedom.
+            - Ke (list of float): An array of effective stiffness terms for the link property. The effective stiffness applies for linear analyses, and also for nonlinear analysis for those DOF for which NonLinear(n) = False.
+            - Ce (list of float): An array of effective damping terms for the link property. The effective damping applies for linear analyses.
+            - K1 (float): The axial compression stiffness for the U1 degree of freedom. This item applies for nonlinear analyses.
+            - Damping (float): The nonlinear damping coefficient for the axial degree of freedom, U1, when it is in compression. This item applies for nonlinear analyses.
+            - K (list of float): An array, dimensioned to 3, of initial nonlinear stiffness (before sliding) for each sliding surface.
+            - Slow (list of float): An array, dimensioned to 3, of the friction coefficient at zero velocity for each sliding surface when U1 is in compression.
+            - Fast (list of float): An array, dimensioned to 3, of the friction coefficient at fast velocity for each sliding surface when U1 is in compression.
+            - Rate (list of float): An array, dimensioned to 3, of the inverse of the characteristic sliding velocity for the Slow and Fast friction coefficients for each sliding surface.
+            - Radius (list of float): An array, dimensioned to 3, of the radius for each sliding surface. Inputting 0 means there is an infinite radius, that is, the slider is flat.
+            - StopDist (list of float): An array, dimensioned to 3, of the amount of displacement allowed before hitting a stiff limit for each sliding surface. Inputting 0 means there is no stop.
+            - HeightOut (float): The height (distance) between the outer sliding surfaces at zero displacement.
+            - HeightIn (float): The height (distance) between the inner sliding surfaces.
+            - dj2 (float): The distance from the J-End of the link to the U2 shear spring, that is, the center of the isolator.
+            - dj3 (float): The distance from the J-End of the link to the U3 shear spring, that is, the center of the isolator.
+            - Notes (str): The notes, if any, assigned to the property.
+            - GUID (str): The GUID (global unique identifier), if any, assigned to the property.
+            - ret (int): Returns zero if the property data is successfully retrieved; otherwise returns a nonzero value.
+        """
+        ret = self.__Model.PropLink.GetTriplePendulumIsolator(name)
+        return ret
+
+    def GetTypeOAPI(self, name: str) -> list:
+        """
+        Retrieves the property type for the specified link property.
+        
+        Parameters:
+        name (str): The name of an existing link property.
+        
+        Returns:
+        List: [PropType, ret]
+            - PropType (str): The type of the link property as defined in the eLinkPropType enumeration.
+                'Linear' = 1
+                'Damper' = 2
+                'Gap' = 3
+                'Hook' = 4
+                'PlasticWen' = 5
+                'RubberIsolator' = 6
+                'FrictionIsolator' = 7
+                'MultiLinearElastic' = 8
+                'MultiLinearPlastic' = 9
+                'TCFrictionIsolator' = 10
+                'NotFound' = 0
+            - ret (int): Returns zero if the type is successfully retrieved; otherwise returns a nonzero value.
+        """
+        TypeDict = {0:None, 1:'Linear', 2:'Damper', 3:'Gap', 4:'Hook', 5:'PlasticWen', 6:'RubberIsolator', 7:'FrictionIsolator', 8:'MultiLinearElastic', 9:'MultiLinearPlastic', 10:'TCFrictionIsolator'}
+        PropType,ret = self.__Model.PropLink.GetTypeOAPI(name)
+        if PropType in TypeDict:
+            return [TypeDict[PropType],ret]
+        else:
+            return [PropType,ret]
+
+    def GetWeightAndMass(self, name: str) -> list:
+        """
+        Retrieves weight and mass data for a link property.
+        
+        Parameters:
+        name (str): The name of an existing link property.
+        
+        Returns:
+        List: [w, m, R1, R2, R3, ret]
+            - w (float): The weight of the link. [F]
+            - m (float): The translational mass of the link. [M]
+            - R1 (float): The rotational inertia of the link about its local 1 axis. [ML2]
+            - R2 (float): The rotational inertia of the link about its local 2 axis. [ML2]
+            - R3 (float): The rotational inertia of the link about its local 3 axis. [ML2]
+            - ret (int): Returns zero if the data is successfully retrieved; otherwise returns a nonzero value.
+        """
+        ret = self.__Model.PropLink.GetWeightAndMass(name)
+        return ret
+
+class PropLink:
+    def __init__(self,Sapobj):
+        """
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+        self.Set = PropLink_Set(Sapobj)
+        self.Get = PropLink_Get(Sapobj)
+
+    
+

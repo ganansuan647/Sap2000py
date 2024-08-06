@@ -4,14 +4,18 @@ from loguru import logger
 from shapely import Polygon
 from sectionproperties.pre import Geometry
 from sectionproperties.analysis import Section
-from typing import Literal,Union
+from typing import Literal,Union,ClassVar,Dict, List
 from itertools import chain
 import numpy as np
 import math
 from rich.console import Console
 from rich.table import Table
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from Sap2000py.Saproject import Saproject
+import weakref
+
+class ShouldNotInstantiateError(Exception):
+    pass
 
 @dataclass
 class Section_General:
@@ -100,7 +104,6 @@ class SapPoint:
 
     def exists(self):
         return Saproject().Assign.PointObj.Get.CoordCartesian(self.name)[-1] == 0
-
 
 class SapBase_6Spring:
     def __init__(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path(".\Examples\ContinuousBridge6spring.txt")):
@@ -457,7 +460,7 @@ class Sap_Double_Box_Pier:
         self.cap_section = self.name+"_Cap"
         return self.cap_section
     
-    def __add_body_constraints_for_points(self,constraint_name:str, points : list):
+    def _add_body_constraints_for_points(self,constraint_name:str, points : list):
         for point in points:
             if not point.exists():
                 logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
@@ -475,17 +478,17 @@ class Sap_Double_Box_Pier:
         # add body constraint between capTop and pier
         
         Saproject().Define.jointConstraints.SetBody(self.name+"_Cap_Pier", body_dof)
-        self.__add_body_constraints_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
+        self._add_body_constraints_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
         
         # add body constraint between pier top and bearing bottom
         left_points = flatten([self.pier_top['left'], self.bearing_bottom_point_outer['left'], self.bearing_bottom_point_inner['left']])
         right_points = flatten([self.pier_top['right'], self.bearing_bottom_point_outer['right'], self.bearing_bottom_point_inner['right']])
         # left
         Saproject().Define.jointConstraints.SetBody(self.name+"_left_Pier_Bearing", body_dof)
-        self.__add_body_constraints_for_points(self.name+"_left_Pier_Bearing", left_points)
+        self._add_body_constraints_for_points(self.name+"_left_Pier_Bearing", left_points)
         # right
         Saproject().Define.jointConstraints.SetBody(self.name+"_right_Pier_Bearing", body_dof)
-        self.__add_body_constraints_for_points(self.name+"_right_Pier_Bearing", right_points)
+        self._add_body_constraints_for_points(self.name+"_right_Pier_Bearing", right_points)
         
     def generate_cap_elements(self):
         cap_section_name = self.get_cap_section()
@@ -518,25 +521,159 @@ class Sap_Double_Box_Pier:
             Saproject().Assign.FrameObj.AddByPoint(self.hollow_points[side][-1].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
         Saproject().Assign.FrameObj.AddByPoint(self.pier_hollow_top[side].name, self.pier_top[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_hollowTop2Top")
 
+class Sap_Bearing:
+    def __init__(self):
+        logger.error('EZOpsMaterial is a abstract class!Should not be instantiated!')
+        raise ShouldNotInstantiateError('Abstract class EZOpsMaterial accidentally instantiated!')
+    
+    def add_link(self):
+        ret = Saproject().Assign.Link.AddByPoint(self.start_point.name, self.end_point.name, IsSingleJoint=False, PropName = self.link_name, UserName=self.name)
+        if ret[1] == 0:
+            logger.opt(colors=True).success(f"Link <yellow>{self.name}</yellow> Added!")
+        else:
+            logger.opt(colors=True).error(f"Link <yellow>{self.name}</yellow> Failed to Add!")
+    
+
 @dataclass
-class Sap_Bearing_Linear:
+class Sap_Bearing_Linear(Sap_Bearing):
     name:str
     start_point:SapPoint
     end_point:SapPoint
     link_name:str
     
     def __post_init__(self):
-        self.add()
+        self.add_link()
         
-    def add(self):
+    def define_link(self):
+        raise NotImplementedError
+
+@dataclass
+class Sap_LinkProp_MultiLinearElastic(Sap_Bearing):
+    name: str
+    DOF: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
+    Fixed: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
+    Nonlinear: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
+    Ke: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
+    Ce: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
+    dj2: float = 0.0
+    dj3: float = 0.0
+    notes: str = ""
+    GUID: str = ""
+    _instances: ClassVar = weakref.WeakSet()
+
+    def __post_init__(self):
+        self.add_link()
+        self.__class__._instances.add(self)
+    
+    @property
+    def is_defined(self):
+        ret = Saproject()._Model.PropLink.GetMultiLinearElastic(self.name)
+        return ret[-1]
+    
+    def get_LinkProp_from_Sap(self):
+        if self.is_defined:
+            ret = Saproject()._Model.PropLink.GetMultiLinearElastic(self.name)
+            DOF:list[bool] = ret[0]
+            Fixed:list[bool] = ret[1]
+            Nonlinear:list[bool] = ret[2]
+            Ke:list[float] = ret[3]
+            Ce:list[float] = ret[4]
+            dj2:float = ret[5]
+            dj3:float = ret[6]
+            Notes:str = ret[7]
+            GUID:str = ret[8]
+            return DOF,Fixed,Nonlinear,Ke,Ce,dj2,dj3,Notes,GUID
+        else:
+            logger.error(f"Link Property {self.name} is not defined.")
+            return None
+    
+    def define_link(self):
+        if not self.is_defined:
+            ret = Saproject().Define.section.PropLink.Set.MultiLinearElastic(self.name, DOF=self.DOF, Fixed=self.Fixed, Nonlinear = self.Nonlinear,Ke=self.Ke,Ce=self.Ce,dj2=self.dj2,dj3=self.dj3,Notes=self.notes)
+
+        else:
+            DOF,Fixed,Nonlinear,Ke,Ce,dj2,dj3,Notes,GUID = self.get_LinkProp_from_Sap()
+            if DOF == self.DOF and Fixed == self.Fixed and Nonlinear == self.Nonlinear and Ke == self.Ke and dj2 == self.dj2 and dj3 == self.dj3 and Notes == self.notes and GUID == self.GUID:
+                logger.opt(colors=True).info(f"Link Property <yellow>{self.name}</yellow> already defined.")
+                return 0  
+            
+    
+    @classmethod
+    def get_instances(cls):
+        return list(cls._instances)
+
+@dataclass
+class Sap_Bearing_MultiLinearElastic(Sap_LinkProp_MultiLinearElastic):
+    name:str
+    start_point:SapPoint
+    end_point:SapPoint
+    link_name:str
+    
+    def __post_init__(self):
+        self.add_link()
+        
+    def add_link(self):
         ret = Saproject().Assign.Link.AddByPoint(self.start_point.name, self.end_point.name, IsSingleJoint=False, PropName = self.link_name, UserName=self.name)
         if ret[1] == 0:
             logger.opt(colors=True).success(f"Link <yellow>{self.name}</yellow> Added!")
         else:
             logger.opt(colors=True).error(f"Link <yellow>{self.name}</yellow> Failed to Add!")
 
+
+class Sap_Girder:
+    def __init__(self):
+        logger.error('EZOpsMaterial is a abstract class!Should not be instantiated!')
+        raise ShouldNotInstantiateError('Abstract class EZOpsMaterial accidentally instantiated!')
+
+    def _define_ideal_links(self):
+        # 刚度取大值，不直接固定,暂时不考虑阻尼
+        # U1为竖向，U2为纵桥向，U3为横桥向
+        FixedDOF = []
+        DOF = ['U1', 'U2', 'U3', 'R1', 'R2', 'R3']
+        # dampingCe = {}
+        # 固定支座:
+        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0}
+        fixed_link = "Fixed"
+        Saproject().Define.section.PropLink.SetLinear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        # 横桥向（y）滑动支座
+        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":0,"R1":0,"R2":0,"R3":0}
+        y_sliding_link = "y_sliding"
+        Saproject().Define.section.PropLink.SetLinear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        # 纵桥向（x）滑动支座
+        uncoupleKe = {"U1":1e10,"U2":0,"U3":1e10,"R1":0,"R2":0,"R3":0}
+        x_sliding_link = "x_sliding"
+        Saproject().Define.section.PropLink.SetLinear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        # 双向滑动支座
+        uncoupleKe = {"U1":1e10,"U2":0,"U3":0,"R1":0,"R2":0,"R3":0}
+        both_sliding_link = "Both_sliding"
+        Saproject().Define.section.PropLink.SetLinear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
+
+    def _replace_ideal_link(self):
+        raise NotImplementedError
+
+    def _add_multiLinear_link(self,link_name:str,DOF:str,forceList:list,dispList:list,Type:str):
+        ret = Saproject().Define.section.PropLink.Set.MultiLinearPoints(link_name, DOF, forceList, dispList, Type)
+        if ret == 0:
+            logger.opt(colors=True).success(f"Link <yellow>{link_name}</yellow> Added!")
+        else:
+            logger.opt(colors=True).error(f"Link <yellow>{link_name}</yellow> Failed to Add!")
+        return ret
+
+    def _add_body_constraints_for_points(self,constraint_name:str, points : list):
+        for point in points:
+            if not point.exists():
+                logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
+                point.add()
+            ret = Saproject().Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
+            if ret[1] == 0:
+                logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to Body constraint : <yellow>{constraint_name}</yellow>")
+            else:
+                logger.opt(colors=True).error(f"<yellow>{point.name}</yellow> failed to add to Body constraint : <yellow>{constraint_name}</yellow>")
+
+
 @dataclass
-class Sap_Box_Girder:
+class Sap_Box_Girder(Sap_Girder):
     name: str
     pierlist: list
     fixedpier: list
@@ -562,30 +699,6 @@ class Sap_Box_Girder:
         # self.add_bearing_links(strategy='ideal')
         Saproject().RefreshView()
     
-    def __define_ideal_links(self):
-        # 刚度取大值，不直接固定,暂时不考虑阻尼
-        # U1为竖向，U2为纵桥向，U3为横桥向
-        FixedDOF = []
-        DOF = ['U1', 'U2', 'U3', 'R1', 'R2', 'R3']
-        # dampingCe = {}
-        # 固定支座:
-        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0}
-        fixed_link = "Fixed"
-        Saproject().Define.section.PropLink.SetLinear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
-        # 横桥向（y）滑动支座
-        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":0,"R1":0,"R2":0,"R3":0}
-        y_sliding_link = "y_sliding"
-        Saproject().Define.section.PropLink.SetLinear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
-        # 纵桥向（x）滑动支座
-        uncoupleKe = {"U1":1e10,"U2":0,"U3":1e10,"R1":0,"R2":0,"R3":0}
-        x_sliding_link = "x_sliding"
-        Saproject().Define.section.PropLink.SetLinear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
-        # 双向滑动支座
-        uncoupleKe = {"U1":1e10,"U2":0,"U3":0,"R1":0,"R2":0,"R3":0}
-        both_sliding_link = "Both_sliding"
-        Saproject().Define.section.PropLink.SetLinear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
-        return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
-    
     def update_ideal_links(self,mu:float = 0.03):
         """update bilinear ideal links for girder
         mu(float): frictional coefficient
@@ -594,12 +707,22 @@ class Sap_Box_Girder:
             bearings = self.bearings[pier.name]
             for side in ['left','right']:
                 raise NotImplementedError
-                Saproject().Define.section.PropLink.SetMultiLinearElastic("#6_x_sliding", DOF=['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], Fixed=[], Nonlinear = ["U2"],Ke={"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0})
+                
 
-                Saproject().Define.section.PropLink.SetMultiLinearPoints("#6_x_sliding", DOF='U2', forceList=[-1,-1,0,1,1],dispList=[-30,-0.03,0,0.03,30],Type='Isotropic')
+                Saproject().Define.section.PropLink.Set.MultiLinearPoints("#6_x_sliding", DOF='U2', forceList=[-1,-1,0,1,1],dispList=[-30,-0.03,0,0.03,30],Type='Isotropic')
+    
+    def _replace_ideal_link(self):
+        # return super()._replace_ideal_link()
+        for pier in self.pierlist:
+            bearings = self.bearings[pier.name]
+            for side in ['left','right']:
+                raise NotImplementedError
+                Saproject().Define.section.PropLink.Set.MultiLinearElastic("#6_x_sliding", DOF=['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], Fixed=[], Nonlinear = ["U2"],Ke={"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0})
+
+                Saproject().Define.section.PropLink.Set.MultiLinearPoints("#6_x_sliding", DOF='U2', forceList=[-1,-1,0,1,1],dispList=[-30,-0.03,0,0.03,30],Type='Isotropic')
     
     def add_ideal_bearing_links(self):
-        fixed_link, y_sliding_link, x_sliding_link, both_sliding_link = self.__define_ideal_links()
+        fixed_link, y_sliding_link, x_sliding_link, both_sliding_link = self._define_ideal_links()
         if not hasattr(self, "bearings"):
             self.bearings = {}
         # 所有墩默认内侧用固定，外侧用滑动
@@ -646,17 +769,6 @@ class Sap_Box_Girder:
             raise NotImplementedError
         elif strategy == 'wait for add':
             raise NotImplementedError
-    
-    def __add_body_constraints_for_points(self,constraint_name:str, points : list):
-        for point in points:
-            if not point.exists():
-                logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
-                point.add()
-            ret = Saproject().Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
-            if ret[1] == 0:
-                logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to Body constraint : <yellow>{constraint_name}</yellow>")
-            else:
-                logger.opt(colors=True).error(f"<yellow>{point.name}</yellow> failed to add to Body constraint : <yellow>{constraint_name}</yellow>")
         
     def add_body_constraint(self):
         body_dof = ["UX", "UY", "UZ", "RX", "RY", "RZ"]
@@ -666,7 +778,7 @@ class Sap_Box_Girder:
                 Saproject().Define.jointConstraints.SetBody(f"{pier.name}_{side}_Girder", body_dof)
                 girder_point = self.girder_points[pier.name][side]
                 bearing_top_points = list(self.girder_bearing_top_points[pier.name][side].values())
-                self.__add_body_constraints_for_points(pier.name+"_"+side+"_girder", flatten([girder_point,bearing_top_points]))
+                self._add_body_constraints_for_points(pier.name+"_"+side+"_girder", flatten([girder_point,bearing_top_points]))
                 
     def generate_girder_elements(self):
         for pier_start,pier_end in zip(self.pierlist[0:-1],self.pierlist[1:]):
