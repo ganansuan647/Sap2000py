@@ -24,7 +24,83 @@ class SapMeta(type):
         else:
             return self.__instance
 
-class Saproject(object):
+class SapScripts:
+    def __init__(self,Sapobj):
+        """
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+        self.Sapobj = Sapobj
+        from Sap2000py.Scripts.GetResults import GetResults
+        self.GetResults = GetResults(Sapobj)
+        from Sap2000py.Scripts.Analyze import SapAnalyze
+        self.Analyze = SapAnalyze(Sapobj)
+        from Sap2000py.Scripts.Group import SapGroup
+        self.Group = SapGroup(Sapobj)
+
+    def AddCommonMaterialSet(self,standard = "GB"):
+        """
+        Add Common Material Set for China with your desired standard,
+        for China it includes ["GB","JTG","TB","User"]
+        """
+        from Sap2000py.Scripts.Common_Material_Set import CommonMaterialSet_China
+        CommonMaterialSet_China(self.Sapobj,standard)
+
+    def AddJoints(self,Cartesian_coord = np.empty(shape=(0,3))):
+        """
+        Add Joints by Cartesian coordinates,which must be a numpy array
+        input-Cartesian_coord(ndarray)-Nx3 array or Nx2 array in 2D model
+        """
+        from .Scripts.Build_Model import Add_Joints_Cartesian
+        Add_Joints_Cartesian(self.Sapobj,Cartesian_coord)
+
+    def AddElements(self,Connections):
+        """
+        Add Elements by Element_type,Element_coord,Element_name
+        input Connections(ndarray)-Nx2 array
+        """
+        from .Scripts.Build_Model import Add_Elements
+        Add_Elements(self.Sapobj,Connections)
+
+    def SelectCombo_Case(self,Combo_CaseList):
+        """
+        Select combo or case you need for out put
+        """
+        self.Sapobj.Results.Setup.DeselectAllCasesAndCombosForOutput()
+        if isinstance(Combo_CaseList,str):
+            Combo_CaseList = [Combo_CaseList]
+        for combo_case in Combo_CaseList:
+            self.Sapobj.Results.Setup.Set.ComboSelectedForOutput(combo_case,True)
+            ret = self.Sapobj.Results.Setup.Get.ComboSelectedForOutput(combo_case)
+            if ret[1]!=0:
+                self.Sapobj.Results.Setup.Set.CaseSelectedForOutput(combo_case,True)
+                ret = self.Sapobj.Results.Setup.Get.CaseSelectedForOutput(combo_case)
+            if ret[0]==False:
+                logger.warning(f"[orange1]{combo_case}[/orange1] may not be name of a combo/case, please check!")
+
+    @staticmethod
+    def writecell(WorkSheet,dataArray,startCell):
+        """
+        ---write matrix(ndarray) in specified WorkSheet---
+        input:
+            WorkSheet: pointer to the target worksheet
+            dataArray(ndarray): 2d numpy array
+            startCell(str): top left corner of the matrix
+        """
+        import re
+        from openpyxl.utils import get_column_letter, column_index_from_string
+        colname,rowname = re.findall(r'\d+|\D+', startCell)
+        rownum = int(rowname)
+        colnum = column_index_from_string(colname)
+        m,n = dataArray.shape
+        for i in range(m):
+            for j in range(n):
+                WorkSheet.cell(rownum+i,colnum+j,value = dataArray[i,j])
+
+class Saproject(metaclass=SapMeta):
     """---SAP2000 project class---"""
 
     def __init__(self,AttachToInstance = True):
@@ -142,7 +218,7 @@ class Saproject(object):
         return self.Unitdict_rev[self.Unitid]
     
     @property
-    def is_lock(self):
+    def is_locked(self):
         """
         ---check if the model is locked---
         """
@@ -325,83 +401,6 @@ class Saproject(object):
         """
         ret = self._Model.View.RefreshView(Window, Zoom)
         return ret
-    
-
-class SapScripts:
-    def __init__(self,Sapobj):
-        """
-        Passing in the parent class object directly is to avoid 
-        getting only the last opened SAP2000 window when initializing the 
-        parent class instance to get the model pointer in the subclass.
-        """
-        self.__Object = Sapobj._Object 
-        self.__Model = Sapobj._Model
-        self.Sapobj = Sapobj
-        from Sap2000py.Scripts.GetResults import GetResults
-        self.GetResults = GetResults(Sapobj)
-        from Sap2000py.Scripts.Analyze import SapAnalyze
-        self.Analyze = SapAnalyze(Sapobj)
-        from Sap2000py.Scripts.Group import SapGroup
-        self.Group = SapGroup(Sapobj)
-
-    def AddCommonMaterialSet(self,standard = "GB"):
-        """
-        Add Common Material Set for China with your desired standard,
-        for China it includes ["GB","JTG","TB","User"]
-        """
-        from Sap2000py.Scripts.Common_Material_Set import CommonMaterialSet_China
-        CommonMaterialSet_China(self.Sapobj,standard)
-
-    def AddJoints(self,Cartesian_coord = np.empty(shape=(0,3))):
-        """
-        Add Joints by Cartesian coordinates,which must be a numpy array
-        input-Cartesian_coord(ndarray)-Nx3 array or Nx2 array in 2D model
-        """
-        from .Scripts.Build_Model import Add_Joints_Cartesian
-        Add_Joints_Cartesian(self.Sapobj,Cartesian_coord)
-
-    def AddElements(self,Connections):
-        """
-        Add Elements by Element_type,Element_coord,Element_name
-        input Connections(ndarray)-Nx2 array
-        """
-        from .Scripts.Build_Model import Add_Elements
-        Add_Elements(self.Sapobj,Connections)
-
-    def SelectCombo_Case(self,Combo_CaseList):
-        """
-        Select combo or case you need for out put
-        """
-        self.Sapobj.Results.Setup.DeselectAllCasesAndCombosForOutput()
-        if isinstance(Combo_CaseList,str):
-            Combo_CaseList = [Combo_CaseList]
-        for combo_case in Combo_CaseList:
-            self.Sapobj.Results.Setup.Set.ComboSelectedForOutput(combo_case,True)
-            ret = self.Sapobj.Results.Setup.Get.ComboSelectedForOutput(combo_case)
-            if ret[1]!=0:
-                self.Sapobj.Results.Setup.Set.CaseSelectedForOutput(combo_case,True)
-                ret = self.Sapobj.Results.Setup.Get.CaseSelectedForOutput(combo_case)
-            if ret[0]==False:
-                logger.warning(f"[orange1]{combo_case}[/orange1] may not be name of a combo/case, please check!")
-
-    @staticmethod
-    def writecell(WorkSheet,dataArray,startCell):
-        """
-        ---write matrix(ndarray) in specified WorkSheet---
-        input:
-            WorkSheet: pointer to the target worksheet
-            dataArray(ndarray): 2d numpy array
-            startCell(str): top left corner of the matrix
-        """
-        import re
-        from openpyxl.utils import get_column_letter, column_index_from_string
-        colname,rowname = re.findall(r'\d+|\D+', startCell)
-        rownum = int(rowname)
-        colnum = column_index_from_string(colname)
-        m,n = dataArray.shape
-        for i in range(m):
-            for j in range(n):
-                WorkSheet.cell(rownum+i,colnum+j,value = dataArray[i,j])
 
 if __name__ == "__main__":
     sys.path.append(".")

@@ -1,7 +1,6 @@
 from Sap2000py.Saproject import Saproject
 from loguru import logger
 from pathlib import Path
-# from Sap2000py.Scripts.Build_Continuous_Bridge import Sap_Double_Box_Pier, Sap_Box_Girder, SapPoint, SapBase_6Spring, Section_General, DXF2Polygons
 from dataclasses import dataclass
 from loguru import logger
 from shapely import Polygon
@@ -294,7 +293,7 @@ girderleft = Bridge.Girder.Box(
     pierlist=[pier1,pier2,pier3,pier4,pier5,pier6],
     fixedpier = [pier3],
     Plan = '方案一')
-girderleft.add_bearing_links(strategy = 'ideal')        
+girderleft.add_bearing_links(strategy = 'ideal')      
 
 girdermain = Bridge.Girder.Box(
     name = "SpanMain",
@@ -310,6 +309,25 @@ girderright = Bridge.Girder.Box(
     Plan = '方案一')
 girderright.add_bearing_links(strategy = 'ideal')
 
+# gravity load
+Sap.Define.loadcases.StaticLinear.SetLoads("DEAD",numberLoads=1,loadType=['Accel'],loadName=['UZ'],scaleFactor=[9.81])
+
+# Run gravity analysis
+Sap.Scripts.Analyze.RemoveCases("All")
+Sap.Scripts.Analyze.AddCases(CaseName = ['DEAD'])
+Sap.File.Save(ModelPath)
+Sap.Analyze.RunAnalysis()
+# update ideal links to multi-elastic links
+girderleft.update_links_parameters()
+girdermain.update_links_parameters()
+girderright.update_links_parameters()
+
+Sap.unlockModel()
+
+girderleft.update_links_in_Sap()
+girdermain.update_links_in_Sap()
+girdermain.update_links_in_Sap()
+
 # create groups for results
 base_names = [pier.base.point.name for pier in girdermain.pierlist]
 Sap.Scripts.Group.AddtoGroup('Base',base_names,type='Point')
@@ -324,6 +342,7 @@ bearing_names = [girdermain.bearings[pier.name]['left']['inner'].name for pier i
 Sap.Scripts.Group.AddtoGroup('Bearing',bearing_names,type='Link')
 
 # set Modal analysis
+Sap.Define.loadcases.ModalEigen.SetInitialCase('DEAD')
 Sap.Define.loadcases.ModalEigen.SetNumberModes('MODAL',MaxModes=500)
 # Remove all cases for analysis
 Sap.Scripts.Analyze.RemoveCases("All")
@@ -380,7 +399,7 @@ logger.opt(colors=True).success(f"Rayleigh damping Control Period of Y direction
 logger.opt(colors=True).success(f"Rayleigh damping Control Period of Z direction is {period_z_1:.2f}s and {period_z_2:.2f}s")
 
 # unlck the model to make more settings
-ret = Sap._Model.SetModelIsLocked(False)
+Sap.unlockModel()
 
 def get_spectrum_from_file(file_path:Path):
     times = []
@@ -492,10 +511,10 @@ if True:
     Name,LinkAbsDeformationTH,__,__ = Sap.Scripts.GetResults.LinkDeformation_by_Group("Bearing")
     # get Link shearforce result by group name
     Name,LinkAbsForceTH,LinkMaxForceTH,LinkMinForceTH = Sap.Scripts.GetResults.LinkForce_by_Group("Bearing")
-    sorted_indices = sorted(range(len(Name)), key=lambda i: int(Name[i].split('_')[0][1:]))
+    sorted_indices = sorted(range(len(Name)), key=lambda i: int(Name[i].split('_')[1][1:]))
     for i in sorted_indices:
         table.add_row(
-                f"{Name[i].split('_')[0].split('#')[-1]}",
+                f"{Name[i].split('_')[1].split('#')[-1]}",
                 f"{max(LinkAbsDeformationS[i][1:3]):.2f}",
                 f"{max(LinkAbsForceS[i][1:3]):.2f}",
                 f"{max(LinkAbsDeformationTH[i][1:3]):.2f}",
@@ -525,10 +544,10 @@ if True:
     Name,LinkAbsDeformationTH,__,__ = Sap.Scripts.GetResults.LinkDeformation_by_Group("Bearing")
     # get Link shearforce result by group name
     Name,LinkAbsForceTH,LinkMaxForceTH,LinkMinForceTH = Sap.Scripts.GetResults.LinkForce_by_Group("Bearing")
-    sorted_indices = sorted(range(len(Name)), key=lambda i: int(Name[i].split('_')[0][1:]))
+    sorted_indices = sorted(range(len(Name)), key=lambda i: int(Name[i].split('_')[1][1:]))
     for i in sorted_indices:
         table.add_row(
-                f"{Name[i].split('_')[0].split('#')[-1]}",
+                f"{Name[i].split('_')[1].split('#')[-1]}",
                 f"{max(LinkAbsDeformationS[i][1:3]):.2f}",
                 f"{max(LinkAbsForceS[i][1:3]):.2f}",
                 f"{max(LinkAbsDeformationTH[i][1:3]):.2f}",
@@ -560,10 +579,10 @@ if True:
     for i in sorted_indices:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
-                f"{max(EleAbsForceS1[i][1:3]):.2f}",
-                f"{max(EleAbsForceS2[i][1:3]):.2f}",
-                f"{max(EleAbsForceTH1[i][1:3]):.2f}",
-                f"{max(EleAbsForceTH2[i][1:3]):.2f}",
+                f"{max(EleAbsForceS1[i][0:2]):.2f}",
+                f"{max(EleAbsForceS2[i][0:2]):.2f}",
+                f"{max(EleAbsForceTH1[i][0:2]):.2f}",
+                f"{max(EleAbsForceTH2[i][0:2]):.2f}",
             )
 # print table
 console = Console()
@@ -590,10 +609,10 @@ if True:
     for i in sorted_indices:
         table.add_row(
                 f"{Name[i].split('_')[0].split('#')[-1]}",
-                f"{max(EleAbsForceS1[i][1:3]):.2f}",
-                f"{max(EleAbsForceS2[i][1:3]):.2f}",
-                f"{max(EleAbsForceTH1[i][1:3]):.2f}",
-                f"{max(EleAbsForceTH2[i][1:3]):.2f}",
+                f"{max(EleAbsForceS1[i][0:2]):.2f}",
+                f"{max(EleAbsForceS2[i][0:2]):.2f}",
+                f"{max(EleAbsForceTH1[i][0:2]):.2f}",
+                f"{max(EleAbsForceTH2[i][0:2]):.2f}",
             )
 # print table
 console = Console()
@@ -623,10 +642,10 @@ if True:
                 f"{Name[i].split('_')[0].split('#')[-1]}",
                 f"{JointAbsReacS[i][2]:.2f}",
                 f"{max(JointAbsReacS[i][0:2]):.2f}",
-                f"{max(JointAbsReacS[i][3:4]):.2e}",
+                f"{max(JointAbsReacS[i][3:5]):.2e}",
                 f"{JointAbsReacTH[i][2]:.2f}",
                 f"{max(JointAbsReacTH[i][0:2]):.2f}",
-                f"{max(JointAbsReacTH[i][3:4]):.2e}",
+                f"{max(JointAbsReacTH[i][3:5]):.2e}",
             )
 
 # print table
@@ -658,10 +677,10 @@ if True:
                 f"{Name[i].split('_')[0].split('#')[-1]}",
                 f"{JointAbsReacS[i][2]:.2f}",
                 f"{max(JointAbsReacS[i][0:2]):.2f}",
-                f"{max(JointAbsReacS[i][3:4]):.2e}",
+                f"{max(JointAbsReacS[i][3:5]):.2e}",
                 f"{JointAbsReacTH[i][2]:.2f}",
                 f"{max(JointAbsReacTH[i][0:2]):.2f}",
-                f"{max(JointAbsReacTH[i][3:4]):.2e}",
+                f"{max(JointAbsReacTH[i][3:5]):.2e}",
             )
 
 # print table

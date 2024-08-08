@@ -8,6 +8,7 @@ class SapSection:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
+        self._Sapobj = Sapobj
         self.PropLink = PropLink(Sapobj)
 
     def PropFrame_SetGeneral(self,sectName,matName,t3,t2,Area,As2,As3,I22,I33,J,notes=""):
@@ -124,8 +125,9 @@ class PropLink_Set:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model 
+        self._Sapobj = Sapobj
         
-    def SetLinear(self,name,DOF,Fixed,Ke={},Ce={},dj2=0,dj3=0,KeCoupled=False,CeCoupled=False):
+    def Linear(self,name,DOF,Fixed,Ke={},Ce={},dj2=0,dj3=0,KeCoupled=False,CeCoupled=False,Notes=""):
         """
         ---This function initializes a linear-type link property. If this function is called for
         an existing link property, all items for the property are reset to their default value.---
@@ -186,7 +188,7 @@ class PropLink_Set:
             for each5 in key5:
                 indexNum5=keCoupleDict[each5]
                 ceInput[indexNum5]=Ce[each5]
-        ret = self.__Model.PropLink.SetLinear(name,DOFFinal,FixedFinal,keInput,ceInput,dj2,dj3,KeCoupled,CeCoupled)
+        ret = self.__Model.PropLink.SetLinear(name,DOFFinal,FixedFinal,keInput,ceInput,dj2,dj3,KeCoupled,CeCoupled,Notes)
         return ret
 
     def MultiLinearElastic(self,name:str,
@@ -197,7 +199,7 @@ class PropLink_Set:
                            Ce:dict[Literal['U1','U2','U3','R1','R2','R3'],float] = {},
                            dj2:float = 0.0,
                            dj3:float = 0.0,
-                           notes:str = "",
+                           Notes:str = "",
                            GUID:str = ""):
         
         """
@@ -241,10 +243,10 @@ class PropLink_Set:
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        ret = self.__Model.PropLink.SetMultiLinearElastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3,notes,GUID)
+        ret = self.__Model.PropLink.SetMultiLinearElastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3,Notes,GUID)
         return ret
 
-    def MultiLinearPoints(self,name,DOF:Literal['U1','U2','U3','R1','R2','R3'],forceList:list[float],dispList:list[float],Type:Literal['Isotropic','Kinematic','Takeda','Pivot']='Isotropic',a1=0,a2=0,b1=0,b2=0,eta=0):
+    def MultiLinearPoints(self,name:str,DOF:Literal['U1','U2','U3','R1','R2','R3'],forceList:list[float],dispList:list[float],Type:Literal['Isotropic','Kinematic','Takeda','Pivot']='Isotropic',a1=0.0,a2=0.0,b1=0.0,b2=0.0,eta=0.0):
         """
         ---This function sets the force-deformation data for a specified degree of freedom in multilinear
         elastic and multilinear plastic link properties.---
@@ -268,7 +270,9 @@ class PropLink_Set:
         numberPoints=len(forceList)
         TypeDict={"Isotropic":0,"Kinematic":1,"Takeda":2,"Pivot":3}
         myType=TypeDict[Type]
-        self.__Model.PropLink.SetMultiLinearPoints(name,DOF,numberPoints,forceList,dispList,myType,a1,a2,b1,b2,eta)
+        ret = self.__Model.PropLink.SetMultiLinearPoints(name,dof,numberPoints,forceList,dispList,myType,a1,a2,b1,b2,eta)
+        return ret
+            
 
     def Damper(self,name,DOF,Fixed,Nonliear,Ke={},Ce={},k={},c={},cexp={},dj2=0,dj3=0):
         """
@@ -767,7 +771,7 @@ class PropLink_Get:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model 
     
-    def GetDamper(self, name: str) -> list:
+    def Damper(self, name: str) -> list:
         """
         Retrieves link property data for an exponential damper-type link property.
         
@@ -793,7 +797,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetDamper(name)
         return ret
 
-    def GetDamperBilinear(self, name: str) -> list:
+    def DamperBilinear(self, name: str) -> list:
         """
         Retrieves link property data for a bilinear damper-type link property.
         
@@ -820,7 +824,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetDamperBilinear(name)
         return ret
 
-    def GetDamperFrictionSpring(self, name: str) -> list:
+    def DamperFrictionSpring(self, name: str) -> list:
         """
         Retrieves link property data for a friction spring damper-type link property.
         
@@ -848,7 +852,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetDamperFrictionSpring(name)
         return ret
 
-    def GetDamperLinearExponential(self, name: str) -> list:
+    def DamperLinearExponential(self, name: str) -> list:
         """
         Retrieves link property data for a linear exponential damper-type link property.
         
@@ -875,7 +879,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetDamperLinearExponential(name)
         return ret
 
-    def GetFrictionIsolator(self, name: str) -> list:
+    def FrictionIsolator(self, name: str) -> list:
         """
         Retrieves link property data for a friction isolator-type link property.
         
@@ -904,7 +908,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetFrictionIsolator(name)
         return ret
 
-    def GetGap(self, name: str) -> list:
+    def Gap(self, name: str) -> list:
         """
         Retrieves link property data for a gap-type link property.
         
@@ -929,7 +933,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetGap(name)
         return ret
 
-    def GetHook(self, name: str) -> list:
+    def Hook(self, name: str) -> list:
         """
         Retrieves link property data for a hook-type link property.
         
@@ -954,7 +958,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetHook(name)
         return ret
 
-    def GetLinear(self, name: str) -> list:
+    def Linear(self, name: str) -> list:
         """
         Retrieves link property data for a linear-type link property.
         
@@ -978,7 +982,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetLinear(name)
         return ret
 
-    def GetMultiLinearElastic(self, name: str) -> list:
+    def MultiLinearElastic(self, name: str) -> list:
         """
         Retrieves link property data for a multilinear elastic-type link property.
         
@@ -1001,7 +1005,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetMultiLinearElastic(name)
         return ret
 
-    def GetMultiLinearPlastic(self, name: str) -> list:
+    def MultiLinearPlastic(self, name: str) -> list:
         """
         Retrieves link property data for a multilinear plastic-type link property.
         
@@ -1024,7 +1028,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetMultiLinearPlastic(name)
         return ret
 
-    def GetMultiLinearPoints(self, name: str) -> list:
+    def MultiLinearPoints(self, name: str) -> list:
         """
         Retrieves the force-deformation data for a specified degree of freedom in multilinear elastic and multilinear plastic link properties.
         
@@ -1048,7 +1052,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetMultiLinearPoints(name)
         return ret
 
-    def GetNameList(self) -> list:
+    def NameList(self) -> list:
         """
         Retrieves the names of all defined link properties of the specified type.
         
@@ -1064,7 +1068,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetNameList()
         return ret
 
-    def GetPDelta(self, name: str) -> list:
+    def PDelta(self, name: str) -> list:
         """
         Retrieves P-delta parameters for a link property.
         
@@ -1083,7 +1087,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetPDelta(name)
         return ret
 
-    def GetPlasticWen(self, name: str) -> list:
+    def PlasticWen(self, name: str) -> list:
         """
         Retrieves link property data for a plastic Wen-type link property.
         
@@ -1110,7 +1114,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetPlasticWen(name,)
         return ret
 
-    def GetRubberIsolator(self, name: str) -> list:
+    def RubberIsolator(self, name: str) -> list:
         """
         Retrieves link property data for a rubber isolator-type link property.
         
@@ -1136,7 +1140,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetRubberIsolator(name)
         return ret
 
-    def GetSpringData(self, name: str) -> list:
+    def SpringData(self, name: str) -> list:
         """
         Retrieves length and area values for a link property that are used if the link property is specified in line and area spring assignments.
         
@@ -1152,7 +1156,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetSpringData(name)
         return ret
 
-    def GetTCFrictionIsolator(self, name: str) -> list:
+    def TCFrictionIsolator(self, name: str) -> list:
         """
         Retrieves link property data for a T/C friction isolator-type link property.
         
@@ -1187,7 +1191,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetTCFrictionIsolator(name)
         return ret
 
-    def GetTriplePendulumIsolator(self, name: str) -> list:
+    def TriplePendulumIsolator(self, name: str) -> list:
         """
         Retrieves link property data for a Triple Pendulum Isolator type link property.
         
@@ -1220,7 +1224,7 @@ class PropLink_Get:
         ret = self.__Model.PropLink.GetTriplePendulumIsolator(name)
         return ret
 
-    def GetTypeOAPI(self, name: str) -> list:
+    def TypeOAPI(self, name: str) -> list:
         """
         Retrieves the property type for the specified link property.
         
@@ -1250,7 +1254,7 @@ class PropLink_Get:
         else:
             return [PropType,ret]
 
-    def GetWeightAndMass(self, name: str) -> list:
+    def WeightAndMass(self, name: str) -> list:
         """
         Retrieves weight and mass data for a link property.
         

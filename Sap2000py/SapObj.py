@@ -5428,3 +5428,12 @@ class SapLinkObj:
         """
         ret=self.__Model.LinkObj.Count()
         return ret
+
+    def Delete(self,Name):
+        """
+        ---This function deletes the specified link object---
+        inputs:
+        Name(str)-The name of an existing link object
+        """
+        ret=self.__Model.LinkObj.Delete(Name)
+        return ret

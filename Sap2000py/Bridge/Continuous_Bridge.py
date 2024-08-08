@@ -526,33 +526,140 @@ class Sap_Bearing:
         logger.error('EZOpsMaterial is a abstract class!Should not be instantiated!')
         raise ShouldNotInstantiateError('Abstract class EZOpsMaterial accidentally instantiated!')
     
-    def add_link(self):
-        ret = Saproject().Assign.Link.AddByPoint(self.start_point.name, self.end_point.name, IsSingleJoint=False, PropName = self.link_name, UserName=self.name)
+    def add_link(self,point1:SapPoint=None,point2:SapPoint=None):
+        if not self.linkprop_instance.is_defined:
+            self.linkprop_instance.define_link()
+        if not point1:
+            point1 = self.start_point
+        if not point2:
+            point2 = self.end_point
+        ret = Saproject().Assign.Link.AddByPoint(point1.name, point2.name, IsSingleJoint=False, PropName = self.linkprop_name, UserName=self.name)
         if ret[1] == 0:
             logger.opt(colors=True).success(f"Link <yellow>{self.name}</yellow> Added!")
         else:
             logger.opt(colors=True).error(f"Link <yellow>{self.name}</yellow> Failed to Add!")
     
+    def get_link_between_points(self,point1:SapPoint=None,point2:SapPoint=None)-> list[str]:
+        if not point1:
+            point1 = self.start_point
+        if not point2:
+            point2 = self.end_point
+        ret1 = Saproject().Assign.PointObj.Get.Connectivity(point1.name)
+        ret2 = Saproject().Assign.PointObj.Get.Connectivity(point2.name)
+        if ret1[-1] == 0 and ret2[-1] == 0:
+            # both points exist
+            if ret1[0]>0 and ret2[0]>0:
+                # both points are connected
+                # get {name:linktype} dict, only need to check if type is 7(Link)
+                dict1 = {ret1[2][i]:ret1[1][i]for i in range(ret1[0]) if ret1[1][i]==7}
+                dict2 = {ret2[2][i]:ret2[1][i]for i in range(ret2[0]) if ret2[1][i]==7}
+                commonlink = [link for link in dict1.keys() if link in dict2.keys()]
+                # should only have one common link, but i'll return whole list just in case
+                return commonlink
+        else:
+            logger.error(f"Point {point1.name} or {point2.name} does not exist.")
+        return None
+
+    def AxialF_under_dead_weight(self,link_name:str):
+        # make sure dead load analysis is run
+        if not Saproject().is_locked:
+            # run dead load analysis
+            Saproject().Scripts.Analyze.RemoveCases("All")
+            Saproject().Scripts.Analyze.AddCases(CaseName = ['DEAD'])
+            filepath = Saproject()._Model.GetModelFilename(True)
+            if len(filepath) >0:
+                Saproject().File.Save(filepath)
+            else:
+                logger.warning("Model is not saved! Saving as default")
+                Saproject().File.Save()
+            Saproject().Analyze.RunAnalysis()
+            
+        # read axial force
+        Saproject().Scripts.SelectCombo_Case("DEAD")
+        ret = Saproject().Results.Link.Force(link_name,ItemTypeElm=1)
+        if ret[-1] == 0:
+            axialF = max([abs(val) for val in ret[7]])
+            return axialF
+        else:
+            logger.error(f"Failed to get axial force for link {link_name}")
+            return None
+            
 
 @dataclass
-class Sap_Bearing_Linear(Sap_Bearing):
-    name:str
-    start_point:SapPoint
-    end_point:SapPoint
-    link_name:str
-    
-    def __post_init__(self):
-        self.add_link()
-        
-    def define_link(self):
-        raise NotImplementedError
-
-@dataclass
-class Sap_LinkProp_MultiLinearElastic(Sap_Bearing):
-    name: str
+class Sap_LinkProp_Linear(Sap_Bearing):
+    prop_name:str
     DOF: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
     Fixed: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
-    Nonlinear: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
+    Ke: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
+    Ce: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
+    dj2: float = 0.0
+    dj3: float = 0.0
+    KeCoupled:bool = False
+    CeCoupled:bool = False
+    notes: str = ""
+    GUID: str = ""
+    _instances: ClassVar = weakref.WeakSet()
+
+    def __hash__(self):
+        return hash((self.prop_name, tuple(self.DOF), tuple(self.Fixed), frozenset(self.Ke.items()), frozenset(self.Ce.items()), self.dj2, self.dj3, self.notes, self.GUID))
+    
+    def __post_init__(self):
+        self.__class__._instances.add(self)
+    
+    @property
+    def is_defined(self):
+        ret = Saproject().Define.section.PropLink.Get.Linear(self.prop_name)
+        return ret[-1]==0
+    
+    def get_LinkProp_from_Sap(self):
+        if self.is_defined:
+            ret = Saproject().Define.section.PropLink.Get.Linear(self.prop_name)
+            dofdict = ['U1', 'U2', 'U3', 'R1', 'R2', 'R3']
+            DOF:list[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = [dofdict[i] for i,dof in enumerate(ret[0]) if dof] 
+            Fixed:list[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = [dofdict[i] for i,dof in enumerate(ret[1]) if dof] 
+            Ke:dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = {dof:k for dof,k in zip(dofdict,ret[2])}
+            Ce:dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = {dof:c for dof,c in zip(dofdict,ret[3])}
+            dj2:float = ret[4]
+            dj3:float = ret[5]
+            KeCoupled:bool = ret[6]
+            CeCoupled:bool = ret[7]
+            Notes:str = ret[8]
+            GUID:str = ret[9]
+            return DOF,Fixed,Ke,Ce,dj2,dj3,KeCoupled,CeCoupled,Notes,GUID
+        else:
+            logger.error(f"Link Property {self.prop_name} is not defined.")
+            return None
+    
+    def define_link(self):
+        if not self.is_defined:
+            ret = Saproject().Define.section.PropLink.Set.Linear(self.prop_name, DOF=self.DOF, Fixed=self.Fixed, Ke=self.Ke, Ce = self.Ce, dj2=self.dj2, dj3=self.dj3,KeCoupled=self.KeCoupled,CeCoupled=self.CeCoupled, Notes=self.notes)
+            if ret[-1]==0:
+                logger.opt(colors=True).info(f"LinearLink Property <yellow>{self.prop_name}</yellow> defined.")
+
+    @classmethod
+    def get_instances(cls):
+        return list(cls._instances)
+
+
+class Sap_Bearing_Linear(Sap_LinkProp_Linear):
+    def __init__(self,name:str, start_point:SapPoint, end_point:SapPoint, linkprop_name:str):
+        self.name = name
+        self.start_point = start_point
+        self.end_point = end_point
+        self.linkprop_name = linkprop_name
+        # check if link property already exists
+        self.linkprop_instance = [link for link in Sap_LinkProp_Linear.get_instances() if link.prop_name == self.linkprop_name][0]
+        if not isinstance(self.linkprop_instance, Sap_LinkProp_Linear):
+            self.linkprop_instance = [link for link in Sap_LinkProp_Linear.get_instances() if link.name == self.linkprop_name][0]
+            self.linkprop_instance.define_link()
+        self.add_link()
+        
+@dataclass
+class Sap_LinkProp_MultiLinearElastic(Sap_Bearing):
+    prop_name: str
+    DOF: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
+    Fixed: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
+    Nonlinear: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'],dict] = field(default_factory=dict)
     Ke: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
     Ce: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
     dj2: float = 0.0
@@ -561,65 +668,159 @@ class Sap_LinkProp_MultiLinearElastic(Sap_Bearing):
     GUID: str = ""
     _instances: ClassVar = weakref.WeakSet()
 
+    def __hash__(self) -> int:
+        return hash((self.prop_name, tuple(self.DOF), tuple(self.Fixed), tuple(self.Nonlinear), frozenset(self.Ke.items()), frozenset(self.Ce.items()), self.dj2, self.dj3, self.notes, self.GUID))
+    
     def __post_init__(self):
-        self.add_link()
         self.__class__._instances.add(self)
     
     @property
     def is_defined(self):
-        ret = Saproject()._Model.PropLink.GetMultiLinearElastic(self.name)
-        return ret[-1]
+        ret = Saproject().Define.section.PropLink.Get.MultiLinearElastic(self.prop_name)
+        return ret[-1]==0
     
     def get_LinkProp_from_Sap(self):
         if self.is_defined:
-            ret = Saproject()._Model.PropLink.GetMultiLinearElastic(self.name)
-            DOF:list[bool] = ret[0]
-            Fixed:list[bool] = ret[1]
-            Nonlinear:list[bool] = ret[2]
-            Ke:list[float] = ret[3]
-            Ce:list[float] = ret[4]
+            ret = Saproject().Define.section.PropLink.Get.MultiLinearElastic(self.prop_name)
+            dofdict = ['U1', 'U2', 'U3', 'R1', 'R2', 'R3']
+            DOF:list[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = [dofdict[i] for i,dof in enumerate(ret[0]) if dof] 
+            Fixed:list[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = [dofdict[i] for i,dof in enumerate(ret[1]) if dof] 
+            Nonlinear:list[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = [dofdict[i] for i,dof in enumerate(ret[2]) if dof] 
+            Ke:dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = {dof:k for dof,k in zip(dofdict,ret[3])}
+            Ce:dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = {dof:c for dof,c in zip(dofdict,ret[4])}
             dj2:float = ret[5]
             dj3:float = ret[6]
             Notes:str = ret[7]
             GUID:str = ret[8]
             return DOF,Fixed,Nonlinear,Ke,Ce,dj2,dj3,Notes,GUID
         else:
-            logger.error(f"Link Property {self.name} is not defined.")
+            logger.error(f"Link Property {self.prop_name} is not defined.")
             return None
+    
+    def __define_link(self):
+        ret = Saproject().Define.section.PropLink.Set.MultiLinearElastic(self.prop_name, DOF=self.DOF, Fixed=self.Fixed, Nonlinear = list(self.Nonlinear.keys()),Ke=self.Ke,Ce=self.Ce,dj2=self.dj2,dj3=self.dj3,Notes=self.notes)
+        return ret
+    
+    def __define_nonlinear_points(self):
+        if not self.is_defined:
+            logger.error(f"Link Property {self.prop_name} is not defined. Trying to fix...")
+            self.define_link()
+        for dof,pointsdict in self.Nonlinear.items():
+            forcelist = pointsdict['forcelist']
+            displist = pointsdict['displist']
+            ret = Saproject().Define.section.PropLink.Set.MultiLinearPoints(self.prop_name, dof, forcelist, displist, Type='Isotropic')
+            points = "["+", ".join(f"({d:.2f},{f:.2f})" for d,f in zip(displist,forcelist))+"]"
+            if ret[-1]==0:
+                logger.opt(colors=True).success(f"Link Property <yellow>{self.prop_name}</yellow> updated with points:{points}.")
+            else:
+                logger.opt(colors=True).error(f"Link Property <yellow>{self.prop_name}</yellow> failed to update with points:{points}.")
     
     def define_link(self):
         if not self.is_defined:
-            ret = Saproject().Define.section.PropLink.Set.MultiLinearElastic(self.name, DOF=self.DOF, Fixed=self.Fixed, Nonlinear = self.Nonlinear,Ke=self.Ke,Ce=self.Ce,dj2=self.dj2,dj3=self.dj3,Notes=self.notes)
-
+            ret = self.__define_link()
+            if ret[-1] == 0:
+                logger.opt(colors=True).success(f"Multi Elastic Linear Link Property <yellow>{self.prop_name}</yellow> defined.")
         else:
-            DOF,Fixed,Nonlinear,Ke,Ce,dj2,dj3,Notes,GUID = self.get_LinkProp_from_Sap()
-            if DOF == self.DOF and Fixed == self.Fixed and Nonlinear == self.Nonlinear and Ke == self.Ke and dj2 == self.dj2 and dj3 == self.dj3 and Notes == self.notes and GUID == self.GUID:
-                logger.opt(colors=True).info(f"Link Property <yellow>{self.name}</yellow> already defined.")
-                return 0  
-            
+            DOF, Fixed, Nonlinear, Ke, Ce, dj2, dj3, Notes, GUID = self.get_LinkProp_from_Sap()
+            discrepancies = []
+            if DOF != self.DOF:
+                discrepancies.append(f"DOF: expected {self.DOF}, got {DOF}")
+            if Fixed != self.Fixed:
+                discrepancies.append(f"Fixed: expected {self.Fixed}, got {Fixed}")
+            if Nonlinear != list(self.Nonlinear.keys()):
+                discrepancies.append(f"Nonlinear: expected {list(self.Nonlinear.keys())}, got {Nonlinear}")
+            if Ke != self.Ke:
+                discrepancies.append(f"Ke: expected {self.Ke}, got {Ke}")
+            if Ce != self.Ce:
+                if not all(Ce.keys() == 0.0):
+                    discrepancies.append(f"Ce: expected {self.Ce}, got {Ce}")
+            if dj2 != self.dj2:
+                discrepancies.append(f"dj2: expected {self.dj2}, got {dj2}")
+            if dj3 != self.dj3:
+                discrepancies.append(f"dj3: expected {self.dj3}, got {dj3}")
+            if Notes != self.notes:
+                discrepancies.append(f"Notes: expected {self.notes}, got {Notes}")
+            if GUID != self.GUID:
+                discrepancies.append(f"GUID: expected {self.GUID}, got {GUID}")
+
+            if not discrepancies:
+                logger.opt(colors=True).info(f"Link Property <yellow>{self.prop_name}</yellow> already defined.")
+            else:
+                logger.opt(colors=True).warning(
+                    f"Link Property <yellow>{self.prop_name}</yellow> already defined but with different parameters: {', '.join(discrepancies)}. Updating..."
+                )
+                # Update the properties with the new values
+                ret = self.__define_link()
+                if ret[-1] == 0:
+                    logger.opt(colors=True).info(f"Link Property <yellow>{self.prop_name}</yellow> updated with new parameters.")
+        self.__define_nonlinear_points()
     
+    def _update_link_yield_prop_1dof(self,DOF:Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'],forceList:list,dispList:list):
+        if DOF not in self.Nonlinear.keys():
+            newdict = {DOF:{'forcelist':forceList,'displist':dispList}}
+            self.Nonlinear.update(newdict)
+         
     @classmethod
     def get_instances(cls):
         return list(cls._instances)
 
-@dataclass
 class Sap_Bearing_MultiLinearElastic(Sap_LinkProp_MultiLinearElastic):
-    name:str
-    start_point:SapPoint
-    end_point:SapPoint
-    link_name:str
+    def __init__(self,name:str,start_point:SapPoint,end_point:SapPoint,linkprop_name:str):
+        self.name = name
+        self.start_point = start_point
+        self.end_point = end_point
+        self.linkprop_name = linkprop_name
+        # check if link property already exists
+        self.linkprop_instance = [link for link in Sap_LinkProp_MultiLinearElastic.get_instances() if link.prop_name == self.linkprop_name][0]
+        if not isinstance(self.linkprop_instance, Sap_LinkProp_MultiLinearElastic):
+            self.linkprop_instance = [link for link in Sap_LinkProp_MultiLinearElastic.get_instances() if link.prop_name == self.linkprop_name][0]
     
-    def __post_init__(self):
-        self.add_link()
+    def calculate_yield_properties(self,mu:float = 0.03,yield_disp:float=0.002,ultimate_disp:float=1)->tuple[list[float],list[float]]:
+        """
+        Ideal bilinear elastic, yield force is static frictional force, reached at 2mm, infinite length of platform segment (default 1m)
+        Args:
+            mu (float, optional): _description_. Defaults to 0.03.
+            yield_disp (float, optional): _description_. Defaults to 0.002 m.
+            ultimate_disp (float, optional): _description_. Defaults to 1 m.
+
+        """
+        if Saproject().Units != 'KN_m_C':
+            Saproject().setUnits('KN_m_C')
+        yield_force = self.AxialF_under_dead_weight(self.name) * mu
+        forcelist = [-yield_force,-yield_force,0,yield_force,yield_force]
+        displist = [-ultimate_disp,-yield_disp,0,yield_disp,ultimate_disp]
+        return forcelist,displist
+    
+    def update_yield_prop_for_existing_linear_link(self):
+        existing_link = self.get_link_between_points(self.start_point,self.end_point)[0]
+        existing_linkprop = Saproject()._Model.LinkObj.GetProperty(existing_link)[0]
+        [link_type,ret] = Saproject().Define.section.PropLink.Get.TypeOAPI(existing_linkprop)
+        if ret==0 and link_type == 'Linear':
+            existing_link_instance = [link for link in Sap_LinkProp_Linear.get_instances() if link.prop_name == existing_linkprop][0]
+            if isinstance(existing_link_instance, Sap_LinkProp_Linear):
+                # assume already defined
+                Ke = existing_link_instance.Ke
+                doflist = [dof for dof,ke in Ke.items() if ke == 0 and dof not in ['R1','R2','R3']]
+                forceList,dispList = self.calculate_yield_properties(mu=0.03,yield_disp=0.002,ultimate_disp=1)
+                for dof in doflist:
+                    self.linkprop_instance._update_link_yield_prop_1dof(dof,forceList,dispList)
+                logger.debug(f"Yield properties updated for {existing_link}")
+            else:
+                raise ValueError(f"Sap_LinkProp_Linear instance for {existing_link} is not existing!")
+        else:
+            logger.error(f"Link {existing_link} is not Not Supported yet!")
+            raise NotImplementedError
         
     def add_link(self):
-        ret = Saproject().Assign.Link.AddByPoint(self.start_point.name, self.end_point.name, IsSingleJoint=False, PropName = self.link_name, UserName=self.name)
-        if ret[1] == 0:
-            logger.opt(colors=True).success(f"Link <yellow>{self.name}</yellow> Added!")
-        else:
-            logger.opt(colors=True).error(f"Link <yellow>{self.name}</yellow> Failed to Add!")
-
-
+        """
+        little different from Sap_Bearing.add_link,this function checks if link already exists, if yes, remove the previous one first.
+        """
+        exist_link = self.get_link_between_points(self.start_point,self.end_point)
+        if exist_link:
+            for link in exist_link:
+                Saproject().Assign.Link.Delete(link)
+        super().add_link()
+        
 class Sap_Girder:
     def __init__(self):
         logger.error('EZOpsMaterial is a abstract class!Should not be instantiated!')
@@ -633,33 +834,40 @@ class Sap_Girder:
         # dampingCe = {}
         # 固定支座:
         uncoupleKe = {"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0}
-        fixed_link = "Fixed"
-        Saproject().Define.section.PropLink.SetLinear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        # fixed_link = "Fixed"
+        # Saproject().Define.section.PropLink.Set.Linear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        fixed_link = Sap_LinkProp_Linear("Fixed",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
+        fixed_link.define_link()
         # 横桥向（y）滑动支座
         uncoupleKe = {"U1":1e10,"U2":1e10,"U3":0,"R1":0,"R2":0,"R3":0}
-        y_sliding_link = "y_sliding"
-        Saproject().Define.section.PropLink.SetLinear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        # y_sliding_link = "y_sliding"
+        # Saproject().Define.section.PropLink.Set.Linear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        y_sliding_link = Sap_LinkProp_Linear("y_sliding",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
+        y_sliding_link.define_link()
         # 纵桥向（x）滑动支座
         uncoupleKe = {"U1":1e10,"U2":0,"U3":1e10,"R1":0,"R2":0,"R3":0}
-        x_sliding_link = "x_sliding"
-        Saproject().Define.section.PropLink.SetLinear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        # x_sliding_link = "x_sliding"
+        # Saproject().Define.section.PropLink.Set.Linear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        x_sliding_link = Sap_LinkProp_Linear("x_sliding",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
+        x_sliding_link.define_link()
         # 双向滑动支座
         uncoupleKe = {"U1":1e10,"U2":0,"U3":0,"R1":0,"R2":0,"R3":0}
-        both_sliding_link = "Both_sliding"
-        Saproject().Define.section.PropLink.SetLinear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        # both_sliding_link = "Both_sliding"
+        # Saproject().Define.section.PropLink.Set.Linear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        both_sliding_link = Sap_LinkProp_Linear("Both_sliding",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
+        both_sliding_link.define_link()
         return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
 
-    def _replace_ideal_link(self):
-        raise NotImplementedError
-
-    def _add_multiLinear_link(self,link_name:str,DOF:str,forceList:list,dispList:list,Type:str):
-        ret = Saproject().Define.section.PropLink.Set.MultiLinearPoints(link_name, DOF, forceList, dispList, Type)
-        if ret == 0:
-            logger.opt(colors=True).success(f"Link <yellow>{link_name}</yellow> Added!")
-        else:
-            logger.opt(colors=True).error(f"Link <yellow>{link_name}</yellow> Failed to Add!")
-        return ret
-
+    def _update_ideal_link2MultiElactic_link(self,linear_link:Sap_Bearing_Linear):
+        new_link_name = linear_link.name
+        new_linkprop_name = new_link_name+"_MultiElastic"
+        new_MultiElastic_linkprop = Sap_LinkProp_MultiLinearElastic(new_linkprop_name,
+                                                                    DOF=linear_link.linkprop_instance.DOF,Fixed=linear_link.linkprop_instance.Fixed,Nonlinear={},Ke=linear_link.linkprop_instance.Ke,Ce=linear_link.linkprop_instance.Ce,dj2=linear_link.linkprop_instance.dj2,dj3=linear_link.linkprop_instance.dj3,notes=f"Converted from {linear_link.linkprop_instance.prop_name}")
+        new_MultiElastic_link = Sap_Bearing_MultiLinearElastic(new_link_name,
+                                                               linear_link.start_point,linear_link.end_point,linkprop_name=new_linkprop_name)
+        new_MultiElastic_link.update_yield_prop_for_existing_linear_link()
+        return new_MultiElastic_link
+        
     def _add_body_constraints_for_points(self,constraint_name:str, points : list):
         for point in points:
             if not point.exists():
@@ -699,27 +907,32 @@ class Sap_Box_Girder(Sap_Girder):
         # self.add_bearing_links(strategy='ideal')
         Saproject().RefreshView()
     
-    def update_ideal_links(self,mu:float = 0.03):
+    def update_links_parameters(self):
         """update bilinear ideal links for girder
         mu(float): frictional coefficient
         """
+        
         for pier in self.pierlist:
             bearings = self.bearings[pier.name]
             for side in ['left','right']:
-                raise NotImplementedError
-                
-
-                Saproject().Define.section.PropLink.Set.MultiLinearPoints("#6_x_sliding", DOF='U2', forceList=[-1,-1,0,1,1],dispList=[-30,-0.03,0,0.03,30],Type='Isotropic')
+                linksdict = {}
+                for key,link in bearings[side].items():
+                    new_link = self._update_ideal_link2MultiElactic_link(link)
+                    linksdict.update({key:new_link})
+                self.bearings[pier.name][side] = linksdict
     
-    def _replace_ideal_link(self):
-        # return super()._replace_ideal_link()
+    def update_links_in_Sap(self):
+        """update bilinear ideal links for girder in sap
+        """
+        if Saproject().is_locked:
+            Saproject().unlockModel()
+            
         for pier in self.pierlist:
             bearings = self.bearings[pier.name]
             for side in ['left','right']:
-                raise NotImplementedError
-                Saproject().Define.section.PropLink.Set.MultiLinearElastic("#6_x_sliding", DOF=['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], Fixed=[], Nonlinear = ["U2"],Ke={"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0})
-
-                Saproject().Define.section.PropLink.Set.MultiLinearPoints("#6_x_sliding", DOF='U2', forceList=[-1,-1,0,1,1],dispList=[-30,-0.03,0,0.03,30],Type='Isotropic')
+                for link in bearings[side].values():
+                    link.linkprop_instance.define_link()
+                    link.add_link()
     
     def add_ideal_bearing_links(self):
         fixed_link, y_sliding_link, x_sliding_link, both_sliding_link = self._define_ideal_links()
@@ -747,14 +960,14 @@ class Sap_Box_Girder(Sap_Girder):
                 else:
                     inner_bearing_bottom = pier.bearing_bottom_point_inner[side]
 
-                link_inner = Sap_Bearing_Linear(f"{pier.name}_{side}_inner_Bearing", inner_bearing_bottom, inner_bearing_top, inner_link)
+                link_inner = Sap_Bearing_Linear(f"{self.name}_{pier.name}_{side}_inner_Bearing", inner_bearing_bottom, inner_bearing_top, inner_link.prop_name)
                 
                 outer_bearing_top = self.girder_bearing_top_points[pier.name][side]['outer']
                 if type(pier.bearing_bottom_point_outer[side]) == list:
                     outer_bearing_bottom = [p for p in pier.bearing_bottom_point_outer[side] if p.x == inner_bearing_top.x][0]
                 else:
                     outer_bearing_bottom = pier.bearing_bottom_point_outer[side]
-                link_outer = Sap_Bearing_Linear(f"{pier.name}_{side}_outer_Bearing", outer_bearing_bottom, outer_bearing_top, outer_link)
+                link_outer = Sap_Bearing_Linear(f"{self.name}_{pier.name}_{side}_outer_Bearing", outer_bearing_bottom, outer_bearing_top, outer_link.prop_name)
                 
                 self.bearings[pier.name][side] = {'inner':link_inner, 'outer':link_outer}
     
