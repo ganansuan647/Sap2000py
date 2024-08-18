@@ -1,18 +1,18 @@
-from pathlib import Path
-from dataclasses import dataclass
-from loguru import logger
-from shapely import Polygon
-from sectionproperties.pre import Geometry
-from sectionproperties.analysis import Section
-from typing import Literal,Union,ClassVar,Dict, List
-from itertools import chain
-import numpy as np
 import math
-from rich.console import Console
-from rich.table import Table
-from dataclasses import dataclass, field
-from Sap2000py.Saproject import Saproject
 import weakref
+from dataclasses import dataclass, field
+from itertools import chain
+from pathlib import Path
+from typing import ClassVar, Dict, List, Literal, Union
+
+import numpy as np
+from loguru import logger
+from sectionproperties.analysis import Section
+from sectionproperties.pre import Geometry
+from shapely import Polygon
+
+from Sap2000py.Saproject import Saproject
+
 
 class ShouldNotInstantiateError(Exception):
     pass
@@ -523,8 +523,8 @@ class Sap_Double_Box_Pier:
 
 class Sap_Bearing:
     def __init__(self):
-        logger.error('EZOpsMaterial is a abstract class!Should not be instantiated!')
-        raise ShouldNotInstantiateError('Abstract class EZOpsMaterial accidentally instantiated!')
+        logger.error('Sap_Bearing is a abstract class!Should not be instantiated!')
+        raise ShouldNotInstantiateError('Abstract class Sap_Bearing accidentally instantiated!')
     
     def add_link(self,point1:SapPoint=None,point2:SapPoint=None):
         if not self.linkprop_instance.is_defined:
@@ -823,8 +823,8 @@ class Sap_Bearing_MultiLinearElastic(Sap_LinkProp_MultiLinearElastic):
         
 class Sap_Girder:
     def __init__(self):
-        logger.error('EZOpsMaterial is a abstract class!Should not be instantiated!')
-        raise ShouldNotInstantiateError('Abstract class EZOpsMaterial accidentally instantiated!')
+        logger.error('Sap_Girder is a abstract class!Should not be instantiated!')
+        raise ShouldNotInstantiateError('Abstract class Sap_Girder accidentally instantiated!')
 
     def _define_ideal_links(self):
         # 刚度取大值，不直接固定,暂时不考虑阻尼

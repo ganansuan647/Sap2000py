@@ -1,11 +1,13 @@
-from Sap2000py import Saproject
-import os
+from pathlib import Path
+
 import numpy as np
 import openpyxl
 from rich import print
-from pathlib import Path
+
+from Sap2000py import Saproject
+
 #full path to the model
-ModelPath = Path('.Sap2000pyTest\Test.sdb')
+ModelPath = Path('.\Test\Test.sdb')
 
 # Create a Sap2000py obj (default: attatch to instance and create if not exist)
 Sap = Saproject()

@@ -1,1 +1,0 @@
-th('.Sap2000pyTest\Test.sdb')
