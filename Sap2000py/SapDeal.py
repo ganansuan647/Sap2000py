@@ -1,13 +1,22 @@
-from Sap2000py.SapMaterial import SapMaterial
-from Sap2000py.SapSection import SapSection
+from pathlib import Path
+from typing import Literal, Union
+
+from loguru import logger
+
 from Sap2000py.SapConstraints import jointConstraints
 from Sap2000py.Sapfunctions import Sapfunctions
-from Sap2000py.Sapload import SapLoadCases,SapLoadPatterns
-from Sap2000py.SapObj import SapPointObj,SapFrameObj,SapTendonObj,SapAreaObj,SapSolidObj,SapLinkObj
-import os
-from pathlib import Path
-from typing import Union,Literal
-from loguru import logger
+from Sap2000py.Sapload import SapLoadCases, SapLoadPatterns
+from Sap2000py.SapMaterial import SapMaterial
+from Sap2000py.SapObj import (
+    SapAreaObj,
+    SapFrameObj,
+    SapLinkObj,
+    SapPointObj,
+    SapSolidObj,
+    SapTendonObj,
+)
+from Sap2000py.SapSection import SapSection
+
 
 class SapFile():
     def __init__(self,Sapobj=None):
@@ -48,10 +57,12 @@ class SapFile():
             logger.warning(f"File {FileName} does not exist! Creating file...")
             # create new blank model
             ret = self.__Model.File.NewBlank()
-            if(ret!=0):logger.error("Cannot create new Blank Sap model")
+            if(ret!=0):
+                logger.error("Cannot create new Blank Sap model")
             # save sdb file
             ret = self.Save(FileName)
-            if(ret!=0):logger.error(f"Cannot save file at path:{FileName}")
+            if(ret!=0):
+                logger.error(f"Cannot save file at path:{FileName}")
         else:
             # open the sdbFile
             ret = self.__Model.File.OpenFile(str(FileName))  # open an existing file
@@ -59,7 +70,8 @@ class SapFile():
                 logger.error(f"Cannot open file at path:{FileName}, Instead Creating new Blank Sap model")
                 # create new blank model
                 ret = self.__Model.File.NewBlank()
-                if(ret!=0):logger.error("Cannot create new Blank Sap model")
+                if(ret!=0):
+                    logger.error("Cannot create new Blank Sap model")
         self.Sapobj.setDefaultProjectInfo()
         return ret
 
@@ -75,7 +87,8 @@ class SapFile():
         save at savepath\savename
         """
         # make sure filepath exists
-        if type(FileName) == str:FileName = Path(FileName).resolve()
+        if isinstance(FileName,str):
+            FileName = Path(FileName).resolve()
         ret = self.__Model.File.Save(str(FileName))
         return ret
     

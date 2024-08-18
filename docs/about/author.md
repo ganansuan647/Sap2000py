@@ -26,3 +26,5 @@
 
 ## 🛠️ 其他项目 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/ganansuan647)
 - [EZSite_with_Openseespy:利用Openseespy快速建立场地-结构一体化模型并进行地震分析](https://github.com/ganansuan647/EZSite_with_Openseespy)
+
+[![Readme Card](https://github-readme-stats-beta-amber-44.vercel.app/api?username=ganansuan647&show_icons=true&role=OWNER,ORGANIZATION_MEMBER,COLLABORATOR&locale=zh-my)](#)

@@ -1,8 +1,5 @@
-import os
 import sys
 import comtypes.client
-# from itertools import chain
-import math
 import numpy as np
 from typing import Literal
 from loguru import logger
@@ -91,7 +88,7 @@ class SapScripts:
             startCell(str): top left corner of the matrix
         """
         import re
-        from openpyxl.utils import get_column_letter, column_index_from_string
+        from openpyxl.utils import column_index_from_string
         colname,rowname = re.findall(r'\d+|\D+', startCell)
         rownum = int(rowname)
         colnum = column_index_from_string(colname)
