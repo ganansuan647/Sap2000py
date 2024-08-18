@@ -266,7 +266,6 @@ class PropLink_Set:
         DOFDict = {"U1": 1, "U2": 2, "U3": 3, "R1": 4, "R2": 5, "R3": 6}
         dof = DOFDict[DOF]
         TypeDict = {"Isotropic": 0, "Kinematic": 1, "Takeda": 2, "Pivot": 3}
-        Typeid = TypeDict[Type]
         numberPoints=len(forceList)
         TypeDict={"Isotropic":0,"Kinematic":1,"Takeda":2,"Pivot":3}
         myType=TypeDict[Type]

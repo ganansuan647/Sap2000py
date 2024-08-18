@@ -8,6 +8,10 @@ from pathlib import Path
 import json
 
 class SapMeta(type):
+    """---Sap2000 project Meta class for singleton---
+
+    用于保证Saproject单例用法的元类,不应被继承
+    """
     __instance = None
     def __init__(self,class_name,class_bases,class_dic):
         self.__instance=object.__new__(self)  # Initialize the object corresponding to the singleton Saproject class.
@@ -22,6 +26,10 @@ class SapMeta(type):
             return self.__instance
 
 class SapScripts:
+    """---SAP2000 script class---
+    
+    在Saproject类下集成了部分常用的SAP2000脚本,实现一些常用功能
+    """
     def __init__(self,Sapobj):
         """
         Passing in the parent class object directly is to avoid 
