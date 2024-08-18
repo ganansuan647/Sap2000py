@@ -1,0 +1,123 @@
+site_name: Sap2000py Docs
+site_url: https://ganansuan647.github.io/Sap2000py/
+site_author: 苟凌云(Lingyun Gou)
+theme:
+  name: material
+  palette:
+  # Palette toggle for automatic mode
+  - media: "(prefers-color-scheme)"
+    toggle:
+      icon: material/brightness-auto
+      name: 手动调整主题
+  
+  # Palette toggle for light mode
+  - media: "(prefers-color-scheme: light)"
+    scheme: default # light mode: default, dark mode: slate
+    primary: indigo # primary colors:indigo, pink, purple, teal, cyan, light-blue, lime, amber, deep-orange
+    accent: deep orange # accent colors: pink, red, deep orange, orange, amber, yellow, lime, light-green, teal
+    toggle:
+        icon: material/brightness-5 # 图标
+        name: 切换至夜间模式 # 鼠标悬浮提示
+
+  # Palette toggle for dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate # 夜间模式
+    primary: black
+    accent: indigo
+    # teal
+    toggle:
+      icon: material/brightness-3
+      name: 自动调整主题
+
+
+
+
+  features:
+    - announce.dismiss #呈现可标记为由用户读取的临时公告，可以包含一个用于取消当前公告的按钮
+    - navigation.tracking #地址栏中的 URL 将自动更新为在目录中突出显示的活动锚点
+    - navigation.tabs #顶级部分将呈现在上面视口标题下方的菜单层中，但在移动设备上保持原样
+    # - navigation.tabs.sticky  #启用粘性选项卡后，导航选项卡将锁定在标题下方，并在向下滚动时始终保持可见
+    - navigation.sections #启用部分后，顶级部分在边栏中呈现为1220px以上视口的组，但在移动设备上保持原样
+    - navigation.top # 返回顶部的按钮 在上滑时出现
+    - navigation.footer #页脚将呈现在边栏中，但在移动设备上保持原样
+    - search.suggest # 搜索输入一些字母时推荐补全整个单词
+    - search.highlight # 搜索出的文章关键词加入高亮
+    - search.share #搜索分享按钮
+    - navigation.expand # 打开Tab时左侧目录全部展开
+    - navigation.indexes #启用节索引页后，可以将文档直接附加到节
+    - content.tabs.link
+    - content.tooltips
+    - content.code.copy #代码复制
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+  language: zh # 一些提示性的文字会变成中文
+
+  icon:
+    repo: fontawesome/brands/github #右上角图标
+    logo: logo
+edit_uri: edit/main/docs # 编辑按钮跳转的链接
+repo_url: https://github.com/ganansuan647/Sap2000py # 右上角点击跳转的链接
+repo_name: Sap2000py # 右上角的名字
+
+plugins:
+  - search
+  - tags
+
+markdown_extensions:
+  - abbr
+  - attr_list
+  - admonition
+  - def_list
+  - footnotes
+  - md_in_html
+  # - meta # 支持Markdown文件上方自定义标题标签等
+  - pymdownx.caret
+  - pymdownx.betterem
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.snippets
+  - pymdownx.smartsymbols
+  - pymdownx.tilde
+
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format:
+            !!python/name:pymdownx.superfences.fence_code_format # 代码块高亮插件
+
+  - pymdownx.arithmatex: # latex支持
+      generic: true
+  - toc:
+      permalink: true # 固定标题位置为当前位置
+  - pymdownx.highlight: # 代码块高亮
+      anchor_linenums: true
+      linenums: true # 显示行号
+      # auto_title: true # 显示编程语言名称
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  # - markdown.extensions.toc:
+  #     slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
+  #     permalink: "\ue157"
+
+
+nav:  #目录
+  - Getting Start: index.md
+  - Basic Usage:
+    - SapProject: Sap2000py/Saproject/openSap.md
+    - SapModel: Sap2000py/Saproject/openSap.md
+  - Examples:
+    - Basic Usage: Examples/BasicUsage.md
+  - About:
+    - Project: about/project.md
+    - Author: about/author.md
+    
