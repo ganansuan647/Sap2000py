@@ -204,7 +204,8 @@ class Saproject(metaclass=SapMeta):
 
         ```python
         from pathlib import Path
-
+        from Sap2000py import Saproject
+        
         Sap = Saproject()
         Sap.openSap()
         Sap.File.New_Blank()
