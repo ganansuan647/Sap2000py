@@ -4,6 +4,12 @@ Sap2000py is a python module to interact with Sap2000 API
 
 This Demo below shows how to interact with SAP2000 using the Sap2000py library. The project includes complete examples of creating and manipulating SAP2000 models, running analyses, and exporting results to Excel.
 
+## Documents
+
+You can find the latest documentation [here](https://ganansuan647.github.io/Sap2000py/)
+
+Or you can find documents for all versions [here](https://sap2000py.readthedocs.io/).
+
 ## Contents
 
 - [Installation](#installation)
@@ -19,8 +25,7 @@ This Demo below shows how to interact with SAP2000 using the Sap2000py library. 
 
 ## Installation
 
-1. Clone this repository to your local machine.
-2. Install the dependencies:
+Using pip:
 
 ```bash
 pip install Sap2000py
@@ -35,7 +40,9 @@ Below are detailed instructions for using `Sap2000pyDemo.py`.
 At the beginning of the script, set the path to your model file:
 
 ```python
-ModelPath = 'F:\\python\\Sap2000\\Models\\Test.sdb'
+from pathlib import Path
+#full path to the model
+ModelPath = Path('.\Test\Test.sdb')
 ```
 
 ### Creating and Opening a SAP2000 Project
@@ -43,7 +50,7 @@ ModelPath = 'F:\\python\\Sap2000\\Models\\Test.sdb'
 Create a Sap2000py object and open the SAP2000 program:
 
 ```python
-from Sap2000py.Saproject import Saproject
+from Sap2000py import Saproject
 
 Sap = Saproject()
 Sap.openSap()
@@ -101,6 +108,7 @@ Sap.Scripts.Analyze.RunAll()
 
 Export analysis results to an Excel file:
 
+note: the following code is just an example, you can modify it according to your needs.
 ```python
 filename = 'F:\\python\\Sap2000\\Models\\Test.xlsx'
 wb = openpyxl.load_workbook(filename)
@@ -139,4 +147,4 @@ This project requires the following Python libraries:
 - json
 - sectionproperties>=3.3.0
 
-For more information, please check [Sap2000pyDemo.py](./Sap2000pyDemo.py).
+For more information, please check [Sap2000py Demo](./Sap2000pyDemo.py) and [Build Continuous Bridge Demo](./Build_Continuous_Bridge_Demo.py).

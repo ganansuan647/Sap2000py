@@ -115,8 +115,7 @@ markdown_extensions:
 nav:  #目录
   - Getting Start: index.md
   - Basic Usage:
-    - SapProject: Sap2000py/Saproject/openSap.md
-    - SapModel: Sap2000py/Saproject/openSap.md
+    - SapProject: Sap2000py/Saproject/Saproject.md
   - Examples:
     - Basic Usage: Examples/BasicUsage.md
   - About:

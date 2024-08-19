@@ -1,3 +1,36 @@
+# Sap2000py
+
+Sap2000py is a python module to interact with Sap2000 API
+
+This Demo below shows how to interact with SAP2000 using the Sap2000py library. The project includes complete examples of creating and manipulating SAP2000 models, running analyses, and exporting results to Excel.
+
+## Documents
+
+You can find the latest documentation [here](https://ganansuan647.github.io/Sap2000py/)
+
+Or you can find documents for all versions [here](https://sap2000py.readthedocs.io/).
+
+## Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Setting the Model Path](#setting-the-model-path)
+  - [Creating and Opening a SAP2000 Project](#creating-and-opening-a-sap2000-project)
+  - [Model Information](#model-information)
+  - [Adding Materials and Elements](#adding-materials-and-elements)
+  - [Analysis](#analysis)
+  - [Post-processing](#post-processing)
+  - [Saving and Closing](#saving-and-closing)
+- [Dependencies](#dependencies)
+
+## Installation
+
+Using pip:
+
+```bash
+pip install Sap2000py
+```
+
 ## Usage
 
 Below are detailed instructions for using `Sap2000pyDemo.py`.
@@ -7,7 +40,9 @@ Below are detailed instructions for using `Sap2000pyDemo.py`.
 At the beginning of the script, set the path to your model file:
 
 ```python
-ModelPath = 'F:\\python\\Sap2000\\Models\\Test.sdb'
+from pathlib import Path
+#full path to the model
+ModelPath = Path('.\Test\Test.sdb')
 ```
 
 ### Creating and Opening a SAP2000 Project
@@ -15,7 +50,7 @@ ModelPath = 'F:\\python\\Sap2000\\Models\\Test.sdb'
 Create a Sap2000py object and open the SAP2000 program:
 
 ```python
-from Sap2000py.Saproject import Saproject
+from Sap2000py import Saproject
 
 Sap = Saproject()
 Sap.openSap()
@@ -73,6 +108,7 @@ Sap.Scripts.Analyze.RunAll()
 
 Export analysis results to an Excel file:
 
+note: the following code is just an example, you can modify it according to your needs.
 ```python
 filename = 'F:\\python\\Sap2000\\Models\\Test.xlsx'
 wb = openpyxl.load_workbook(filename)
@@ -93,3 +129,22 @@ Save the project and close the SAP2000 program:
 Sap.File.Save()
 Sap.closeSap()
 ```
+
+## Dependencies
+
+- python>=3.9
+
+This project requires the following Python libraries:
+
+- numpy
+- os
+- openpyxl
+- comtypes>=1.1.11
+- itertools
+- rich
+- loguru
+- pathlib
+- json
+- sectionproperties>=3.3.0
+
+For more information, please check [Sap2000py Demo](./Sap2000pyDemo.py) and [Build Continuous Bridge Demo](./Build_Continuous_Bridge_Demo.py).

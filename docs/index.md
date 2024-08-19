@@ -2,8 +2,6 @@
 ??? info "Project Information"
     For detailed information about this project please check [here](./about/project.md)
 
-::: Saproject
-
 ## Install
 
 * `pip install sap2000py` - Install Sap2000py module.
