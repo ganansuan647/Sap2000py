@@ -1,4 +1,5 @@
 # Sap2000py
+[![pypi](https://img.shields.io/pypi/v/Sap2000py)](https://pypi.org/project/Sap2000py/)[![Downloads](https://static.pepy.tech/badge/Sap2000py)](https://pepy.tech/project/Sap2000py)[![Documentation Status](https://readthedocs.org/projects/sap2000py/badge/?version=latest)](https://sap2000py.readthedocs.io/en/latest/?badge=latest)[![github stars](https://img.shields.io/github/stars/ganansuan647/Sap2000py?style=social)](https://github.com/ganansuan647/Sap2000py)![license](https://img.shields.io/github/license/ganansuan647/Sap2000py)[![code grade](https://img.shields.io/codefactor/grade/github/ganansuan647/Sap2000py)](https://www.codefactor.io/repository/github/ganansuan647/Sap2000py)
 
 Sap2000py is a python module to interact with Sap2000 API
 

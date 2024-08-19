@@ -14,5 +14,6 @@
 #########################################################################
 __version__ = "0.1.3"
 
-from .Saproject import Saproject
-__all__ = ["Saproject"]
+from Sap2000py.Saproject import Saproject
+from Sap2000py.Bridge.SapBridge import SapBridge
+__all__ = ["Saproject","SapBridge"]

@@ -11,7 +11,7 @@ from sectionproperties.analysis import Section
 from sectionproperties.pre import Geometry
 from shapely import Polygon
 
-from Sap2000py.Saproject import Saproject
+from Sap2000py import Saproject
 
 
 class ShouldNotInstantiateError(Exception):
@@ -731,9 +731,8 @@ class Sap_LinkProp_MultiLinearElastic(Sap_Bearing):
                 discrepancies.append(f"Nonlinear: expected {list(self.Nonlinear.keys())}, got {Nonlinear}")
             if Ke != self.Ke:
                 discrepancies.append(f"Ke: expected {self.Ke}, got {Ke}")
-            if Ce != self.Ce:
-                if not all(Ce.keys() == 0.0):
-                    discrepancies.append(f"Ce: expected {self.Ce}, got {Ce}")
+            if Ce != self.Ce and any(val != 0.0 for val in Ce.values()):
+                discrepancies.append(f"Ce: expected {self.Ce}, got {Ce}")
             if dj2 != self.dj2:
                 discrepancies.append(f"dj2: expected {self.dj2}, got {dj2}")
             if dj3 != self.dj3:
@@ -775,7 +774,7 @@ class Sap_Bearing_MultiLinearElastic(Sap_LinkProp_MultiLinearElastic):
         if not isinstance(self.linkprop_instance, Sap_LinkProp_MultiLinearElastic):
             self.linkprop_instance = [link for link in Sap_LinkProp_MultiLinearElastic.get_instances() if link.prop_name == self.linkprop_name][0]
     
-    def calculate_yield_properties(self,mu:float = 0.03,yield_disp:float=0.002,ultimate_disp:float=1)->tuple[list[float],list[float]]:
+    def calculate_yield_properties(self,mu:float = 0.02,yield_disp:float=0.002,ultimate_disp:float=1)->tuple[list[float],list[float]]:
         """
         Ideal bilinear elastic, yield force is static frictional force, reached at 2mm, infinite length of platform segment (default 1m)
         Args:
