@@ -16,4 +16,5 @@ __version__ = "0.1.3"
 
 from Sap2000py.Saproject import Saproject
 from Sap2000py.Bridge.SapBridge import SapBridge
-__all__ = ["Saproject","SapBridge"]
+from Sap2000py.Bridge.SapEarthquake import SapEarthquake
+__all__ = ["Saproject","SapBridge","SapEarthquake"]

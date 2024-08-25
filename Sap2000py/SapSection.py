@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal,List
 class SapSection:
     def __init__(self,Sapobj):
         """
@@ -48,6 +48,37 @@ class SapSection:
         """
         ret = self.__Model.PropFrame.SetSDSection(sectName, matName, DesignType, Color, Notes, GUID)
         return ret
+
+    def PropFrame_SetNonPrismatic(self,Name:str,NumberItems:int,StartSec:list[str],EndSec:list[str],
+                                  Lengthlist:list[float],LengthType:list[Literal['Variable','Absolute']],
+                                  EI33Variation:list[Literal['Linear','Parabolic','Cubic']],
+                                  EI22Variation:list[Literal['Linear','Parabolic','Cubic']],
+                                  Color=-1,Notes="",GUID=""):
+        """set a nonprismatic frame section property
+        This function assigns data to a nonprismatic frame section property.
+        The function returns zero if the data is successfully filled; otherwise it returns a nonzero value.
+
+        Args:
+            Name (str): the name of the defined sections
+            NumberItems (int): The number of segments assigned to the nonprismatic section.
+            StartSec (list[str]): This is an array of the names of the frame section properties at the start of each segment. Auto select lists and nonprismatic sections are not allowed in this array
+            EndSec (list[str]): This is an array of the names of the frame section properties at the end of each segment. Auto select lists and nonprismatic sections are not allowed in this array.
+            Lengthlist (list[float]): This is an array that includes the length of each segment. The length may be variable or absolute as indicated by the 'LengthType' item.
+            LengthType (list[Literal['Variable','Absolute']]): This is an array of either 'Variable' or 'Absolute', indicating the length type for each segment.
+            EI33Variation (list[Literal['Linear','Parabolic','Cubic']]): This is an array of either ['Linear','Parabolic','Cubic'], indicating the variation type for EI33 in each segment.
+            EI22Variation (list[Literal['Linear','Parabolic','Cubic']]): This is an array of either ['Linear','Parabolic','Cubic'], indicating the variation type forEI22 in each segment.
+            Color(long)-The display color assigned to the section. If Color is specified as -1, the program will automatically assign a color.
+            Notes(str)-The notes, if any, assigned to the section.
+            GUID(str)-The GUID (global unique identifier), if any, assigned to the section. If this item is input as Default, the program assigns a GUID to the section.
+        """
+        LengthTypeDict = {'Variable':1,'Absolute':2}
+        Lengthtypeidlist = [LengthTypeDict[mytype] for mytype in LengthType]
+        VariationDict = {'Linear':1,'Parabolic':2,'Cubic':3}
+        EI33VarList = [VariationDict[mytype] for mytype in EI33Variation]
+        EI22VarList = [VariationDict[mytype] for mytype in EI22Variation]
+        ret = self.__Model.PropFrame.SetNonPrismatic(Name, NumberItems, StartSec, EndSec, Lengthlist, Lengthtypeidlist, EI33VarList, EI22VarList,Color,Notes,GUID)
+        return ret
+        
 
     def Tendon_SetProp(self,tendonName,matName,modelOpt,Area):
         """

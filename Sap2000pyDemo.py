@@ -61,7 +61,6 @@ print(Eledict)
 Sap.Scripts.Group.Select('Edge')
 
 
-
 # Modal Analysis
 # Remove all cases for analysis
 Sap.Scripts.Analyze.RemoveCases("All")
@@ -71,7 +70,6 @@ Sap.Scripts.Analyze.AddCases(Casename = ['DEAD', 'MODAL','yourCase1', 'yourCase2
 Sap.Scripts.Analyze.DeleteResults("All")
 # Run analysis
 Sap.Scripts.Analyze.RunAll()
-
 
 
 # post process

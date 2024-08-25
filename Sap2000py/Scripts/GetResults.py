@@ -164,12 +164,15 @@ def deal_with_item(results,colstart,colend):
     MaxReaction = np.zeros((len(uniquelist),reaction.shape[1]))
     MinReaction = np.zeros((len(uniquelist),reaction.shape[1]))
     AbsReaction = np.zeros((len(uniquelist),reaction.shape[1]))
-    for item in uniquelist:
-        num = uniquelist.index(item)
-        itemreaction = reaction[indexdict[item],:]
-        MaxReaction[num,:] = np.max(itemreaction,0)
-        MinReaction[num,:] = np.min(itemreaction,0)
-        AbsReaction[num,:] = np.max(np.fabs(itemreaction),0)
+    try:
+        sorted_indices = sorted(range(len(uniquelist)), key=lambda i: int(uniquelist[i].split('_')[1][1:]))
+    except:
+        sorted_indices = range(len(uniquelist))
+    for i in sorted_indices:
+        itemreaction = reaction[indexdict[uniquelist[i]],:]
+        MaxReaction[i,:] = np.max(itemreaction,0)
+        MinReaction[i,:] = np.min(itemreaction,0)
+        AbsReaction[i,:] = np.max(np.fabs(itemreaction),0)
     return uniquelist,AbsReaction,MaxReaction,MinReaction
 
 

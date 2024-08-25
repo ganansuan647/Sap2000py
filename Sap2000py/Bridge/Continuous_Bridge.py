@@ -34,6 +34,7 @@ class Section_General:
     sec: Section = None
     unit_of_sec:Literal['mm','cm','m'] = 'm'
     notes:str=""
+    
 
     @property
     def t3(self):
@@ -55,6 +56,14 @@ class Section_General:
             logger.opt(colors=True).success(f"Section <yellow>{self.name}</yellow> added!")
         Saproject().setUnits("KN_m_C")
         return ret
+    
+    def ignore_mass_effect(self):
+        # Set mass and weight modifiers to 0
+        ret = Saproject()._Model.PropFrame.SetModifiers(self.name,[1,1,1,1,1,1,0,0])
+        if ret[-1] == 0:
+            logger.opt(colors=True).success(f"Mass effect ignored for Section <yellow>{self.name}</yellow>!")
+        else:
+            logger.opt(colors=True).error(f"Failed to ignore mass effect for Section <yellow>{self.name}</yellow>!")
     
     def plot_geometry(self):
         if self.geom:
@@ -79,6 +88,41 @@ class Section_General:
         raise NotImplementedError
 
 @dataclass
+class Section_NonPrismatic:
+    """
+    
+    VaryingRules(list[float,Literal['Variable','Absolute'],str,str,Literal['Linear','Parabolic','Cubic']],Literal['Linear','Parabolic','Cubic']):
+        [0]:list of the length type for each segment.1 = Variable (relative length),2 = Absolute
+        [1]:the length of each segment
+        [2]:start section property name
+        [3]:end section property name
+        [4]:the type of the varying rule for EI33.1 = Linear,2 = Parabolic,3 = Cubic
+        [5]:the type of the varying rule for EI22.1 = Linear,2 = Parabolic,3 = Cubic
+
+    CardinalPoint:Literal['Centroid','Shear Center','Bottom Left','Bottom Center','Bottom Right','Middle Left','Middle Center','Middle Right','Top Left','Top Center','Top Right'] = 'Top Center'
+
+    
+    """
+    name:str
+    VaryingRules:list[Literal['Variable','Absolute'],float,str,str,Literal['Linear','Parabolic','Cubic'],Literal['Linear','Parabolic','Cubic']]
+    notes:str=""
+    
+    def define(self):
+        NumberItems:int = len(self.VaryingRules)
+        lengthTypeList:List = [segment[0] for segment in self.VaryingRules]
+        lengthlist:List = [segment[1] for segment in self.VaryingRules]
+        startSecList:List = [segment[2] for segment in self.VaryingRules]
+        endSecList:List = [segment[3] for segment in self.VaryingRules]
+        EI33Variation = [segment[4] for segment in self.VaryingRules]
+        EI22Variation = [segment[5] for segment in self.VaryingRules]
+        ret = Saproject().Define.section.PropFrame_SetNonPrismatic(self.name, NumberItems, startSecList, endSecList, lengthlist, lengthTypeList, EI33Variation, EI22Variation)
+        if ret[-1] == 0:
+            logger.opt(colors=True).success(f"Section <yellow>{self.name}</yellow> added!")
+        return ret
+
+   
+
+@dataclass
 class SapPoint:
     x:float
     y:float
@@ -94,9 +138,11 @@ class SapPoint:
             logger.opt(colors=True).error(f"Point <yellow>{self.name}</yellow> : <cyan>({self.x}, {self.y}, {self.z})</cyan> failed to add.")
         return ret
     
-    def defineMass(self):
-        ret = Saproject().Assign.PointObj.Set.Mass(self.name, [self.mass for i in range(6)])
-        if ret == 0:
+    def defineMass(self,mass:float = None):
+        if mass is not None:
+            self.mass = mass
+        ret = Saproject().Assign.PointObj.Set.Mass(self.name, [self.mass, self.mass, self.mass, 0, 0, 0])
+        if ret[-1] == 0:
             logger.success(f"Mass {self.mass} added to Point {self.name}")
         else:
             logger.error(f"Mass {self.mass} failed to add to Point {self.name}")
@@ -104,6 +150,99 @@ class SapPoint:
 
     def exists(self):
         return Saproject().Assign.PointObj.Get.CoordCartesian(self.name)[-1] == 0
+
+@dataclass
+class SapFrame:
+    node1:Union[SapPoint,str]
+    node2:Union[SapPoint,str]
+    section:Union[str,Section_General,Section_NonPrismatic]
+    
+    name:str = ""
+    CardinalPoint:Literal['Centroid','Shear Center','Bottom Left','Bottom Center','Bottom Right','Middle Left','Middle Center','Middle Right','Top Left','Top Center','Top Right'] = 'Centroid'
+    
+    def define(self):
+        if isinstance(self.node1, SapPoint):
+            namei = self.node1.name
+        else:
+            namei = self.node1
+        if isinstance(self.node2, SapPoint):
+            namej = self.node2.name
+        else:
+            namej = self.node2
+        if isinstance(self.section, str):
+            section_name = self.section
+        else:
+            section_name = self.section.name
+        ret = Saproject().Assign.FrameObj.AddByPoint(namei, namej,propName=section_name, userName = self.name)
+        if ret[-1] == 0:
+            logger.opt(colors=True).success(f"Frame element <yellow>{self.name}</yellow> added!")
+        else:
+            logger.opt(colors=True).error(f"Frame element <yellow>{self.name}</yellow> failed to add!")
+
+    def add_line_mass(self, disLoad:float = 0.0, Replace:bool = True):
+        """add frame line mass
+
+        Args:
+            disLoad (float, optional): mass per unit length under unit kN_m . Defaults to 0.0.
+            Replace (bool, optional): replace line mass or not. Defaults to True.
+        """
+        # add line mass manually instead(一期+二期恒载)
+        ret = Saproject().Assign.FrameObj.Set.Mass(self.name,disLoad,Replace=Replace)
+        if ret == 0:
+            if Replace:
+                logger.opt(colors=True).success(f"element <yellow>{self.name}</yellow> line mass set as {disLoad} ton/m (kN/m/g)!")
+            else:
+                logger.opt(colors=True).success(f"element <yellow>{self.name}</yellow> line mass set as {disLoad} ton/m (kN/m/g)!")
+        else:
+            logger.opt(colors=True).error(f"element <yellow>{self.name}</yellow> mass failed to set as {disLoad} ton/m (kN/m/g)!")
+
+    def get_section_name(self):
+        ret = Saproject()._Model.FrameObj.GetSection(self.name)
+        if ret[-1] == 0:
+            return ret[0]
+        else:
+            logger.error(f"Failed to get section name of Frame {self.name}")
+     
+    def define_Cardinal_Point(self,CardinalPoint:Literal['Centroid','Shear Center','Bottom Left','Bottom Center','Bottom Right','Middle Left','Middle Center','Middle Right','Top Left','Top Center','Top Right'] = None):
+        if CardinalPoint is not None:
+            newCardinalPoint = CardinalPoint
+        else:
+            newCardinalPoint = self.CardinalPoint
+        ret = Saproject().Assign.FrameObj.Set.InsertionPoint(self.name, newCardinalPoint, False, False, [0,0,0], [0,0,0], "Local")
+        if ret[-1] == 0:
+            logger.opt(colors=True).success(f"Cardinal Point of Element <yellow>{self.name}</yellow> set as <yellow>{self.CardinalPoint}</yellow>!")
+            self.CardinalPoint = CardinalPoint
+        else:
+            logger.opt(colors=True).error(f"Cardinal Point of Element <yellow>{self.name}</yellow> failed to set as <yellow>{self.CardinalPoint}</yellow>!")
+        return ret
+
+    def set_varying_sec_params(self,VarTotalLength:float = 0.0, RelStartLoc: float = 0.0):
+        """_summary_
+
+        Args:
+            VarTotalLength (float, optional): This is the total assumed length of the nonprismatic section. Enter 0 for this item to indicate that the section length is the same as the frame object length. Defaults to 0.0. This item is applicable only when the assigned frame section property is a nonprismatic section. 
+            RelStartLoc (float, optional): This is the relative distance along the nonprismatic section to the I-End (start) of the frame object. This item is ignored when the sVarTotalLengthitem is 0.0. Defaults to 0.0. This item is applicable only when the assigned frame section property is a nonprismatic section, and the sVarTotalLengthitem is greater than zero.
+        """
+        if isinstance(self.section, str):
+                secname = self.section
+        else:
+            secname = self.section.name
+                
+        if not isinstance(self.section, Section_NonPrismatic):
+            ret = Saproject()._Model.FrameObj.GetSectionNonPrismatic(self.name)
+            if ret[-1] != 0:
+                logger.warning(f"Section {self.section} is not nonprismatic.")
+            raise ValueError(f"Section {self.section} is not nonprismatic.")
+        ret = Saproject().Assign.FrameObj.Set.Section(name=self.name,
+                                                propName=secname,
+                                                sVarTotalLength=float(VarTotalLength),
+                                                sVarRelStartLoc=float(RelStartLoc))
+        if ret == 0:
+            logger.opt(colors=True).success(f"Frame with nonprismatic section: <yellow>{secname}</yellow> now set as total length of <yellow>{VarTotalLength}</yellow> and relative start location at <yellow>{RelStartLoc}</yellow>!")
+        else:
+            logger.opt(colors=True).error(f"Failed to set Frame with nonprismatic section: <yellow>{secname}</yellow> as total length of <yellow>{VarTotalLength}</yellow> and relative start location at <yellow>{RelStartLoc}</yellow>!")
+            
+        
 
 class SapBase_6Spring:
     def __init__(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path(".\Examples\ContinuousBridge6spring.txt")):
@@ -199,11 +338,6 @@ class Sap_Double_Box_Pier:
         self.base = baseobj
         self.base.get_spring_data()
         self.base.add_spring()
-    
-    def add_mass(self):
-        # if cap section is defined properly, mass of cap should not be added to cap point
-        # self.cap_point.defineMass()
-        raise NotImplementedError
     
     def generate_base_points(self):
         x = self.station
@@ -494,8 +628,8 @@ class Sap_Double_Box_Pier:
         cap_section_name = self.get_cap_section()
         
         # define solid cap
-        Saproject().Assign.FrameObj.AddByPoint(self.base_point.name, self.cap_point.name, propName=cap_section_name, userName = self.name+"base2cap")
-        Saproject().Assign.FrameObj.AddByPoint(self.cap_point.name, self.cap_top_point.name, propName=cap_section_name, userName = self.name+"cap2bottom")
+        SapFrame(node1=self.base_point.name, node2=self.cap_point.name,section=cap_section_name,name=self.name+"_base2cap").define()
+        SapFrame(node1=self.cap_point.name, node2=self.cap_top_point.name,section=cap_section_name,name=self.name+"_cap2bottom").define()
     
     def generate_pier_elements(self,side = Literal['left','right','both']):
         if side == 'both':
@@ -509,17 +643,19 @@ class Sap_Double_Box_Pier:
         box_section.define()
         
         # define pier
-        Saproject().Assign.FrameObj.AddByPoint(self.pier_bottom_point[side].name, self.pier_hollow_bottom[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_bottom2hollowBottom")
+        SapFrame(node1=self.pier_bottom_point[side].name, node2=self.pier_hollow_bottom[side].name,section=solid_section.name,name=self.name+'_'+side+"_bottom2hollowBottom").define()
+        
         for i,h in enumerate(self.hollow_points[side]):
             if i == 0:
-                Saproject().Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
+                SapFrame(node1=self.pier_hollow_bottom[side].name, node2=h.name, section=box_section.name, name=self.name+'_'+side+f"_hollow_{i+1}").define()
             else:
-                Saproject().Assign.FrameObj.AddByPoint(self.hollow_points[side][i-1].name, h.name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
+                SapFrame(node1=self.hollow_points[side][i-1].name, node2=h.name, section=box_section.name, name=self.name+'_'+side+f"_hollow_{i+1}").define()
         if len(self.hollow_points[side]) == 0:
-            Saproject().Assign.FrameObj.AddByPoint(self.pier_hollow_bottom[side].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+"_hollowBottom2Top")
+            SapFrame(node1=self.pier_hollow_bottom[side].name, node2=self.pier_hollow_top[side].name, section=box_section.name, name=self.name+'_'+side+"_hollowBottom2Top").define()
         else:
-            Saproject().Assign.FrameObj.AddByPoint(self.hollow_points[side][-1].name, self.pier_hollow_top[side].name, propName=box_section.name, userName = self.name+'_'+side+f"_hollow_{i+1}")
-        Saproject().Assign.FrameObj.AddByPoint(self.pier_hollow_top[side].name, self.pier_top[side].name, propName=solid_section.name, userName = self.name+'_'+side+"_hollowTop2Top")
+            SapFrame(node1=self.hollow_points[side][-1].name, node2=self.pier_hollow_top[side].name, section=box_section.name, name=self.name+'_'+side+"_hollowBottom2Top").define()
+        SapFrame(node1=self.pier_hollow_top[side].name, node2=self.pier_top[side].name, section=solid_section.name, name=self.name+'_'+side+"_hollowTop2Top").define()
+
 
 class Sap_Bearing:
     def __init__(self):
@@ -881,13 +1017,19 @@ class Sap_Girder:
 
 @dataclass
 class Sap_Box_Girder(Sap_Girder):
+    """_summary_
+
+    Returns:
+        _type_: _description_
+    """
     name: str
     pierlist: list
     fixedpier: list
-    num_of_ele_foreach_girder: int = 6
+    num_of_ele_foreach_girder: int = 8
     Thickness_of_bearing: float = 0.3
     Height_of_girder: float = 2.678
     Plan:Literal['方案一','方案二','方案三'] = '方案一'
+    DefaultSpan:float = 0.0 # if only one pier for this girder, this value will be used to calculate concentrated mass
            
     def __post_init__(self):
         # sort pierlist by station
@@ -901,10 +1043,19 @@ class Sap_Box_Girder(Sap_Girder):
         self.end_intermediate_pier = self.pierlist[-1]
         self.generate_girder_points()
         self.girder_section = self.get_girder_section()
-        self.generate_girder_elements()
+        if len(self.pierlist) > 1:
+            self.generate_girder_elements()
+        else:
+            self.add_mass_for_concentrated_girder()
         self.add_body_constraint()
         # self.add_bearing_links(strategy='ideal')
         Saproject().RefreshView()
+    
+    def add_mass_for_concentrated_girder(self):
+        pier = self.pierlist[0]
+        girdername = f"{pier.name}_{pier.name}"
+        self.girder_points[girdername]['left'].defineMass((self.q1+self.q2)*self.DefaultSpan/9.81)
+        self.girder_points[girdername]['right'].defineMass((self.q1+self.q2)*self.DefaultSpan/9.81)
     
     def update_links_parameters(self):
         """update bilinear ideal links for girder
@@ -954,7 +1105,7 @@ class Sap_Box_Girder(Sap_Girder):
                     outer_link = both_sliding_link
                     
                 inner_bearing_top = self.girder_bearing_top_points[pier.name][side]['inner']
-                if type(pier.bearing_bottom_point_inner[side]) == list:
+                if isinstance(pier.bearing_bottom_point_inner[side],list):
                     inner_bearing_bottom = [p for p in pier.bearing_bottom_point_inner[side] if p.x == inner_bearing_top.x][0]
                 else:
                     inner_bearing_bottom = pier.bearing_bottom_point_inner[side]
@@ -962,29 +1113,18 @@ class Sap_Box_Girder(Sap_Girder):
                 link_inner = Sap_Bearing_Linear(f"{self.name}_{pier.name}_{side}_inner_Bearing", inner_bearing_bottom, inner_bearing_top, inner_link.prop_name)
                 
                 outer_bearing_top = self.girder_bearing_top_points[pier.name][side]['outer']
-                if type(pier.bearing_bottom_point_outer[side]) == list:
+                if isinstance(pier.bearing_bottom_point_outer[side],list):
                     outer_bearing_bottom = [p for p in pier.bearing_bottom_point_outer[side] if p.x == inner_bearing_top.x][0]
                 else:
                     outer_bearing_bottom = pier.bearing_bottom_point_outer[side]
                 link_outer = Sap_Bearing_Linear(f"{self.name}_{pier.name}_{side}_outer_Bearing", outer_bearing_bottom, outer_bearing_top, outer_link.prop_name)
                 
                 self.bearings[pier.name][side] = {'inner':link_inner, 'outer':link_outer}
-    
-    def add_bearing_links(self, strategy:Literal['deal', 'allsame','wait for add'] = 'ideal',Bearings:list[Union[Sap_Bearing_Linear,]] = []):
-        if strategy == 'ideal':
-            self.add_ideal_bearing_links()
-        elif strategy == 'allsame':
-            # all bearings are the same
-            if len(Bearings) == 1:
-                linkprop = Bearings[0]
-            logger.opt(colors=True).info(f"Add bearing links with strategy: <yellow>{strategy}</yellow>")
-            raise NotImplementedError
-        elif strategy == 'wait for add':
-            raise NotImplementedError
         
     def add_body_constraint(self):
         body_dof = ["UX", "UY", "UZ", "RX", "RY", "RZ"]
-        flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
+        def flatten(l):  # noqa: E741
+            return list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
         for side in ['left','right']:
             for pier in self.pierlist:
                 Saproject().Define.jointConstraints.SetBody(f"{pier.name}_{side}_Girder", body_dof)
@@ -995,9 +1135,42 @@ class Sap_Box_Girder(Sap_Girder):
     def generate_girder_elements(self):
         for pier_start,pier_end in zip(self.pierlist[0:-1],self.pierlist[1:]):
             self.__generate_girder_elements(pier_start,pier_end, side = 'both')
+    
+    def __get_varying_rule(self,pier_start,
+                           pier_end, uniform_length_for_intermediate_pier:float=0.3,
+                           uniform_length_for_middle_pier:float=0.04,
+                           uniform_length_for_middle_span:float=0.0,side:Literal['left','right']='left'):
+        
+        case_intermediate2middle = [[uniform_length_for_intermediate_pier,self.girder_section_middle_span,self.girder_section_middle_span],
+                                   [1-uniform_length_for_intermediate_pier-uniform_length_for_middle_pier,self.girder_section_middle_span,self.girder_section_pier],
+                                   [uniform_length_for_middle_pier,self.girder_section_pier,self.girder_section_pier]]
+        case_middle2intermediate = [[uniform_length_for_middle_pier,self.girder_section_pier,self.girder_section_pier],
+                                   [1-uniform_length_for_intermediate_pier-uniform_length_for_middle_pier,self.girder_section_pier,self.girder_section_middle_span],
+                                   [uniform_length_for_intermediate_pier,self.girder_section_middle_span,self.girder_section_middle_span]]
+        case_mieele2middle =       [[0.5-uniform_length_for_middle_span/2,self.girder_section_pier,self.girder_section_middle_span],
+                                    [uniform_length_for_middle_span,self.girder_section_middle_span,self.girder_section_middle_span],
+                                    [0.5-uniform_length_for_middle_span/2,self.girder_section_middle_span,self.girder_section_pier]]
+        
+        varying_rule:list[float,Section_General,Section_General] = []   # [length_ratio,section1,section2]
+        if pier_start.is_intermediate_pier and pier_end.is_intermediate_pier:
+            varying_rule = None
+        elif pier_start.is_intermediate_pier and not pier_end.is_intermediate_pier:
+            if side == 'left':
+                varying_rule = case_intermediate2middle
+            elif side == 'right':
+                varying_rule = case_middle2intermediate
+        elif not pier_start.is_intermediate_pier and pier_end.is_intermediate_pier:
+            if side == 'left':
+                varying_rule = case_middle2intermediate
+            elif side == 'right':
+                varying_rule = case_intermediate2middle
+        else:
+            # from middle pier to middle pier
+            varying_rule = case_mieele2middle
             
+        return varying_rule
+
     def __generate_girder_elements(self,pier_start,pier_end,side = Literal['left','right','both']):
-        num = self.num_of_ele_foreach_girder
         
         if side == 'both':
             self.__generate_girder_elements(pier_start,pier_end,'left')
@@ -1006,26 +1179,46 @@ class Sap_Box_Girder(Sap_Girder):
         
         gidername = f"{pier_start.name}_{pier_end.name}"
         points_to_connect = self.girder_points[gidername][side]
-        i = 1
-        for point1,point2 in zip(points_to_connect[0:-1],points_to_connect[1:]):
-            ret = Saproject().Assign.FrameObj.AddByPoint(point1.name, point2.name, propName = self.girder_section.name, userName = f"{gidername}_{side}_girder_{i}")
-            if ret[1] == 0:
-                logger.opt(colors=True).success(f"Girder element <yellow>{gidername}_{side}_girder_{i}</yellow> added!")
-            else:
-                logger.opt(colors=True).error(f"Girder element <yellow>{gidername}_{side}_girder_{i}</yellow> failed to add!")
+        if self.is_varing_section:
+            span_length = pier_end.station - pier_start.station
+            varying_rule = self.__get_varying_rule(pier_start,pier_end,
+                                                        uniform_length_for_intermediate_pier=0.723,
+                                                        uniform_length_for_middle_pier=0.0422,
+                                                        uniform_length_for_middle_span=0.447,side=side)
+            varying_rule_list:\
+                list[Literal['Variable','Absolute'],float,str,str,Literal['Linear','Parabolic','Cubic'],Literal['Linear','Parabolic','Cubic']] \
+                = [['Variable',rule[0],rule[1].name,rule[2].name,'Linear','Linear'] for rule in varying_rule]
+            var_section = Section_NonPrismatic(name = gidername+f"_{side}",VaryingRules = varying_rule_list)
+            var_section.define()
             
-            # add line mass manually instead(一期+二期恒载)
-            ret = Saproject().Assign.FrameObj.Set.Mass(f"{gidername}_{side}_girder_{i}",(self.q1+self.q2)/9.81,Replace=True)
-            if ret == 0:
-                logger.opt(colors=True).success(f"Girder element <yellow>{gidername}_{side}_girder_{i}</yellow> mass set!")
+        i=1
+        for point1,point2 in zip(points_to_connect[0:-1],points_to_connect[1:]):
+            if self.is_varing_section:
+                section = var_section
             else:
-                logger.opt(colors=True).error(f"Girder element <yellow>{gidername}_{side}_girder_{i}</yellow> mass failed to set!")
-            i += 1
+                section = self.girder_section
+            
+            girder = SapFrame(node1 = point1, node2 = point2, section = section, name = f"{gidername}_{side}_girder_{i}")
+            girder.define()
+            
+            if self.is_varing_section:
+                # Relative start location of varying section
+                x_start = points_to_connect[0].x
+                relative_startLoc = min(abs((point1.x-x_start)),abs((point2.x-x_start))) / span_length
+                girder.set_varying_sec_params(VarTotalLength = span_length,RelStartLoc=relative_startLoc)
+                # Cardinal Point
+                girder.define_Cardinal_Point('Top Center')
+                
+            # 一期恒载q1
+            girder.add_line_mass(self.q1/9.81,Replace=True)
+            # 二期恒载q2
+            girder.add_line_mass(self.q2/9.81,Replace=False)
+            i+=1
     
     def get_girder_section(self):
-        unit_of_sec = 'mm'
         if self.Plan == '方案一':
             # 方案一:等截面钢箱梁(mm)
+            self.is_varing_section = False
             Area = 855043.2 
             Asy,Asz = 476380.0,79827.2 
             Ixx,Iyy,Izz = 3.13E+12,2.32E+12,2.32E+13
@@ -1045,31 +1238,79 @@ class Sap_Box_Girder(Sap_Girder):
                 notes = self.name+"_main_girder_section")
         elif self.Plan == '方案二':
             # 方案二:等截面组合梁
+            self.is_varing_section = False
             Area = 1364813.0 
             Asy,Asz = 1038166.0,127892.0 
             Ixx,Iyy,Izz = 6.82E+12,3.52E+12,3.98E+13
             # 20.105m x 4.5m
             Depth,Width = 4500, 20105
             # 一期恒载和二期恒载kN/m
-            q1 = 246.9
-            q2 = 56.0
-            raise NotImplementedError
+            self.q1 = 246.9
+            self.q2 = 56.0
+            self.girder_section = Section_General(
+                name = self.name+"_girder",
+                material = "C60",
+                Area = Area,
+                Depth = Depth,Width = Width,
+                As2=Asz,As3=Asy,
+                I22=Izz,I33=Iyy,I23=0,J=Ixx,
+                unit_of_sec='mm',
+                notes = self.name+"_main_girder_section")
         elif self.Plan == '方案三':
             # 方案三:变截面连续梁
+            self.is_varing_section = True
+            self.variation_curve:Literal['Linear','Parabolic','Cubic'] = 'Parabolic'
+            self.girder_section = None
+            # 一期恒载和二期恒载kN/m
+            self.q1 = 707.0
+            self.q2 = 60.19
             # 分跨中和中墩截面
-            raise NotImplementedError
+            # 中墩截面
+            Area = 3.210E+07
+            Asy,Asz = 1.563E+07,1.322E+07
+            Ixx,Iyy,Izz = 3.009E+14,1.622E+14,7.218E+14
+            # 20.105m x 6.0m
+            Depth,Width = 6000, 20105
+            self.girder_section_pier = Section_General(
+                name = self.name+"_girder_pier",
+                material = "C60",
+                Area = Area,
+                Depth = Depth,Width = Width,
+                As2=Asz,As3=Asy,
+                I22=Izz,I33=Iyy,I23=0,J=Ixx,
+                unit_of_sec='mm',
+                notes = self.name+"_main_girder_section")
+            # 跨中截面
+            Area = 1.737E+07
+            Asy,Asz = 9.598E+06,4.663E+06
+            Ixx,Iyy,Izz = 9.234E+13,4.068E+13,4.645E+14
+            # 20.105m x 4.0m
+            Depth,Width = 4000, 20105
+            self.girder_section_middle_span = Section_General(
+                name = self.name+"_girder_middle_span",
+                material = "C60",
+                Area = Area,
+                Depth = Depth,Width = Width,
+                As2=Asz,As3=Asy,
+                I22=Izz,I33=Iyy,I23=0,J=Ixx,
+                unit_of_sec='mm',
+                notes = self.name+"_main_girder_section")
         else:
             logger.error("Plan is not valid.")
             return None
-        self.girder_section.define()
+        if self.Plan in ['方案一','方案二']:
+            self.girder_section.define()
+            # do not consider mass and weight of girder automatically
+            self.girder_section.ignore_mass_effect()
+            return self.girder_section
+        if self.Plan == '方案三':
+            self.girder_section_middle_span.define()
+            self.girder_section_middle_span.ignore_mass_effect()
             
-        # do not consider mass and weight of girder automatically
-        ret = Saproject()._Model.PropFrame.SetModifiers(self.girder_section.name,[1,1,1,1,1,1,0,0])
-        if ret[1] == 0:
-            logger.opt(colors=True).success(f"Girder element <yellow>{self.girder_section.name}</yellow> modifiers set!")
-        else:
-            logger.opt(colors=True).error(f"Girder element <yellow>{self.girder_section.name}</yellow> modifiers failed to set!")
-        return self.girder_section
+            self.girder_section_pier.define()
+            self.girder_section_pier.ignore_mass_effect()
+            
+            return [self.girder_section_pier,self.girder_section_middle_span]
 
     def generate_girder_points(self):
         if not hasattr(self, 'girder_points'):
@@ -1079,13 +1320,54 @@ class Sap_Box_Girder(Sap_Girder):
                 self.girder_points[pier.name] = {}
                 self.girder_bearing_top_points[pier.name] = {}
 
+        if len(self.pierlist) == 1:
+            logger.opt(colors=True).warning(f"Only one pier in the list, Assuming Concentrated Mass of default {self.DefaultSpan}m span !")
+            pier = self.pierlist[0]
+            self.__generate_concentrated_girder_points(pier,side='both')
+            return
         for pier_start,pier_end in zip(self.pierlist[0:-1],self.pierlist[1:]):
             self.__generate_girder_points(pier_start,pier_end, side = 'both')
-                
+    
+    def __generate_concentrated_girder_points(self,pier,side = Literal['left','right','both']):
+        gidername = f"{pier.name}_{pier.name}"
+        if gidername not in self.girder_points.keys():
+            self.girder_points[gidername] = {}
+            
+        if side == 'left':
+            y =  pier.Distance_between_piers/2   
+        elif side == 'right':
+            y = - pier.Distance_between_piers/2
+        elif side == 'both':
+            self.__generate_concentrated_girder_points(pier,'left')
+            self.__generate_concentrated_girder_points(pier,'right')
+            return
+            
+        def calc_y_bearing(y,pier):
+            if y>0:
+                y_outer = y + pier.Distance_between_bearings/2
+                y_inner = y - pier.Distance_between_bearings/2
+            else:
+                y_outer = y - pier.Distance_between_bearings/2
+                y_inner = y + pier.Distance_between_bearings/2
+            return y_outer,y_inner
+        
+        x = pier.station
+        z = pier.Height_of_pier_bottom + pier.Height_of_pier + self.Thickness_of_bearing + self.Height_of_girder
+        self.girder_points[pier.name][side] = SapPoint(x, y, z, f"{self.name}_{pier.name}_{side}_girder_point")
+        self.girder_points[pier.name][side].add()
+        y_outer,y_inner = calc_y_bearing(y,pier)
+        self.girder_bearing_top_points[pier.name][side] = {
+            'inner':SapPoint(x, y_inner, z - self.Height_of_girder, f"{self.name}_{pier.name}_{side}_BearingTop_inner"),
+            'outer':SapPoint(x, y_outer, z - self.Height_of_girder, f"{self.name}_{pier.name}_{side}_BearingTop_outer")}
+        for point in self.girder_bearing_top_points[pier.name][side].values():
+            point.add()
+ 
+        self.girder_points[gidername][side] = self.girder_points[pier.name][side]
+      
     def __generate_girder_points(self,pier_start,pier_end,side = Literal['left','right','both']):
         num = self.num_of_ele_foreach_girder
         gidername = f"{pier_start.name}_{pier_end.name}"
-        if not gidername in self.girder_points.keys():
+        if gidername not in self.girder_points.keys():
             self.girder_points[gidername] = {}
             
         if side == 'left':

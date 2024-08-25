@@ -286,22 +286,25 @@ girderleft = Bridge.Girder.Box(
     name = "SpanLeft",
     pierlist=[pier1,pier2,pier3,pier4,pier5,pier6],
     fixedpier = [pier3],
-    Plan = '方案一')
-girderleft.add_bearing_links(strategy = 'ideal')      
+    Plan = '方案三',
+    DefaultSpan=90.0)
+girderleft.add_ideal_bearing_links()      
 
 girdermain = Bridge.Girder.Box(
     name = "SpanMain",
     pierlist=[pier6,pier7,pier8,pier9,pier10,pier11],
     fixedpier = [pier8],
-    Plan = '方案一')
-girdermain.add_bearing_links(strategy = 'ideal')
+    Plan = '方案三',
+    DefaultSpan=90.0)
+girdermain.add_ideal_bearing_links()   
 
 girderright = Bridge.Girder.Box(
     name = "SpanRight",
     pierlist=[pier11,pier12,pier13,pier14,pier15,pier16],
     fixedpier = [pier13],
-    Plan = '方案一')
-girderright.add_bearing_links(strategy = 'ideal')
+    Plan = '方案三',
+    DefaultSpan=90.0)
+girderright.add_ideal_bearing_links()   
 
 # gravity load
 Sap.Define.loadcases.StaticLinear.SetLoads("DEAD",numberLoads=1,loadType=['Accel'],loadName=['UZ'],scaleFactor=[9.81])
@@ -580,6 +583,10 @@ if True:
 # print table
 console = Console()
 console.print(table)
+# 创建一个 Rich 的 Con
+# sole 对象，指定输出文件
+with open("output.txt", "w+") as file:
+    console = Console(file=file)
 
 table = Table(title="横桥向+竖向墩底单元受力比较", show_header=True, header_style="bold magenta")
 table.add_column("墩号", justify="left", style="cyan", no_wrap=True)
