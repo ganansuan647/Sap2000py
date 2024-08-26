@@ -258,6 +258,20 @@ class Saproject(metaclass=SapMeta):
         self.Results = SapResults(self)
         self.Scripts = SapScripts(self)
 
+    @classmethod
+    def new(cls, *args, **kwargs):
+        """Creates a new instance of the Saproject class.
+
+        This method is used to create a new instance of the Saproject class
+        with the specified arguments and keyword arguments.
+
+        Returns:
+            Saproject: A new instance of the Saproject class.
+        """
+        newinstance = object.__new__(cls)
+        newinstance.__init__(AttachToInstance = False)
+        return newinstance
+
     @property
     def SapVersion(self):
         """Gets the current SAP2000 program version."""

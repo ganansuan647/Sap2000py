@@ -176,9 +176,9 @@ class SapModalTimeHistoryCase:
         
         ret = Saproject().Define.loadcases.ModalHistNonlinear.SetTimeStep(self.name,nstep=self.nstep, dt=self.dt)
         if ret==0:
-            logger.opt(colors=True).success(f"Modal Time History Case <yellow>{self.name}</yellow> Time Step set as <yellow>{self.dt}</yellow>!")
+            logger.opt(colors=True).success(f"Modal Time History Case <yellow>{self.name}</yellow> Time Step set as <yellow>{self.dt}</yellow>s!")
         else:
-            logger.opt(colors=True).error(f"Modal Time History Case <yellow>{self.name}</yellow> Time Step failed to set as <yellow>{self.dt}</yellow>!")
+            logger.opt(colors=True).error(f"Modal Time History Case <yellow>{self.name}</yellow> Time Step failed to set as <yellow>{self.dt}</yellow>s!")
         
         LoadName = self.Loads['LoadName']
         LoadType = self.Loads['LoadType']

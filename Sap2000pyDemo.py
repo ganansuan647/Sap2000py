@@ -40,7 +40,6 @@ Sap.setUnits("KN_m_C")
 # Add China Common Material Set·
 Sap.Scripts.AddCommonMaterialSet(standard = "JTG")
 
-
 # Build your Model Here
 # Add Joints by Script
 joint_coord = np.array([[0,0,0],[10,0,0],[20,0,0],[30,0,0]])

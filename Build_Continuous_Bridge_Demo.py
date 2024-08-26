@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from Sap2000py import SapBridge as Bridge
+from Sap2000py import SapEarthquake as Earthquake
 from Sap2000py import Saproject
 
 #full path to the model
@@ -286,7 +287,7 @@ girderleft = Bridge.Girder.Box(
     name = "SpanLeft",
     pierlist=[pier1,pier2,pier3,pier4,pier5,pier6],
     fixedpier = [pier3],
-    Plan = '方案三',
+    Plan = '方案一',
     DefaultSpan=90.0)
 girderleft.add_ideal_bearing_links()      
 
@@ -294,7 +295,7 @@ girdermain = Bridge.Girder.Box(
     name = "SpanMain",
     pierlist=[pier6,pier7,pier8,pier9,pier10,pier11],
     fixedpier = [pier8],
-    Plan = '方案三',
+    Plan = '方案一',
     DefaultSpan=90.0)
 girdermain.add_ideal_bearing_links()   
 
@@ -302,7 +303,7 @@ girderright = Bridge.Girder.Box(
     name = "SpanRight",
     pierlist=[pier11,pier12,pier13,pier14,pier15,pier16],
     fixedpier = [pier13],
-    Plan = '方案三',
+    Plan = '方案一',
     DefaultSpan=90.0)
 girderright.add_ideal_bearing_links()   
 
@@ -397,86 +398,74 @@ logger.opt(colors=True).success(f"Rayleigh damping Control Period of Z direction
 # unlck the model to make more settings
 Sap.unlockModel()
 
-def get_spectrum_from_file(file_path:Path):
-    times = []
-    values = []
-    with open(file_path, 'r') as file:
-        # Skip the header line
-        next(file)
-        for line in file:
-            time, value = line.strip().split()
-            times.append(float(time))
-            values.append(float(value))
-    return times,values
-
-def get_time_history_from_file(file_path:Path,dt:float):
-    time = 0.0
-    times = []
-    values = []
-    with open(file_path, 'r') as file:
-        # Skip the header line
-        for line in file:
-            value = line.strip().split()[0]
-            times.append(float(time))
-            values.append(float(value))
-            time+=dt
-    return times,values
-
-spectrum_path = Path('.\Examples\ResponseSpectrum_E2_Damping_0.02.txt')
-times,values = get_spectrum_from_file(spectrum_path)
-
 # E2 Spectrum Function
-Sap.Define.function.ResponseSpectrum.Set_User('E2Spectrum',times,values,0.02)   
+E2_spectrum_fun = Earthquake.Spectrum.Func(name='E2Spectrum', damping=0.02)
+E2_spectrum_fun.get_from_file(Path('.\Examples\ResponseSpectrum_E2_Damping_0.02.txt'))
+E2_spectrum_fun.define()
+# # or use the following code to define the spectrum function manually
+# Sap.Define.function.ResponseSpectrum.Set_User('E2Spectrum',times,values,0.02)
+    
 # E2X Spectrum
-Sap.Define.loadcases.ResponseSpectrum.SetCase("E2X")
-Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2X',0.02)
-Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2X','SRSS')
-Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2X',NumberLoads=2,LoadName=['U1','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
+E2XCase = Earthquake.Spectrum.Case(name='E2X', damping=0.02, CombMethod='SRSS', Loads={'LoadName':['U1','U3'],'LoadFunc':['E2Spectrum','E2Spectrum'],'LoadSF':[1,0.65]})
+E2XCase.define()
+# # or use the following code to define the spectrum case manually
+# Sap.Define.loadcases.ResponseSpectrum.SetCase("E2X")
+# Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2X',0.02)
+# Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2X','SRSS')
+# Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2X',NumberLoads=2,LoadName=['U1','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
 
 # E2Y Spectrum
-Sap.Define.loadcases.ResponseSpectrum.SetCase("E2Y")
-Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2Y',0.02)
-Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2Y','SRSS')
-Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2Y',NumberLoads=2,LoadName=['U2','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
-TH_names = []
-time_history_folder_path = Path('.\Examples\waves')
-TH_files = time_history_folder_path.glob('*.txt')
-for file_path in TH_files:
-    times,values = get_time_history_from_file(file_path,dt=0.02)
-    time_history_name = 'E2'+file_path.stem.split('.')[0]
-    TH_names.append(time_history_name)
-    Sap.Define.function.TimeHistory.Set_User(time_history_name,times,values)
-    # E2X Modal History
-    Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2X'+time_history_name)
-    Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2X'+time_history_name,0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2X'+time_history_name,nstep=8192, dt=0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # # E2X Time History
-    # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2X'+time_history_name)
-    # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2X'+time_history_name,'Newmark')
-    # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2X'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
-    # E2Y Modal History
-    Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2Y'+time_history_name)
-    Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2Y'+time_history_name,0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2Y'+time_history_name,nstep=8192, dt=0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2Y'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U2','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # # E2Y Time History
-    # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2Y'+time_history_name)
-    # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2Y'+time_history_name,'Newmark')
-    # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2Y'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U2','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2Y'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_y_1, Dampf2=min(period_y_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
+E2YCase = Earthquake.Spectrum.Case(name='E2Y', damping=0.02, CombMethod='SRSS', Loads={'LoadName':['U2','U3'],'LoadFunc':['E2Spectrum','E2Spectrum'],'LoadSF':[1,0.65]})
+E2YCase.define()
+
+THfuncs = Earthquake.TimeHistory.Func.get_from_folder(Path('.\Examples\waves'))
+for fun in THfuncs:
+    fun.name = 'E2'+fun.name
+    fun.define()
+
+TH_mode = 'modal'
+for fun in THfuncs:
+    if TH_mode == 'modal':
+        # E2X Modal History
+        E2XCase = Earthquake.TimeHistory.ModalCase(name='E2X'+fun.name, damping=0.02, Loads={'LoadName':['U1','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2XCase.define()
+        # manually define the modal history case
+        # Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2X'+time_history_name)
+        # Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2X'+time_history_name,0.02)
+        # Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2X'+time_history_name,nstep=8192, dt=0.02)
+        # Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
+        
+        # E2Y Modal History
+        E2YCase = Earthquake.TimeHistory.ModalCase(name='E2Y'+fun.name, damping=0.02, Loads={'LoadName':['U2','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2YCase.define()
+    
+    if TH_mode == 'direct':
+        # E2X Time History
+        E2XCase = Earthquake.TimeHistory.DirCase(name='E2X'+fun.name, IntegrationMethod = "Newmark", Loads={'LoadName':['U1','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2XCase.define()
+        E2XCase.set_damping_rayleigh(DampType='Period', Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
+        
+        # # manually define the time history case
+        # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2X'+fun.name)
+        # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2X'+fun.name,'Newmark')
+        # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2X'+fun.name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[fun.name,fun.name],SF=[1,0.65])
+        # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2X'+fun.name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
+        
+        # E2Y Time History
+        E2YCase = Earthquake.TimeHistory.DirCase(name='E2Y'+fun.name, IntegrationMethod = "Newmark", Loads={'LoadName':['U2','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2YCase.define()
+        E2YCase.set_damping_rayleigh(DampType='Period', Dampf1=period_y_1, Dampf2=min(period_y_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
     
 
 Sap.Define.LoadCombo.Add('E2纵向+竖向', comboType = 'AbsAdd')
-ret = [Sap.Define.LoadCombo.SetCaseList('E2纵向+竖向',CNameType="LoadCase",CName = 'E2X'+name, SF = 1/len(TH_names)) for name in TH_names]
+ret = [Sap.Define.LoadCombo.SetCaseList('E2纵向+竖向',CNameType="LoadCase",CName = 'E2X'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
 if all([r[1] == 0 for r in ret]):
     logger.opt(colors=True).success("Load Combination E2纵向+竖向 has been successfully defined.")
 else:
     logger.opt(colors=True).error("An error occurred while defining the Load Combination E2纵向.")
 
 Sap.Define.LoadCombo.Add('E2横向+竖向', comboType = 'AbsAdd')
-ret = [Sap.Define.LoadCombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = 'E2Y'+name, SF = 1/len(TH_names)) for name in TH_names]
+ret = [Sap.Define.LoadCombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = 'E2Y'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
 if all([r[1] == 0 for r in ret]):
     logger.opt(colors=True).success("Load Combination E2横向+竖向 has been successfully defined.")
 else:

@@ -1062,7 +1062,7 @@ class FrameObj_Set:
         ret = self.__Model.FrameObj.SetLocalAxes(name,Ang,itemType)
         return ret
 
-    def Mass(self,name,massOverL,Replace=False,itemType=0):
+    def Mass(self,name:str,massOverL:float,Replace:bool=False,itemType=0):
         """
         ---This function assigns mass per unit length to frame objects---
         inputs:
