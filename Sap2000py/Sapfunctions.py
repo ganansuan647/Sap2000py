@@ -1,4 +1,4 @@
-
+from typing import Literal, Union
 class Sapfunctions:
     def __init__(self,Sapobj):
         """
@@ -10,6 +10,7 @@ class Sapfunctions:
         self.__Model = Sapobj._Model
         self.ResponseSpectrum = fun_ResponseSpectrum(Sapobj)
         self.TimeHistory = fun_TimeHistory(Sapobj)
+        self.Modal = fun_Modal(Sapobj)
 
 class fun_ResponseSpectrum:
     def __init__(self,Sapobj):
@@ -78,6 +79,39 @@ class fun_ResponseSpectrum:
         ret = self.__Model.Func.FuncRS.SetUser(name,numberItems,period,value,dampRatio)
         return ret
 
+    def Set_FromFile(self, name: str, fileName: str,  
+                     valueType: Literal['Frequency', 'Period'],
+                      dampRatio: float=0.05,headLines: int =1,)->int:
+        """
+        ---This function defines a response spectrum function from a file.---
+
+        inputs:
+
+        name (str): The name of an existing or new function.
+        FileName (str): Full path of the text file containing function data.
+        HeadLines (int): Number of header lines to skip in the text file.
+        dampRatio (float): The damping ratio for the function, where 0 <= dampRatio < 1.
+        ValueType (str): Specifies time value type, either 'Frequency' or 'Period'.
+        """
+        
+        # Convert ValueType from string to corresponding integer value
+        value_type_mapping = {
+            'Frequency': 1,
+            'Period': 2
+        }
+        
+        # Check if ValueType is valid
+        if valueType not in value_type_mapping:
+            raise ValueError("ValueType must be either 'Frequency' or 'Period'")
+        
+        # Convert ValueType to corresponding integer
+        value_type_int = value_type_mapping[valueType]
+        
+        # Call the underlying function with the integer ValueType
+        ret=self.__Model.Func.FuncRS.SetFromFile(name, fileName, headLines, dampRatio, value_type_int)
+        return ret
+
+
 class fun_TimeHistory:
     def __init__(self,Sapobj):
         """
@@ -98,4 +132,29 @@ class fun_TimeHistory:
         """
         numberItems=len(myTime)
         ret = self.__Model.Func.FuncTH.SetUser(name,numberItems,myTime,value)
+        return ret
+    
+class fun_Modal:
+    def __init__(self,Sapobj):
+        """
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+
+    def Set_NumberModes(self, name: str, max_modes: int, min_modes: int)->int:
+        """
+        ---This function sets the number of modes requested for a modal eigen load case.---
+        
+        inputs:
+        name (str) - The name of an existing modal eigen load case.
+        max_modes (int) - The maximum number of modes requested.
+        min_modes (int) - The minimum number of modes requested.
+
+        returns:
+        int - Returns 0 if the number of modes is successfully set, otherwise returns a nonzero value.
+        """
+        ret = self.__Model.LoadCases.ModalEigen.SetNumberModes(name, max_modes, min_modes)
         return ret

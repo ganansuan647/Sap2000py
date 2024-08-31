@@ -31,7 +31,35 @@ class GetResults:
             return uniquelist,AbsReaction,MaxReaction,MinReaction
         else:
             return ret[1],ret[colstart:colend]
-         
+
+    def JointDispl_by_Group(self,Name,Dealflag = True):
+        """
+        Get JointDisplacement by group and return results in np.array: [U1, U2, U3, R1, R2, R3].
+        
+        input:
+            Name (str): The group's name you want to extract displacements for.
+            Dealflag (bool):
+                if Dealflag = True, returns the max absolute value for each displacement and rotation component.
+                if Dealflag = False, returns all displacement and rotation data retrieved.
+
+        output:
+            Namelist (list): Item name list in order.
+            AbsReaction (ndarray): Absolute displacements and rotations in np.array: [U1, U2, U3, R1, R2, R3].
+            MaxReaction (ndarray): Maximum displacements and rotations in np.array: [U1, U2, U3, R1, R2, R3].
+            MinReaction (ndarray): Minimum displacements and rotations in np.array: [U1, U2, U3, R1, R2, R3].
+        """
+        # get result by group name
+        GroupElm = 2
+        ret = self._Sapobj.Results.Joint.Displ(Name,GroupElm)
+        colstart,colend = 6,12
+        if Dealflag:
+            uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
+            return uniquelist,AbsReaction,MaxReaction,MinReaction
+        else:
+            return ret[1],ret[colstart:colend]
+
+
+
     def ElementForce_by_Group(self,Name,Dealflag = True):
         """
         Get ElementForce by group and return a np.array:[P,V2,V3,T,M2,M3]
@@ -48,7 +76,7 @@ class GetResults:
         """
         # get result by group name
         GroupElm = 2
-        ret = self._Sapobj.Results.FrameForce(Name,GroupElm)
+        ret = self._Sapobj.Results.Frame.Force(Name,GroupElm)
         colstart,colend = 8,14
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
