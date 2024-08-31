@@ -79,19 +79,19 @@ class fun_ResponseSpectrum:
         ret = self.__Model.Func.FuncRS.SetUser(name,numberItems,period,value,dampRatio)
         return ret
 
-    def Set_FromFile(self, name: str, fileName: str,  
-                     valueType: Literal['Frequency', 'Period'],
-                      dampRatio: float=0.05,headLines: int =1,)->int:
+    def Set_FromFile(self, name: str, file_name: str,  
+                     value_type: Literal['Frequency', 'Period'],
+                     damp_ratio: float=0.05, head_lines: int =1,)->int:
         """
         ---This function defines a response spectrum function from a file.---
 
         inputs:
 
         name (str): The name of an existing or new function.
-        FileName (str): Full path of the text file containing function data.
-        HeadLines (int): Number of header lines to skip in the text file.
-        dampRatio (float): The damping ratio for the function, where 0 <= dampRatio < 1.
-        ValueType (str): Specifies time value type, either 'Frequency' or 'Period'.
+        file_name (str): Full path of the text file containing function data.
+        value_type (str): Specifies time value type, either 'Frequency' or 'Period'.
+        head_lines (int): Number of header lines to skip in the text file.
+        damp_ratio (float): The damping ratio for the function, where 0 <= dampRatio < 1.
         """
         
         # Convert ValueType from string to corresponding integer value
@@ -101,14 +101,14 @@ class fun_ResponseSpectrum:
         }
         
         # Check if ValueType is valid
-        if valueType not in value_type_mapping:
+        if value_type not in value_type_mapping:
             raise ValueError("ValueType must be either 'Frequency' or 'Period'")
         
         # Convert ValueType to corresponding integer
-        value_type_int = value_type_mapping[valueType]
+        value_type_id = value_type_mapping[value_type]
         
         # Call the underlying function with the integer ValueType
-        ret=self.__Model.Func.FuncRS.SetFromFile(name, fileName, headLines, dampRatio, value_type_int)
+        ret=self.__Model.Func.FuncRS.SetFromFile(name, file_name, head_lines, damp_ratio, value_type_id)
         return ret
 
 

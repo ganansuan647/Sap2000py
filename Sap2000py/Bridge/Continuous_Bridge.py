@@ -156,7 +156,7 @@ class SapPoint:
             raise ValueError("The mass must be either a single float value or a list matching the length of dof.")
         
         # 调用外部接口设置质量
-        ret = Saproject().Assign.PointObj.Set.Mass(self.name, self.mass)
+        ret = Saproject().Assign.PointObj.Set.Mass(self.name, self.mass, Replace = True)
         
         # 检查返回值并记录日志
         if ret[-1] == 0:
