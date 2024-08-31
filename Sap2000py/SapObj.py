@@ -39,7 +39,7 @@ class SapPointObj_Get:
         return:
         [numberItem,totalNumConstrait,pointNameturple,constraintNameTurple]
         """
-        result=self.__Model.PointObj.GetConstraint(name)
+        ret=self.__Model.PointObj.GetConstraint(name)
         return ret
 
     def CoordCartesian(self,name:str,Csys="Global"):
@@ -423,7 +423,7 @@ class SapPointObj_Set:
         ret = self.__Model.PointObj.SetMass(name,m,itemType,isLocalCSys,Replace)
         return ret
 
-    def Restraint(self,name:str,value,itemType=0):
+    def Restraint(self,name:str,DOF=list[Literal['Ux','Uy','Uz','Rx','Ry','Rz']],itemType:Literal['Object','Group','SelectedObjects']='Object'):
         """
         ---This function assigns the restraint assignments for a point object. The restraint assignments are always
         set in the point local coordinate system.---
@@ -445,7 +445,13 @@ class SapPointObj_Set:
             If this item is SelectedObjects, the load assignment is made to all selected point objects and the Name
             item is ignored.
         """
-        ret = self.__Model.PointObj.SetRestraint(name,value,itemType)
+        DOFdict = {'Ux':0,'Uy':1,"Uz":2,"Rx":3,"Ry":4,"Rz":5}
+        dofvalue = [False for _ in range(6)]
+        for dof in DOF:
+            dofvalue[DOFdict[dof]] = True
+        itemtypeDict = {'Object':0,'Group':1,'SelectedObjects':2}
+        Typeid = itemtypeDict[itemType]
+        ret = self.__Model.PointObj.SetRestraint(name,dofvalue,Typeid)
         return ret
 
     def Spring(self,name:str,k,ItemType=0,IsLocalCSys=False,Replace=False):

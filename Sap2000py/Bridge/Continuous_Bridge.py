@@ -35,7 +35,6 @@ class Section_General:
     unit_of_sec:Literal['mm','cm','m'] = 'm'
     notes:str=""
     
-
     @property
     def t3(self):
         return self.Depth
@@ -128,7 +127,8 @@ class SapPoint:
     y:float
     z:float
     name:str=""
-    mass:float=0.0
+    mass: List[float] = field(default_factory=lambda: [0.0 for _ in range(6)])
+    restraints:list[Literal['Ux','Uy','Uz','Rx','Ry','Rz']] = field(default_factory=list)
 
     def add(self):
         ret = Saproject().Assign.PointObj.AddCartesian(self.x, self.y, self.z, UserName=self.name)
@@ -138,18 +138,46 @@ class SapPoint:
             logger.opt(colors=True).error(f"Point <yellow>{self.name}</yellow> : <cyan>({self.x}, {self.y}, {self.z})</cyan> failed to add.")
         return ret
     
-    def defineMass(self,mass:float = None):
-        if mass is not None:
-            self.mass = mass
-        ret = Saproject().Assign.PointObj.Set.Mass(self.name, [self.mass, self.mass, self.mass, 0, 0, 0])
+    def defineMass(self, mass: Union[float, List[float]] = None, dof: List[Literal['Ux','Uy','Uz','Rx','Ry','Rz']] = ['Ux', 'Uy', 'Uz']):
+        # 如果 mass 是一个值，应用于指定的 dof
+        if isinstance(mass, (int, float)):
+            dof_index_map = {'Ux': 0, 'Uy': 1, 'Uz': 2, 'Rx': 3, 'Ry': 4, 'Rz': 5}
+            # 更新对应的自由度
+            for d in dof:
+                self.mass[dof_index_map[d]] = mass
+        
+        # 如果 mass 是一个列表，与 dof 一一对应
+        elif isinstance(mass, list) and len(mass) == len(dof):
+            dof_index_map = {'Ux': 0, 'Uy': 1, 'Uz': 2, 'Rx': 3, 'Ry': 4, 'Rz': 5}
+            for m, d in zip(mass, dof):
+                self.mass[dof_index_map[d]] = m
+        
+        else:
+            raise ValueError("The mass must be either a single float value or a list matching the length of dof.")
+        
+        # 调用外部接口设置质量
+        ret = Saproject().Assign.PointObj.Set.Mass(self.name, self.mass)
+        
+        # 检查返回值并记录日志
         if ret[-1] == 0:
             logger.success(f"Mass {self.mass} added to Point {self.name}")
         else:
-            logger.error(f"Mass {self.mass} failed to add to Point {self.name}")
+            logger.error(f"Mass {self.mass} failed to add at Point {self.name}")
+        
         return ret
 
     def exists(self):
         return Saproject().Assign.PointObj.Get.CoordCartesian(self.name)[-1] == 0
+
+    def fix(self,DOF=list[Literal['Ux','Uy','Uz','Rx','Ry','Rz']]):
+        if DOF is not None:
+            self.restraints = DOF
+        ret = Saproject().Assign.PointObj.Set.Restraint(self.name,self.restraints)
+        if ret[-1] == 0:
+            logger.success(f"Restraints at DOF:[{self.restraints}] added to Point {self.name}")
+        else:
+            logger.error(f"Restraints at DOF:[{self.restraints}] failed to added at Point {self.name}")
+        return ret
 
 @dataclass
 class SapFrame:
@@ -348,7 +376,7 @@ class Sap_Double_Box_Pier:
         # cap points
         if not hasattr(self, "Mass_of_cap_in_ton"):
             self.get_cap_section()
-        self.cap_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap/2, f"{self.name}_Cap",mass=self.Mass_of_cap_in_ton)
+        self.cap_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap/2, f"{self.name}_Cap",mass=[self.Mass_of_cap_in_ton for _ in range(3)] + [0, 0, 0])
         
         # cap top points
         self.cap_top_point = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name}_CapTop")
@@ -1030,6 +1058,7 @@ class Sap_Box_Girder(Sap_Girder):
     Height_of_girder: float = 2.678
     Plan:Literal['方案一','方案二','方案三'] = '方案一'
     DefaultSpan:float = 0.0 # if only one pier for this girder, this value will be used to calculate concentrated mass
+    spanCount:int = 1 # only useful for one pier girder, this value will be used to calculate concentrated mass along the bridge
            
     def __post_init__(self):
         # sort pierlist by station
@@ -1047,15 +1076,24 @@ class Sap_Box_Girder(Sap_Girder):
             self.generate_girder_elements()
         else:
             self.add_mass_for_concentrated_girder()
+            self.add_restraints_for_concentrated_girder()
         self.add_body_constraint()
         # self.add_bearing_links(strategy='ideal')
         Saproject().RefreshView()
     
+    def add_restraints_for_concentrated_girder(self):
+        pier = self.pierlist[0]
+        girdername = f"{pier.name}_{pier.name}"
+        self.girder_points[girdername]['left'].fix(['Ry','Rz'])
+        self.girder_points[girdername]['right'].fix(['Ry','Rz'])
+    
     def add_mass_for_concentrated_girder(self):
         pier = self.pierlist[0]
         girdername = f"{pier.name}_{pier.name}"
-        self.girder_points[girdername]['left'].defineMass((self.q1+self.q2)*self.DefaultSpan/9.81)
-        self.girder_points[girdername]['right'].defineMass((self.q1+self.q2)*self.DefaultSpan/9.81)
+        self.girder_points[girdername]['left'].defineMass((self.q1+self.q2)*self.DefaultSpan/9.81, dof = ['Uy','Uz'])
+        self.girder_points[girdername]['left'].defineMass((self.q1+self.q2)*self.DefaultSpan*self.spanCount/9.81, dof = ['Ux'])
+        self.girder_points[girdername]['right'].defineMass((self.q1+self.q2)*self.DefaultSpan/9.81, dof = ['Uy','Uz'])
+        self.girder_points[girdername]['right'].defineMass((self.q1+self.q2)*self.DefaultSpan*self.spanCount/9.81, dof = ['Ux'])
     
     def update_links_parameters(self):
         """update bilinear ideal links for girder
