@@ -134,27 +134,3 @@ class fun_TimeHistory:
         ret = self.__Model.Func.FuncTH.SetUser(name,numberItems,myTime,value)
         return ret
     
-class fun_Modal:
-    def __init__(self,Sapobj):
-        """
-        Passing in the parent class object directly is to avoid 
-        getting only the last opened SAP2000 window when initializing the 
-        parent class instance to get the model pointer in the subclass.
-        """
-        self.__Object = Sapobj._Object 
-        self.__Model = Sapobj._Model
-
-    def Set_NumberModes(self, name: str, max_modes: int, min_modes: int)->int:
-        """
-        ---This function sets the number of modes requested for a modal eigen load case.---
-        
-        inputs:
-        name (str) - The name of an existing modal eigen load case.
-        max_modes (int) - The maximum number of modes requested.
-        min_modes (int) - The minimum number of modes requested.
-
-        returns:
-        int - Returns 0 if the number of modes is successfully set, otherwise returns a nonzero value.
-        """
-        ret = self.__Model.LoadCases.ModalEigen.SetNumberModes(name, max_modes, min_modes)
-        return ret
