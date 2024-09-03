@@ -10,7 +10,6 @@ class Sapfunctions:
         self.__Model = Sapobj._Model
         self.ResponseSpectrum = fun_ResponseSpectrum(Sapobj)
         self.TimeHistory = fun_TimeHistory(Sapobj)
-        self.Modal = fun_Modal(Sapobj)
 
 class fun_ResponseSpectrum:
     def __init__(self,Sapobj):
@@ -133,4 +132,3 @@ class fun_TimeHistory:
         numberItems=len(myTime)
         ret = self.__Model.Func.FuncTH.SetUser(name,numberItems,myTime,value)
         return ret
-    
