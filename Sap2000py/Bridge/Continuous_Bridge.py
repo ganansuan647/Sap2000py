@@ -56,6 +56,19 @@ class Section_General:
         Saproject().setUnits("KN_m_C")
         return ret
     
+    def get_section_prop_from_sap(self):
+        ret = Saproject().Define.section.PropFrame_GetSectProps(self.name)
+        if ret[-1] == 0:
+            self.Area = ret[0]
+            self.As2 = ret[1]
+            self.As3 = ret[2]
+            self.I22 = ret[3]
+            self.I33 = ret[4]
+            self.J = ret[5]
+        else:
+            logger.error(f"Failed to get section properties for Section {self.name}")
+        return ret
+    
     def ignore_mass_effect(self):
         # Set mass and weight modifiers to 0
         ret = Saproject()._Model.PropFrame.SetModifiers(self.name,[1,1,1,1,1,1,0,0])
@@ -85,6 +98,20 @@ class Section_General:
     
     def get_elements_with_this_section(self):
         raise NotImplementedError
+
+    @classmethod
+    def rigid_link(cls,name:str = "rigid",stiffness:float = 1e10):
+        frame_list = Saproject().Assign.FrameObj.Get.NameList()
+        if name not in frame_list[1]:
+            materials = Saproject().Define.material.Get.NameList()[1]
+            # use the first material as the rigid link material
+            rigid_section = cls(name = name, material = materials[0],Area=0.01,Depth=0.01,Width=0.01,As2=0,As3=0,I22=stiffness,I33=stiffness,I23=0,J=stiffness,geom=None,sec=None,unit_of_sec='m',notes="rigid link")
+            rigid_section.define()
+            rigid_section.ignore_mass_effect()
+        else:
+            rigid_section = cls(name,' ',0,0,0,0,0,0,0)
+            rigid_section.get_section_prop_from_sap()
+        return rigid_section
 
 @dataclass
 class Section_NonPrismatic:
@@ -120,7 +147,6 @@ class Section_NonPrismatic:
         return ret
 
    
-
 @dataclass
 class SapPoint:
     x:float
@@ -202,6 +228,8 @@ class SapFrame:
         else:
             section_name = self.section.name
         ret = Saproject().Assign.FrameObj.AddByPoint(namei, namej,propName=section_name, userName = self.name)
+        # update name if not specified
+        self.name = ret[0]
         if ret[-1] == 0:
             logger.opt(colors=True).success(f"Frame element <yellow>{self.name}</yellow> added!")
         else:
@@ -260,7 +288,7 @@ class SapFrame:
             ret = Saproject()._Model.FrameObj.GetSectionNonPrismatic(self.name)
             if ret[-1] != 0:
                 logger.warning(f"Section {self.section} is not nonprismatic.")
-            raise ValueError(f"Section {self.section} is not nonprismatic.")
+                raise ValueError(f"Section {self.section} is not nonprismatic.")
         ret = Saproject().Assign.FrameObj.Set.Section(name=self.name,
                                                 propName=secname,
                                                 sVarTotalLength=float(VarTotalLength),
@@ -269,8 +297,13 @@ class SapFrame:
             logger.opt(colors=True).success(f"Frame with nonprismatic section: <yellow>{secname}</yellow> now set as total length of <yellow>{VarTotalLength}</yellow> and relative start location at <yellow>{RelStartLoc}</yellow>!")
         else:
             logger.opt(colors=True).error(f"Failed to set Frame with nonprismatic section: <yellow>{secname}</yellow> as total length of <yellow>{VarTotalLength}</yellow> and relative start location at <yellow>{RelStartLoc}</yellow>!")
-            
-        
+    
+    @classmethod
+    def rigid_link(cls,point1:SapPoint,point2:SapPoint,name:str = "",stiffness:float = 1e10):
+        rigidlinksec = Section_General.rigid_link(stiffness=stiffness)
+        rigidlink = cls(node1=point1,node2=point2,section=rigidlinksec,name=name)
+        rigidlink.define()
+        return rigidlink
 
 class SapBase_6Spring:
     def __init__(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path(".\Examples\ContinuousBridge6spring.txt")):
@@ -358,7 +391,7 @@ class Sap_Double_Box_Pier:
         self.generate_base_points()
         self.generate_cap_elements()
         
-        self.add_body_constraint()
+        self.add_rigid_link(mode='RigidFrame')
         # self.add_mass()
         Saproject().RefreshView()
     
@@ -565,7 +598,7 @@ class Sap_Double_Box_Pier:
 
         self.solid_section = Section_General(
             name=self.name+"_pier_box",
-            material="C40",
+            material=material,
             Area=sec.get_area(),
             Depth=height,Width=width,
             As2=asy,As3=asx,
@@ -602,7 +635,7 @@ class Sap_Double_Box_Pier:
 
         self.box_section = Section_General(
             name = self.name+"_pier_box",
-            material = "C40",
+            material = material,
             Area = sec.get_area(),
             Depth = height,Width = width,
             As2=asy,As3=asx,
@@ -622,35 +655,46 @@ class Sap_Double_Box_Pier:
         self.cap_section = self.name+"_Cap"
         return self.cap_section
     
-    def _add_body_constraints_for_points(self,constraint_name:str, points : list):
+    def _add_constraint_for_points(self,constraint_name:str, points : list):
         for point in points:
             if not point.exists():
                 logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
                 point.add()
             ret = Saproject().Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
             if ret[1] == 0:
-                logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to Body constraint : <yellow>{constraint_name}</yellow>")
+                logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to constraint : <yellow>{constraint_name}</yellow>")
             else:
-                logger.opt(colors=True).error(f"<yellow>{point.name}</yellow> failed to add to Body constraint : <yellow>{constraint_name}</yellow>")
+                logger.opt(colors=True).error(f"<yellow>{point.name}</yellow> failed to add to constraint : <yellow>{constraint_name}</yellow>")
     
-    def add_body_constraint(self):
-        body_dof = ["UX", "UY", "UZ", "RX", "RY", "RZ"]
-        flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
+    def add_rigid_link(self,mode:Literal['Body','Equal','RigidFrame']='RigidFrame'):
+        # flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
+        def flatten(list_to_flattern:list):
+            return list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], list_to_flattern)))
         
-        # add body constraint between capTop and pier
-        
-        Saproject().Define.jointConstraints.SetBody(self.name+"_Cap_Pier", body_dof)
-        self._add_body_constraints_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
+        rigid_dof = ["UX", "UY", "UZ", "RX", "RY", "RZ"]
+        if mode == 'RigidFrame':
+            SapFrame.rigid_link(point1=self.cap_top_point,point2=self.pier_bottom_point['left'])
+            SapFrame.rigid_link(point1=self.cap_top_point,point2=self.pier_bottom_point['right'])
+        else:
+            if mode == 'Body':
+                Saproject().Define.joint_constraints.Set.Body(self.name+"_Cap_Pier", rigid_dof)
+            elif mode == 'Equal':
+                Saproject().Define.joint_constraints.Set.Equal(self.name+"_Cap_Pier", rigid_dof)
+            self._add_constraint_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
         
         # add body constraint between pier top and bearing bottom
-        left_points = flatten([self.pier_top['left'], self.bearing_bottom_point_outer['left'], self.bearing_bottom_point_inner['left']])
-        right_points = flatten([self.pier_top['right'], self.bearing_bottom_point_outer['right'], self.bearing_bottom_point_inner['right']])
-        # left
-        Saproject().Define.jointConstraints.SetBody(self.name+"_left_Pier_Bearing", body_dof)
-        self._add_body_constraints_for_points(self.name+"_left_Pier_Bearing", left_points)
-        # right
-        Saproject().Define.jointConstraints.SetBody(self.name+"_right_Pier_Bearing", body_dof)
-        self._add_body_constraints_for_points(self.name+"_right_Pier_Bearing", right_points)
+        for side in ['left','right']:
+            pier_top_point = self.pier_top[side]
+            bearing_bottom_points = flatten([self.bearing_bottom_point_outer[side], self.bearing_bottom_point_inner[side]])
+            if mode == 'RigidFrame':
+                for point in bearing_bottom_points:
+                    SapFrame.rigid_link(point1=pier_top_point,point2=point)
+            else:
+                if mode == 'Body':
+                    Saproject().Define.joint_constraints.Set.Body(self.name+f"_{side}_Pier_Bearing", rigid_dof)
+                elif mode == 'Equal':
+                    Saproject().Define.joint_constraints.Set.Equal(self.name+f"_{side}_Pier_Bearing", rigid_dof)
+                self._add_constraint_for_points(self.name+f"_{side}_Pier_Bearing", [pier_top_point]+bearing_bottom_points)
         
     def generate_cap_elements(self):
         cap_section_name = self.get_cap_section()
@@ -992,31 +1036,23 @@ class Sap_Girder:
     def _define_ideal_links(self):
         # 刚度取大值，不直接固定,暂时不考虑阻尼
         # U1为竖向，U2为纵桥向，U3为横桥向
-        FixedDOF = []
+        FixedDOF = ["R1"]
         DOF = ['U1', 'U2', 'U3', 'R1', 'R2', 'R3']
         # dampingCe = {}
         # 固定支座:
-        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":1e10,"R1":0,"R2":0,"R3":0}
-        # fixed_link = "Fixed"
-        # Saproject().Define.section.PropLink.Set.Linear(fixed_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        uncoupleKe = {"U1":1e7,"U2":1e7,"U3":1e7,"R1":0,"R2":0,"R3":0}
         fixed_link = Sap_LinkProp_Linear("Fixed",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
         fixed_link.define_link()
         # 横桥向（y）滑动支座
-        uncoupleKe = {"U1":1e10,"U2":1e10,"U3":0,"R1":0,"R2":0,"R3":0}
-        # y_sliding_link = "y_sliding"
-        # Saproject().Define.section.PropLink.Set.Linear(y_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        uncoupleKe = {"U1":1e7,"U2":1e7,"U3":0,"R1":0,"R2":0,"R3":0}
         y_sliding_link = Sap_LinkProp_Linear("y_sliding",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
         y_sliding_link.define_link()
         # 纵桥向（x）滑动支座
-        uncoupleKe = {"U1":1e10,"U2":0,"U3":1e10,"R1":0,"R2":0,"R3":0}
-        # x_sliding_link = "x_sliding"
-        # Saproject().Define.section.PropLink.Set.Linear(x_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        uncoupleKe = {"U1":1e7,"U2":0,"U3":1e7,"R1":0,"R2":0,"R3":0}
         x_sliding_link = Sap_LinkProp_Linear("x_sliding",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
         x_sliding_link.define_link()
         # 双向滑动支座
-        uncoupleKe = {"U1":1e10,"U2":0,"U3":0,"R1":0,"R2":0,"R3":0}
-        # both_sliding_link = "Both_sliding"
-        # Saproject().Define.section.PropLink.Set.Linear(both_sliding_link, DOF=DOF, Fixed=FixedDOF, Ke=uncoupleKe)
+        uncoupleKe = {"U1":1e7,"U2":0,"U3":0,"R1":0,"R2":0,"R3":0}
         both_sliding_link = Sap_LinkProp_Linear("Both_sliding",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
         both_sliding_link.define_link()
         return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
@@ -1031,7 +1067,7 @@ class Sap_Girder:
         new_MultiElastic_link.update_yield_prop_for_existing_linear_link()
         return new_MultiElastic_link
         
-    def _add_body_constraints_for_points(self,constraint_name:str, points : list):
+    def _add_constraint_for_points(self,constraint_name:str, points : list):
         for point in points:
             if not point.exists():
                 logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
@@ -1077,7 +1113,7 @@ class Sap_Box_Girder(Sap_Girder):
         else:
             self.add_mass_for_concentrated_girder()
             self.add_restraints_for_concentrated_girder()
-        self.add_body_constraint()
+        self.add_rigid_link(mode='RigidFrame')
         # self.add_bearing_links(strategy='ideal')
         Saproject().RefreshView()
     
@@ -1159,16 +1195,24 @@ class Sap_Box_Girder(Sap_Girder):
                 
                 self.bearings[pier.name][side] = {'inner':link_inner, 'outer':link_outer}
         
-    def add_body_constraint(self):
-        body_dof = ["UX", "UY", "UZ", "RX", "RY", "RZ"]
-        def flatten(l):  # noqa: E741
-            return list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
+    def add_rigid_link(self, mode:Literal['RigidFrame','Equal','Body']='Body'):
+        rigid_dof = ["UX", "UY", "UZ", "RX", "RY", "RZ"]
+        def flatten(list_to_flattern:list):
+            return list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], list_to_flattern)))
         for side in ['left','right']:
             for pier in self.pierlist:
-                Saproject().Define.jointConstraints.SetBody(f"{pier.name}_{side}_Girder", body_dof)
                 girder_point = self.girder_points[pier.name][side]
                 bearing_top_points = list(self.girder_bearing_top_points[pier.name][side].values())
-                self._add_body_constraints_for_points(pier.name+"_"+side+"_girder", flatten([girder_point,bearing_top_points]))
+                if mode == 'RigidFrame':
+                    for point in bearing_top_points:
+                        SapFrame.rigid_link(point1 = girder_point, point2 = point)  
+                else:
+                    if mode == 'Equal':
+                        Saproject().Define.joint_constraints.Set.Equal(f"{pier.name}_{side}_Girder", rigid_dof)
+                    elif mode == 'Body':
+                        Saproject().Define.joint_constraints.Set.Body(f"{pier.name}_{side}_Girder", rigid_dof)
+                    
+                    self._add_constraint_for_points(pier.name+"_"+side+"_girder", flatten([girder_point, bearing_top_points]))
                 
     def generate_girder_elements(self):
         for pier_start,pier_end in zip(self.pierlist[0:-1],self.pierlist[1:]):
@@ -1185,12 +1229,13 @@ class Sap_Box_Girder(Sap_Girder):
         case_middle2intermediate = [[uniform_length_for_middle_pier,self.girder_section_pier,self.girder_section_pier],
                                    [1-uniform_length_for_intermediate_pier-uniform_length_for_middle_pier,self.girder_section_pier,self.girder_section_middle_span],
                                    [uniform_length_for_intermediate_pier,self.girder_section_middle_span,self.girder_section_middle_span]]
-        case_mieele2middle =       [[0.5-uniform_length_for_middle_span/2,self.girder_section_pier,self.girder_section_middle_span],
+        case_middle2middle =       [[0.5-uniform_length_for_middle_span/2,self.girder_section_pier,self.girder_section_middle_span],
                                     [uniform_length_for_middle_span,self.girder_section_middle_span,self.girder_section_middle_span],
                                     [0.5-uniform_length_for_middle_span/2,self.girder_section_middle_span,self.girder_section_pier]]
         
         varying_rule:list[float,Section_General,Section_General] = []   # [length_ratio,section1,section2]
         if pier_start.is_intermediate_pier and pier_end.is_intermediate_pier:
+            logger.opt(colors=True).error("Intermediate pier to Intermediate pier can not be considered properly!")
             varying_rule = None
         elif pier_start.is_intermediate_pier and not pier_end.is_intermediate_pier:
             if side == 'left':
@@ -1204,7 +1249,7 @@ class Sap_Box_Girder(Sap_Girder):
                 varying_rule = case_intermediate2middle
         else:
             # from middle pier to middle pier
-            varying_rule = case_mieele2middle
+            varying_rule = case_middle2middle
             
         return varying_rule
 
@@ -1223,11 +1268,14 @@ class Sap_Box_Girder(Sap_Girder):
                                                         uniform_length_for_intermediate_pier=0.723,
                                                         uniform_length_for_middle_pier=0.0422,
                                                         uniform_length_for_middle_span=0.447,side=side)
-            varying_rule_list:\
-                list[Literal['Variable','Absolute'],float,str,str,Literal['Linear','Parabolic','Cubic'],Literal['Linear','Parabolic','Cubic']] \
-                = [['Variable',rule[0],rule[1].name,rule[2].name,'Linear','Linear'] for rule in varying_rule]
-            var_section = Section_NonPrismatic(name = gidername+f"_{side}",VaryingRules = varying_rule_list)
-            var_section.define()
+            if varying_rule is None:
+                var_section = self.girder_section_middle_span
+            else:
+                varying_rule_list:\
+                    list[Literal['Variable','Absolute'],float,str,str,Literal['Linear','Parabolic','Cubic'],Literal['Linear','Parabolic','Cubic']] \
+                    = [['Variable',rule[0],rule[1].name,rule[2].name,'Linear','Linear'] for rule in varying_rule]
+                var_section = Section_NonPrismatic(name = gidername+f"_{side}",VaryingRules = varying_rule_list)
+                var_section.define()
             
         i=1
         for point1,point2 in zip(points_to_connect[0:-1],points_to_connect[1:]):
@@ -1239,7 +1287,7 @@ class Sap_Box_Girder(Sap_Girder):
             girder = SapFrame(node1 = point1, node2 = point2, section = section, name = f"{gidername}_{side}_girder_{i}")
             girder.define()
             
-            if self.is_varing_section:
+            if self.is_varing_section and varying_rule is not None:
                 # Relative start location of varying section
                 x_start = points_to_connect[0].x
                 relative_startLoc = min(abs((point1.x-x_start)),abs((point2.x-x_start))) / span_length
@@ -1476,4 +1524,5 @@ class Sap_Box_Girder(Sap_Girder):
         for point in points:
             point.add()    
         self.girder_points[gidername][side] = points
+    
     

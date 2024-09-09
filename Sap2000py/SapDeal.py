@@ -3,7 +3,7 @@ from typing import Literal, Union
 
 from loguru import logger
 
-from Sap2000py.SapConstraints import jointConstraints
+from Sap2000py.SapConstraints import JointConstraints
 from Sap2000py.Sapfunctions import Sapfunctions
 from Sap2000py.Sapload import SapLoadCases, SapLoadPatterns
 from Sap2000py.SapMaterial import SapMaterial
@@ -276,12 +276,12 @@ class SapDefinitions:
         self.__Model = Sapobj._Model
         self.material = SapMaterial(Sapobj)
         self.section = SapSection(Sapobj)
-        self.jointConstraints = jointConstraints(Sapobj)
+        self.joint_constraints = JointConstraints(Sapobj)
         self.function = Sapfunctions(Sapobj)
         self.loadcases = SapLoadCases(Sapobj)
         self.loadpatterns = SapLoadPatterns(Sapobj)
         self.masssource = MassSource(Sapobj)
-        self.LoadCombo = LoadCombo(Sapobj)
+        self.loadcombo = LoadCombo(Sapobj)
 
 
 class SapAssign:

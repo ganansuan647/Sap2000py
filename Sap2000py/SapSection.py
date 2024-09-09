@@ -11,7 +11,7 @@ class SapSection:
         self._Sapobj = Sapobj
         self.PropLink = PropLink(Sapobj)
 
-    def PropFrame_SetGeneral(self,sectName,matName,t3,t2,Area,As2,As3,I22,I33,J,notes=""):
+    def PropFrame_SetGeneral(self,sectName:str,matName:str,t3:float,t2:float,Area:float,As2:float,As3:float,I22:float,I33:float,J:float,notes:str=""):
         """
         ---set a general frame section property---
         intput:
@@ -79,6 +79,32 @@ class SapSection:
         ret = self.__Model.PropFrame.SetNonPrismatic(Name, NumberItems, StartSec, EndSec, Lengthlist, Lengthtypeidlist, EI33VarList, EI22VarList,Color,Notes,GUID)
         return ret
         
+    def PropFrame_GetSectProps(self, Name: str) -> tuple:
+        """Retrieves properties for a frame section.
+
+        Parameters:
+            Name (str): The name of an existing frame section property.
+
+        Returns:
+            tuple: A tuple containing the following frame section properties:
+                Area (float): The cross-sectional area. [L2]
+                As2 (float): The shear area for forces in the section local 2-axis direction. [L2]
+                As3 (float): The shear area for forces in the section local 3-axis direction. [L2]
+                Torsion (float): The torsional constant. [L4]
+                I22 (float): The moment of inertia for bending about the local 2 axis. [L4]
+                I33 (float): The moment of inertia for bending about the local 3 axis. [L4]
+                S22 (float): The section modulus for bending about the local 2 axis. [L3]
+                S33 (float): The section modulus for bending about the local 3 axis. [L3]
+                Z22 (float): The plastic modulus for bending about the local 2 axis. [L3]
+                Z33 (float): The plastic modulus for bending about the local 3 axis. [L3]
+                R22 (float): The radius of gyration about the local 2 axis. [L]
+                R33 (float): The radius of gyration about the local 3 axis. [L]
+
+        Remarks:
+            The function returns zero if the property data is successfully retrieved; 
+            otherwise it returns a nonzero value.
+        """
+        return self.__Model.PropFrame.GetSectProps(Name)
 
     def Tendon_SetProp(self,tendonName,matName,modelOpt,Area):
         """
@@ -89,7 +115,7 @@ class SapSection:
         modelOpt-1 = Model tendon as loads,2 = Model tendon as elements
         area-The cross-sectional area of the tendon. [L2]
         """
-        self.__Model.PropTendon.SetProp(tendonName,matName,modelOpt,Area)
+        return self.__Model.PropTendon.SetProp(tendonName,matName,modelOpt,Area)
 
     def Cable_SetPro(self,cableName,matName,Area):
         """
@@ -99,7 +125,7 @@ class SapSection:
         matName(str)-The name of the material property assigned to the cable property
         Area(float)-The cross-sectional area of the tendon. [L2]
         """
-        self.__Model.PropCable.SetProp(cableName,matName,Area)
+        return self.__Model.PropCable.SetProp(cableName,matName,Area)
 
     def Area_SetPlane(self,areaName,MyType,MatProp,Thickness,MatAng=0,Incompatible=True):
         """
@@ -115,7 +141,7 @@ class SapSection:
         Incompatible(bool)-If this item is True, incompatible bending modes are included in the stiffness
             formulation. In general, incompatible modes significantly improve the bending behavior of the object.
         """
-        self.__Model.PropArea.SetPlane(areaName,MyType,MatProp,MatAng,Thickness,Incompatible)
+        return self.__Model.PropArea.SetPlane(areaName,MyType,MatProp,MatAng,Thickness,Incompatible)
 
     def Area_SetShell_1(self,name,ShellType,MatProp,Thickness,matAng=0):
         """
@@ -131,7 +157,7 @@ class SapSection:
         Thickness(float)-The membrane thickness. [L],This item does not apply when ShellType = 6.
         matAng(float)-The material angle. [deg] This item does not apply when ShellType = 6.
         """
-        self.__Model.PropArea.SetShell_1(name,ShellType,False,MatProp,matAng,Thickness,Thickness)
+        return self.__Model.PropArea.SetShell_1(name,ShellType,False,MatProp,matAng,Thickness,Thickness)
 
     def PropSolid_SetProp(self,name,matProp,a=0,b=0,c=0,incompatible=True):
         """
@@ -277,6 +303,50 @@ class PropLink_Set:
         ret = self.__Model.PropLink.SetMultiLinearElastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3,Notes,GUID)
         return ret
 
+    def MultiLinearPlastic(self,name,DOF,Fixed,Nonlinear,Ke={},Ce={},dj2=0,dj3=0):
+        """
+        ---This function initializes a multilinear plastic-type link property. If this function is
+        called for an existing link property, all items for the property are reset to their default values.---
+        inputs:
+        name(str)-The name of an existing or new link property. If this is an existing property,
+            that property is modified; otherwise, a new property is added.
+            DOF(list)-This is str list,indicating if properties exist for a specified degree of freedom.e.g. ["U1"]
+        Fixed(list)-This is str list, indicating if the specified degree of freedom is fixed (restrained).e.g. ["R1"]
+        Nonlinear(list)-This is str list, indicating if nonlinear properties exist for a specified degree of freedom.
+            e.g. ["R1"]
+        Ke(dict)-This is a dictionary of stiffness terms for the link property,e.g.,{"U1":2000,"R1":5000}
+        Ce(dict)-This is a dictionary of damping terms for the link property,e.g.,{"U1":0.03,"R1":0.05}
+        dj2(float)-The distance from the J-End of the link to the U2 shear spring.
+            This item applies only when DOF(1) = True. [L]
+        dj3(float)-The distance from the J-End of the link to the U3 shear spring.
+            This item applies only when DOF(2) = True. [L]
+        """
+        DOFDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
+        DOFFinal = [False, False, False, False, False, False]
+        for each in DOF:
+            indexNum = DOFDict[each]
+            DOFFinal[indexNum] = True
+        FixedFinal = [False, False, False, False, False, False]
+        for each1 in Fixed:
+            indexNum1 = DOFDict[each1]
+            FixedFinal[indexNum1] = True
+        nonlinearFinal = [False, False, False, False, False, False]
+        for each2 in Nonlinear:
+            indexNum2 = DOFDict[each2]
+            nonlinearFinal[indexNum2] = True
+        keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
+        keInput = [0 for each in range(6)]
+        key2 = Ke.keys()
+        for each2 in key2:
+            indexNum2 = keDict[each2]
+            keInput[indexNum2] = Ke[each2]
+        ceInput = [0 for each in range(6)]
+        key3 = Ce.keys()
+        for each3 in key3:
+            indexNum3 = keDict[each3]
+            ceInput[indexNum3] = Ce[each3]
+        self.__Model.PropLink.SetMultiLinearPlastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3)
+
     def MultiLinearPoints(self,name:str,DOF:Literal['U1','U2','U3','R1','R2','R3'],forceList:list[float],dispList:list[float],Type:Literal['Isotropic','Kinematic','Takeda','Pivot']='Isotropic',a1=0.0,a2=0.0,b1=0.0,b2=0.0,eta=0.0):
         """
         ---This function sets the force-deformation data for a specified degree of freedom in multilinear
@@ -303,7 +373,6 @@ class PropLink_Set:
         ret = self.__Model.PropLink.SetMultiLinearPoints(name,dof,numberPoints,forceList,dispList,myType,a1,a2,b1,b2,eta)
         return ret
             
-
     def Damper(self,name,DOF,Fixed,Nonliear,Ke={},Ce={},k={},c={},cexp={},dj2=0,dj3=0):
         """
         ---This function initializes an exponential damper-type link property---

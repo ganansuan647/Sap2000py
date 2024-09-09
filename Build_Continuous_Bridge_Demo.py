@@ -457,15 +457,15 @@ for fun in THfuncs:
         E2YCase.set_damping_rayleigh(DampType='Period', Dampf1=period_y_1, Dampf2=min(period_y_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
     
 
-Sap.Define.LoadCombo.Add('E2纵向+竖向', comboType = 'AbsAdd')
-ret = [Sap.Define.LoadCombo.SetCaseList('E2纵向+竖向',CNameType="LoadCase",CName = 'E2X'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
+Sap.Define.loadcombo.Add('E2纵向+竖向', comboType = 'AbsAdd')
+ret = [Sap.Define.loadcombo.SetCaseList('E2纵向+竖向',CNameType="LoadCase",CName = 'E2X'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
 if all([r[1] == 0 for r in ret]):
     logger.opt(colors=True).success("Load Combination E2纵向+竖向 has been successfully defined.")
 else:
     logger.opt(colors=True).error("An error occurred while defining the Load Combination E2纵向.")
 
-Sap.Define.LoadCombo.Add('E2横向+竖向', comboType = 'AbsAdd')
-ret = [Sap.Define.LoadCombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = 'E2Y'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
+Sap.Define.loadcombo.Add('E2横向+竖向', comboType = 'AbsAdd')
+ret = [Sap.Define.loadcombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = 'E2Y'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
 if all([r[1] == 0 for r in ret]):
     logger.opt(colors=True).success("Load Combination E2横向+竖向 has been successfully defined.")
 else:

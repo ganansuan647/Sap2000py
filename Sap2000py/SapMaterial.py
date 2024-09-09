@@ -1,4 +1,4 @@
-
+from typing import Literal
 class SapMaterial:
     def __init__(self,Sapobj):
         """
@@ -8,37 +8,9 @@ class SapMaterial:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
-
-    def SetSSCurve(self,matName,strainList,stressList):
-        """
-        ---sets the material stress-strain curve for existing material ---
-        inputs:
-        matName(str)-the name of the defined material
-        strainList(float)-This is an array that includes the strain at each point on the
-                        stress strain curve. The strains must increase monotonically.
-        stressList(flaot)-This is an array that includes the stress at each point on
-                        the stress strain curve. [F/L2]
-        Points that have a negative strain must have a zero or negative stress. Similarly,
-        points that have a positive strain must have a zero or positive stress.
-        There must be one point defined that has zero strain and zero stress.
-        """
-        numPoint=len(strainList)
-        pointID=[i1 for i1 in range(numPoint)]
-        self.__Model.PropMaterial.SetSSCurve(matName,numPoint,pointID,strainList,stressList)
-
-    def TendonUser(self,tendonName,weightPerV,E,temC):
-        """
-        ---user defined unixial tendon material  ---
-        inputs:
-        tendonName(str)-the name of the tendon material
-        weightPerV(float)-The weight per unit volume for the material. [F/L3]
-        E(float)-The modulus of elasticity. [F/L2]
-        tempC(float)-The modulus of elasticity. [F/L2]
-        """
-        self.__Model.PropMaterial.SetMaterial(tendonName,7) #eMatType_Tendon = 7
-        self.__Model.PropMaterial.SetWeightAndMass(tendonName, 1,weightPerV)#1 = Weight per unit volume
-        self.__Model.PropMaterial.SetMPUniaxial(tendonName,E,temC)
-
+        self.Set = SapMaterial_Set(Sapobj)
+        self.Get = SapMaterial_Get(Sapobj)
+        
     def AddMaterial(self,name,matType,region,standard,grade):
         """
         ---adds a new standard material property to the model---
@@ -57,28 +29,48 @@ class SapMaterial:
         nameList=standard+"-"+str_list[-1]
         self.__Model.PropMaterial.ChangeName(nameList,name)
 
-    def GetMPIsotropic(self,matName):
-        """
-        ---get the the mechanical properties for a material with an isotropic directional symmetry type---
-        intput:
-                matName(str)-the name of an existing material property
-        return:[weightPerV,massPerV,E,v,tempC,G]
-                weightPerV-The weight per unit volume for the material. [F/L3]
-                massPerV-The mass per unit volume for the material. [M/L3]
-                E-The modulus of elasticity. [F/L2]
-                v-Poisson’s ratio.
-                tempC-The thermal coefficient. [1/T]
-                G-The shear modulus. For isotropic materials this value is program calculated
-                    from the modulus of elasticity and poisson’s ratio. [F/L2]
-        """
-        weightAndMass=self.__Model.PropMaterial.GetWeightAndMass(matName)[1:]
-        isoProperty=self.__Model.PropMaterial.GetMPIsotropic(matName)[1:]
-        weightPerV,massPerV=weightAndMass
-        E,v,tempC,G=isoProperty
-        returnMatPro=[weightPerV,massPerV,E,v,tempC,G]
-        return returnMatPro
 
-    def SetMatrial(self,matName,matType):
+class SapMaterial_Set:
+    def __init__(self,Sapobj):
+        """
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+    
+    def SSCurve(self,matName:str,strainList:list[float],stressList:list[float]):
+        """
+        ---sets the material stress-strain curve for existing material ---
+        inputs:
+        matName(str)-the name of the defined material
+        strainList(float)-This is an array that includes the strain at each point on the
+                        stress strain curve. The strains must increase monotonically.
+        stressList(flaot)-This is an array that includes the stress at each point on
+                        the stress strain curve. [F/L2]
+        Points that have a negative strain must have a zero or negative stress. Similarly,
+        points that have a positive strain must have a zero or positive stress.
+        There must be one point defined that has zero strain and zero stress.
+        """
+        numPoint=len(strainList)
+        pointID=[i1 for i1 in range(numPoint)]
+        self.__Model.PropMaterial.SetSSCurve(matName,numPoint,pointID,strainList,stressList)
+
+    def TendonUser(self,tendonName:str,weightPerV:float,E:float,temC:float):
+        """
+        ---user defined unixial tendon material  ---
+        inputs:
+        tendonName(str)-the name of the tendon material
+        weightPerV(float)-The weight per unit volume for the material. [F/L3]
+        E(float)-The modulus of elasticity. [F/L2]
+        tempC(float)-The modulus of elasticity. [F/L2]
+        """
+        self.__Model.PropMaterial.SetMaterial(tendonName,7) #eMatType_Tendon = 7
+        self.__Model.PropMaterial.SetWeightAndMass(tendonName, 1,weightPerV)#1 = Weight per unit volume
+        self.__Model.PropMaterial.SetMPUniaxial(tendonName,E,temC)
+
+    def Matrial(self,matName:str,matType:int):
         """
         ---This function initializes a material property.---
         inputs:
@@ -89,7 +81,7 @@ class SapMaterial:
         """
         self.__Model.PropMaterial.SetMaterial(matName,matType)
 
-    def SetWeightAndMass(self,matName,weightPerV):
+    def WeightAndMass(self,matName:str,weightPerV:float):
         """
         ---This function assigns weight per unit volume to a material property---
         inputs:
@@ -99,7 +91,7 @@ class SapMaterial:
         # 1 = Weight per unit volume is specified,2 = Mass per unit volume is specified
         self.__Model.PropMaterial.SetWeightAndMass(matName, 1,weightPerV)
 
-    def SetMPIsotropic(self,matName,E,v,temC):
+    def MPIsotropic(self,matName:str,E:float,v:float,temC:float):
         """
         ---set the the mechanical properties for a material with an isotropic directional symmetry type---
         inputs: [matName,matType,weightPerV,massPerV,E,v,tempC,G]
@@ -110,7 +102,7 @@ class SapMaterial:
         """
         self.__Model.PropMaterial.SetMPIsotropic(matName,E,v,temC)
 
-    def SetOSteel_1(self,matName,Fy,Fu,eFy,eFu,SSType,SSHysType=0,StrainAtHardening=0,
+    def OSteel_1(self,matName:str,Fy:float,Fu:float,eFy:float,eFu:float,SSType:int,SSHysType:int=0,StrainAtHardening:float=0,
                                     StrainAtMaxStress=0,StrainAtRupture=0,FinalSlope=0):
         """
         ---This function sets the other material property data for steel materials---
@@ -138,7 +130,7 @@ class SapMaterial:
         self.__Model.PropMaterial.SetOSteel_1(matName, Fy,Fu,eFy,eFu,SSType,SSHysType,StrainAtHardening,
                                     StrainAtMaxStress,StrainAtRupture,FinalSlope)
 
-    def SetOConcrete_1(self,matName,fc,IsLightweight,fcsfactor,SSType,SSHysType=0,StrainAtfc=0,
+    def OConcrete_1(self,matName:str,fc:float,IsLightweight:bool,fcsfactor:float,SSType:int,SSHysType:int=0,StrainAtfc:float=0,
                                         StrainUltimate=0,FinalSlope=0,FrictionAngle=0,DilatationalAngle=0):
         """
         ---This function sets the other material property data for concrete materials.---
@@ -164,7 +156,7 @@ class SapMaterial:
         self.__Model.PropMaterial.SetOConcrete_1(matName,fc,IsLightweight,fcsfactor,SSType,SSHysType,StrainAtfc,
                                         StrainUltimate,FinalSlope,FrictionAngle,DilatationalAngle)
 
-    def SetORebar_1(self,matName,Fy,Fu,eFy,eFu,SSType,SSHysType=0,StrainAtHardening=0,
+    def ORebar_1(self,matName:str,Fy:float,Fu:float,eFy:float,eFu:float,SSType:int,SSHysType:int=0,StrainAtHardening:float=0,
                                     StrainUltimate=0,FinalSlope=0,UseCaltransSSDefaults=False):
         """
         ---This function sets the other material property data for rebar materials..---
@@ -191,7 +183,7 @@ class SapMaterial:
         self.__Model.PropMaterial.SetORebar_1(matName,Fy,Fu,eFy,eFu,SSType,SSHysType,StrainAtHardening,
                                     StrainUltimate,FinalSlope,UseCaltransSSDefaults)
 
-    def SetOTendon_1(self,matName,Fy,Fu,SSType,SSHysType=1,FinalSlope=1):
+    def OTendon_1(self,matName:str,Fy:float,Fu:float,SSType:int,SSHysType:int=1,FinalSlope:float=1):
         """
         ---This function sets the other material property data for tendon materials---
         inputs:
@@ -207,46 +199,62 @@ class SapMaterial:
         """
         self.__Model.PropMaterial.SetOTendon_1(matName,Fy,Fu,SSType,SSHysType,FinalSlope)
 
-    def PropLink_SetMultiLinearPlastic(self,name,DOF,Fixed,Nonlinear,Ke={},Ce={},dj2=0,dj3=0):
+class SapMaterial_Get:
+    def __init__(self,Sapobj):
         """
-        ---This function initializes a multilinear plastic-type link property. If this function is
-        called for an existing link property, all items for the property are reset to their default values.---
-        inputs:
-        name(str)-The name of an existing or new link property. If this is an existing property,
-            that property is modified; otherwise, a new property is added.
-            DOF(list)-This is str list,indicating if properties exist for a specified degree of freedom.e.g. ["U1"]
-        Fixed(list)-This is str list, indicating if the specified degree of freedom is fixed (restrained).e.g. ["R1"]
-        Nonlinear(list)-This is str list, indicating if nonlinear properties exist for a specified degree of freedom.
-            e.g. ["R1"]
-        Ke(dict)-This is a dictionary of stiffness terms for the link property,e.g.,{"U1":2000,"R1":5000}
-        Ce(dict)-This is a dictionary of damping terms for the link property,e.g.,{"U1":0.03,"R1":0.05}
-        dj2(float)-The distance from the J-End of the link to the U2 shear spring.
-            This item applies only when DOF(1) = True. [L]
-        dj3(float)-The distance from the J-End of the link to the U3 shear spring.
-            This item applies only when DOF(2) = True. [L]
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
         """
-        DOFDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        DOFFinal = [False, False, False, False, False, False]
-        for each in DOF:
-            indexNum = DOFDict[each]
-            DOFFinal[indexNum] = True
-        FixedFinal = [False, False, False, False, False, False]
-        for each1 in Fixed:
-            indexNum1 = DOFDict[each1]
-            FixedFinal[indexNum1] = True
-        nonlinearFinal = [False, False, False, False, False, False]
-        for each2 in Nonlinear:
-            indexNum2 = DOFDict[each2]
-            nonlinearFinal[indexNum2] = True
-        keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
-        key2 = Ke.keys()
-        for each2 in key2:
-            indexNum2 = keDict[each2]
-            keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
-        key3 = Ce.keys()
-        for each3 in key3:
-            indexNum3 = keDict[each3]
-            ceInput[indexNum3] = Ce[each3]
-        self.__Model.PropLink.SetMultiLinearPlastic(name,DOFFinal,FixedFinal,nonlinearFinal,keInput,ceInput,dj2,dj3)
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+        
+    def NameList(self, MatType:Literal['All','Steel','Concrete','NoDesign','Aluminum','ColdFormed','Rebar','Tendon'] = 'All'):
+        """
+        Retrieves the names of all defined material properties of the specified type.
+
+        Parameters:
+        MatType (str, optional): The material type. If not specified, names are returned for all material properties.
+            'All' = All types
+            'Steel' = Steel materials
+            'Concrete' = Concrete materials
+            'NoDesign' = Non-design materials
+            'Aluminum' = Aluminum materials
+            'ColdFormed' = Cold-formed steel
+            'Rebar' = Reinforcing bars
+            'Tendon' = Prestressing tendons
+
+        Returns:
+        tuple: A tuple containing (NumberNames, MyName, ret)
+            NumberNames (int): The number of material property names retrieved.
+            MyName (list): A list of material property names.
+            ret (int): 0 if successful, nonzero if not.
+
+        """
+        MatType_dict = {'All':None,'Steel':1,'Concrete':2,'NoDesign':3,'Aluminum':4,'ColdFormed':5,'Rebar':6,'Tendon':7}
+        if MatType == 'All':
+            ret = self.__Model.PropMaterial.GetNameList()    
+        else:
+            ret = self.__Model.PropMaterial.GetNameList(MatType_dict[MatType])    
+        return ret
+    
+    def MPIsotropic(self,matName):
+        """
+        ---get the the mechanical properties for a material with an isotropic directional symmetry type---
+        intput:
+                matName(str)-the name of an existing material property
+        return:[weightPerV,massPerV,E,v,tempC,G]
+                weightPerV-The weight per unit volume for the material. [F/L3]
+                massPerV-The mass per unit volume for the material. [M/L3]
+                E-The modulus of elasticity. [F/L2]
+                v-Poisson’s ratio.
+                tempC-The thermal coefficient. [1/T]
+                G-The shear modulus. For isotropic materials this value is program calculated
+                    from the modulus of elasticity and poisson’s ratio. [F/L2]
+        """
+        weightAndMass=self.__Model.PropMaterial.GetWeightAndMass(matName)[1:]
+        isoProperty=self.__Model.PropMaterial.GetMPIsotropic(matName)[1:]
+        weightPerV,massPerV=weightAndMass
+        E,v,tempC,G=isoProperty
+        returnMatPro=[weightPerV,massPerV,E,v,tempC,G]
+        return returnMatPro
