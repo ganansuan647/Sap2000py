@@ -24,11 +24,12 @@ class SapSpectrumFunc:
                 try:
                     i=0
                     for line in file:
-                        time, value = line.strip().split()
+                        data = line.strip().split()
+                        time, value = [float(x) for x in data]
                         if i==0:
-                            logger.trace(f"first data pair of spectrum file is:({float(time)},{float(value)})")
-                        times.append(float(time))
-                        values.append(float(value))
+                            logger.trace(f"first data pair of spectrum file is:({time},{value})")
+                        times.append(time)
+                        values.append(value)
                         i+=1
                     header_flag = 1
                 except:
@@ -112,10 +113,10 @@ class SapTimeHistoryFunc:
                         data = line.strip().split()
                         if len(data)==1:
                             # assume only value is given
-                            value = data[0]
+                            value = float(data[0])
                         elif len(data)==2:
                             # assume time and value is given
-                            time, value = data
+                            time, value = [float(x) for x in data]
                         else:
                             raise NotImplementedError("Time history series format not supported!")
                         if i==0:
