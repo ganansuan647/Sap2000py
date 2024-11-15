@@ -626,7 +626,7 @@ class SapResults_Get_Option:
 
     def NLStatic(self):
         """
-        ---This function retrieves the output option for nonlinear static results---
+        ---This function retrieves the output option for NonLinear static results---
         return:
         [index,Value]
 
@@ -805,7 +805,7 @@ class SapResults_Set_Option:
 
     def NLStatic(self,Value):
         """
-        ---This function sets the output option for nonlinear static results---
+        ---This function sets the output option for NonLinear static results---
         inputs:
         Value(int)-This item is 1, 2 or 3
             1 = Envelopes
@@ -2239,12 +2239,12 @@ class SapResults:
 
     def StepLabel(self):
         """
-        ---This function generates the step label for analyzed linear multi-step, nonlinear multi-step, or
+        ---This function generates the step label for analyzed linear multi-step, NonLinear multi-step, or
         staged-construction load cases. For other load case types, the label will be blank---
         return:
         [index,LoadCase,StepNum,Label]
 
-        LoadCase(str)-The name of an existing linear multi-step, nonlinear multi-step, or staged-construction load case
+        LoadCase(str)-The name of an existing linear multi-step, NonLinear multi-step, or staged-construction load case
         StepNum(int)-This is an overall step number from the specified load case. The range of values of StepNum for a
             given load case can be obtained from most analysis results calls, such as SapObject.SapModel.Results.JointDispl
         Label(str)-The is the step label, including the name or number of the stage, the step number within the stage,

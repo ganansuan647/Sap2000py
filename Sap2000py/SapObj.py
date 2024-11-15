@@ -1332,7 +1332,7 @@ class FrameObj_Set:
         """
         ---This function makes tension/compression force limit assignments to frame objects.
         The function returns zero if the assignments are successfully applied, otherwise it returns a nonzero value.
-        Note that the tension and compression limits are only used in nonlinear analyses
+        Note that the tension and compression limits are only used in NonLinear analyses
         ---
         inputs:
         name(str)-The name of an existing frame object or group, depending on the value of the ItemType item.
@@ -1789,7 +1789,7 @@ class FrameObj_Get:
         """
         ---This function retrieves the tension/compression force limit assignments to frame objects.The function
         returns zero if the assignments are successfully retrieved, otherwise it returns a nonzero value.Note that
-        the tension and compression limits are used only in nonlinear analyses.
+        the tension and compression limits are used only in NonLinear analyses.
         ---
         inputs:
         name(str)-The name of an existing frame object.
