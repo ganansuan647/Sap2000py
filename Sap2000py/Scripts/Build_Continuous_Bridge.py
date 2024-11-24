@@ -495,7 +495,7 @@ class Sap_Box_Girder:
         flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
         for side in ['left','right']:
             for pier in self.pierlist:
-                Sap.Define..Set.Body(f"{pier.name}_{side}_Girder", body_dof)
+                Sap.Define.Set.Body(f"{pier.name}_{side}_Girder", body_dof)
                 girder_point = self.girder_points[pier.name][side]
                 bearing_top_points = list(self.girder_bearing_top_points[pier.name][side].values())
                 self.__add_body_constraints_for_points(pier.name+"_"+side+"_girder", flatten([girder_point,bearing_top_points]))

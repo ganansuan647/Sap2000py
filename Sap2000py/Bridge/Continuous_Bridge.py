@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from typing import ClassVar, Dict, List, Literal, Union
+import copy
 
 import numpy as np
 from loguru import logger
@@ -20,7 +21,7 @@ class ShouldNotInstantiateError(Exception):
 class SapSection:
     name: str
     material: str
-    notes: str = ""
+    notes: str = "Creates by Sap2000py"
     unit_of_sec: Literal['mm', 'cm', 'm'] = 'm'
 
     def define(self):
@@ -182,7 +183,7 @@ class SapPoint:
     z:float
     name:str=""
     mass: List[float] = field(default_factory=lambda: [0.0 for _ in range(6)])
-    restraints:list[Literal['Ux','Uy','Uz','Rx','Ry','Rz']] = field(default_factory=list)
+    restraints:list[Literal['Ux','Uy','Uz','Rx','Ry','Rz']] = field(default_factory=lambda: copy.deepcopy([]))
 
     def add(self):
         ret = Saproject().Assign.PointObj.AddCartesian(self.x, self.y, self.z, UserName=self.name)
@@ -422,6 +423,7 @@ class Sap_Double_Box_Pier:
         self.generate_cap_elements()
         
         self.add_rigid_link(mode='RigidFrame')
+        # self.add_rigid_link(mode='Body')
         # self.add_mass()
         Saproject().RefreshView()
     
@@ -727,11 +729,13 @@ class Sap_Double_Box_Pier:
             if not point.exists():
                 logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
                 point.add()
-            ret = Saproject().Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
-            if ret[1] == 0:
-                logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to constraint : <yellow>{constraint_name}</yellow>")
-            else:
-                logger.opt(colors=True).error(f"<yellow>{point.name}</yellow> failed to add to constraint : <yellow>{constraint_name}</yellow>")
+        
+        Saproject().Scripts.Group.AddtoGroup(constraint_name,[p.name for p in points], type='Point')
+        ret = Saproject().Assign.PointObj.Set.Constraint(constraint_name,constraint_name,ItemType = 1, Replace=False)
+        if ret[-1] == 0:
+            logger.opt(colors=True).success(f"<yellow>{[p.name for p in points]}</yellow> added to constraint : <yellow>{constraint_name}</yellow>")
+        else:
+            logger.opt(colors=True).error(f"<yellow>{[p.name for p in points]}</yellow> failed to add to constraint : <yellow>{constraint_name}</yellow>")
     
     def add_rigid_link(self,mode:Literal['Body','Equal','RigidFrame']='Body'):
         # flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
@@ -744,10 +748,12 @@ class Sap_Double_Box_Pier:
             SapFrame.rigid_link(point1=self.cap_top_point,point2=self.pier_bottom_point['right'])
         else:
             if mode == 'Body':
-                Saproject().Define.joint_constraints.Set.Body(self.name+"_Cap_Pier", rigid_dof)
+                body_prop = f"{self.name}_Cap_Pier"
+                Saproject().Define.joint_constraints.Set.Body(body_prop, rigid_dof)
+                self._add_constraint_for_points(body_prop, flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))        
             elif mode == 'Equal':
                 Saproject().Define.joint_constraints.Set.Equal(self.name+"_Cap_Pier", rigid_dof)
-            self._add_constraint_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
+                self._add_constraint_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
         
         # add body constraint between pier top and bearing bottom
         for side in ['left','right']:
@@ -758,10 +764,12 @@ class Sap_Double_Box_Pier:
                     SapFrame.rigid_link(point1=pier_top_point,point2=point)
             else:
                 if mode == 'Body':
-                    Saproject().Define.joint_constraints.Set.Body(self.name+f"_{side}_Pier_Bearing", rigid_dof)
+                    body_prop = f"{self.name}_{side}_Pier_Bearing"
+                    Saproject().Define.joint_constraints.Set.Body(body_prop, rigid_dof)
+                    self._add_constraint_for_points(body_prop, flatten([pier_top_point, bearing_bottom_points]))
                 elif mode == 'Equal':
                     Saproject().Define.joint_constraints.Set.Equal(self.name+f"_{side}_Pier_Bearing", rigid_dof)
-                self._add_constraint_for_points(self.name+f"_{side}_Pier_Bearing", [pier_top_point]+bearing_bottom_points)
+                    self._add_constraint_for_points(self.name+f"_{side}_Pier_Bearing", [pier_top_point]+bearing_bottom_points)
         
     def generate_cap_elements(self):
         cap_section_name = self.get_cap_section()
@@ -863,15 +871,15 @@ class Sap_Bearing:
 @dataclass
 class Sap_LinkProp_Linear(Sap_Bearing):
     prop_name:str
-    DOF: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
-    Fixed: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
-    Ke: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
-    Ce: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
+    DOF: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=lambda: copy.deepcopy([]))
+    Fixed: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=lambda: copy.deepcopy([]))
+    Ke: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
+    Ce: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
     dj2: float = 0.0
     dj3: float = 0.0
     KeCoupled:bool = False
     CeCoupled:bool = False
-    notes: str = ""
+    notes: str = "Linear Created by Sap2000py"
     GUID: str = ""
     _instances: ClassVar = weakref.WeakSet()
 
@@ -915,7 +923,6 @@ class Sap_LinkProp_Linear(Sap_Bearing):
     def get_instances(cls):
         return list(cls._instances)
 
-
 class Sap_Bearing_Linear(Sap_LinkProp_Linear):
     def __init__(self,name:str, start_point:SapPoint, end_point:SapPoint, linkprop_name:str):
         self.name = name
@@ -923,23 +930,29 @@ class Sap_Bearing_Linear(Sap_LinkProp_Linear):
         self.end_point = end_point
         self.linkprop_name = linkprop_name
         # check if link property already exists
-        self.linkprop_instance = [link for link in Sap_LinkProp_Linear.get_instances() if link.prop_name == self.linkprop_name][0]
+        self.linkprop_instance = next(
+            (link for link in Sap_LinkProp_Linear.get_instances() if link.prop_name == self.linkprop_name),
+            None
+        )
         if not isinstance(self.linkprop_instance, Sap_LinkProp_Linear):
-            self.linkprop_instance = [link for link in Sap_LinkProp_Linear.get_instances() if link.name == self.linkprop_name][0]
+            self.linkprop_instance = next(
+                (link for link in Sap_LinkProp_Linear.get_instances() if link.prop_name == self.linkprop_name),
+                None
+            )
             self.linkprop_instance.define_link()
         self.add_link()
         
 @dataclass
 class Sap_LinkProp_MultiLinearElastic(Sap_Bearing):
     prop_name: str
-    DOF: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
-    Fixed: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=list)
-    NonLinear: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'],dict] = field(default_factory=dict)
-    Ke: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
-    Ce: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=dict)
+    DOF: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=lambda: copy.deepcopy([]))
+    Fixed: List[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3']] = field(default_factory=lambda: copy.deepcopy([]))
+    NonLinear: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'],dict] = field(default_factory=lambda: copy.deepcopy({}))
+    Ke: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
+    Ce: Dict[Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
     dj2: float = 0.0
     dj3: float = 0.0
-    notes: str = ""
+    notes: str = "MultiLinear Created by Sap2000py"
     GUID: str = ""
     _instances: ClassVar = weakref.WeakSet()
 
@@ -1068,7 +1081,7 @@ class Sap_Bearing_MultiLinearElastic(Sap_LinkProp_MultiLinearElastic):
         displist = [-ultimate_disp,-yield_disp,0,yield_disp,ultimate_disp]
         return forcelist,displist
     
-    def update_yield_prop_for_existing_linear_link(self, freeF:float = 10.0):
+    def update_yield_prop_for_existing_linear_link(self, freeF:float = 10.0,*args,**kwargs):
         """_summary_
 
         Args:
@@ -1087,8 +1100,16 @@ class Sap_Bearing_MultiLinearElastic(Sap_LinkProp_MultiLinearElastic):
                 # assume already defined
                 Ke = existing_link_instance.Ke
                 # get free DOF(Be Careful with freeF)
-                doflist = [dof for dof,ke in Ke.items() if ke <= freeF and dof not in ['R1','R2','R3']]
-                forceList,dispList = self.calculate_yield_properties(mu=0.02,yield_disp=0.0025,ultimate_disp=2)
+                doflist = [dof for dof,ke in Ke.items() if ke <= freeF and dof not in ['U1', 'R1', 'R2', 'R3']]
+                
+                # 支座摩擦系数
+                mu = kwargs.get('mu', 0.02)
+                # 支座滑动时的位移（m）
+                yield_disp = kwargs.get('yield_disp', 0.0025)
+                # 极限位移（m）
+                ultimate_disp = kwargs.get('ultimate_disp', 2.0)
+                
+                forceList,dispList = self.calculate_yield_properties(mu=mu,yield_disp=yield_disp,ultimate_disp=ultimate_disp)
                 for dof in doflist:
                     self.linkprop_instance._update_link_yield_prop_1dof(dof,forceList,dispList)
                 logger.debug(f"Yield properties updated for {existing_link}")
@@ -1111,18 +1132,18 @@ class Sap_Bearing_MultiLinearElastic(Sap_LinkProp_MultiLinearElastic):
 @dataclass
 class Sap_LinkProp_PlasticWen(Sap_Bearing):
     prop_name: str
-    DOF: List[Literal['U1','U2','U3','R1','R2','R3']] = field(default_factory=list)
-    Fixed: List[Literal['U1','U2','U3','R1','R2','R3']] = field(default_factory=list)
-    NonLinear: List[Literal['U1','U2','U3','R1','R2','R3']] = field(default_factory=list)
-    Ke: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=dict)
-    Ce: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=dict)
-    k: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=dict)
-    yieldF: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=dict)
-    Ratio: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=dict)
-    exp: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=dict)
+    DOF: List[Literal['U1','U2','U3','R1','R2','R3']] = field(default_factory=lambda: copy.deepcopy([]))
+    Fixed: List[Literal['U1','U2','U3','R1','R2','R3']] = field(default_factory=lambda: copy.deepcopy([]))
+    NonLinear: List[Literal['U1','U2','U3','R1','R2','R3']] = field(default_factory=lambda: copy.deepcopy([]))
+    Ke: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
+    Ce: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
+    k: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
+    yieldF: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
+    Ratio: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
+    exp: Dict[Literal['U1','U2','U3','R1','R2','R3'], float] = field(default_factory=lambda: copy.deepcopy({}))
     dj2: float = 0.0
     dj3: float = 0.0
-    notes: str = ""
+    notes: str = "PlasticWen Created by Sap2000py."
     _instances: ClassVar = weakref.WeakSet()
 
     def __hash__(self):
@@ -1138,7 +1159,8 @@ class Sap_LinkProp_PlasticWen(Sap_Bearing):
             frozenset(self.Ratio.items()),
             frozenset(self.exp.items()),
             self.dj2,
-            self.dj3
+            self.dj3,
+            self.notes
         ))
 
     def __post_init__(self):
@@ -1162,7 +1184,8 @@ class Sap_LinkProp_PlasticWen(Sap_Bearing):
             Ratio=self.Ratio,
             exp=self.exp,
             dj2=self.dj2,
-            dj3=self.dj3
+            dj3=self.dj3,
+            notes=self.notes
         )
         return ret
     
@@ -1171,6 +1194,8 @@ class Sap_LinkProp_PlasticWen(Sap_Bearing):
             ret = self.__define_link()
             if ret[-1] == 0:
                 logger.opt(colors=True).success(f"Multi Elastic Linear Link Property <yellow>{self.prop_name}</yellow> defined.")
+            else:
+                logger.opt(colors=True).error(f"Multi Elastic Linear Link Property <yellow>{self.prop_name}</yellow> failed to define.")
         else:
             DOF, Fixed, NonLinear, Ke, Ce, k, yieldF, Ratio, exp, dj2, dj3, Notes, GUID = self.get_LinkProp_from_Sap()
             discrepancies = []
@@ -1207,29 +1232,36 @@ class Sap_LinkProp_PlasticWen(Sap_Bearing):
                 ret = self.__define_link()
                 if ret[-1] == 0:
                     logger.opt(colors=True).info(f"Link Property <yellow>{self.prop_name}</yellow> updated with new parameters.")
-            self.__define_NonLinear_points()
     
-    def _update_link_yield_prop_1dof(self,DOF:Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'],yield_force:float,init_k:float,ratio:float = 0.0,exp:float = 2.0):
+    def _update_link_yield_prop_1dof(self, DOF: Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], yield_force: float, init_k: float, ratio: float = 0.0, exp: float = 2.0):
         if DOF not in self.NonLinear:
             self.NonLinear.append(DOF)
-            k_dict = {DOF:init_k}
-            yieldF_dict = {DOF:yield_force}
-            ratio_dict = {DOF:ratio}
-            exp_dict = {DOF:exp}
-            self.k.update(k_dict)
-            self.yieldF.update(yieldF_dict)
-            self.Ratio.update(ratio_dict)
-            self.exp.update(exp_dict)
+        k_dict = {DOF: init_k}
+        yieldF_dict = {DOF: yield_force}
+        ratio_dict = {DOF: ratio}
+        exp_dict = {DOF: exp}
+        # use deepcopy to avoid modifying the original dict, very important
+        self.k = copy.deepcopy(self.k)
+        self.k.update(k_dict)
+        self.yieldF = copy.deepcopy(self.yieldF)
+        self.yieldF.update(yieldF_dict)
+        self.Ratio = copy.deepcopy(self.Ratio)
+        self.Ratio.update(ratio_dict)
+        self.exp = copy.deepcopy(self.exp)
+        self.exp.update(exp_dict)
     
-    def _update_link_effective_prop_1dof(self,DOF:Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'],ke:float,ce:float):
-        self.k.update({DOF:ke})
-        self.Ce.update({DOF:ce})
+    def _update_link_effective_prop_1dof(self, DOF: Literal['U1', 'U2', 'U3', 'R1', 'R2', 'R3'], Ke: float, Ce: float):
+        # use deepcopy to avoid modifying the original dict， very important
+        self.Ke = copy.deepcopy(self.Ke)
+        self.Ke.update({DOF: Ke})
+        self.Ce = copy.deepcopy(self.Ce)
+        self.Ce.update({DOF: Ce})
             
     @classmethod
     def get_instances(cls):
         return list(cls._instances)
 
-class Sap_Bearing_PlasticWen(Sap_Bearing):
+class Sap_Bearing_PlasticWen(Sap_LinkProp_PlasticWen):
     def __init__(self, name: str,
                  start_point: SapPoint,
                  end_point: SapPoint,
@@ -1252,44 +1284,67 @@ class Sap_Bearing_PlasticWen(Sap_Bearing):
         ratio = ratio
         exp = exp
         return yield_force,init_k,ratio,exp
-        
-    def update_yield_prop_for_existing_linear_link(self, freeF:float = 10.0):
-        """_summary_
+    
+    def update_yield_prop_for_existing_linear_link(self, freeF: float = 10.0, *args, **kwargs):
+        """
+        Update yield properties for an existing linear link.
 
         Args:
             freeF (float, optional): DOF with Ke less than freeF will be considered as free, updating them to bilinear. Defaults to 10.0.
+            user_defined (bool, optional): If True, use user-defined stiffness and damping values. Defaults to False.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
         Raises:
-            ValueError: _description_
-            NotImplementedError: _description_
+            ValueError: If the Sap_LinkProp_Linear instance for the existing link is not found.
+            NotImplementedError: If the link type is not supported.
         """
-        existing_link = self.get_link_between_points(self.start_point,self.end_point)[0]
+        existing_link = self.get_link_between_points(self.start_point, self.end_point)[0]
         existing_linkprop = Saproject()._Model.LinkObj.GetProperty(existing_link)[0]
-        [link_type,ret] = Saproject().Define.section.PropLink.Get.TypeOAPI(existing_linkprop)
-        if ret==0 and link_type == 'Linear':
-            existing_link_instance = next(
+        [link_type, ret] = Saproject().Define.section.PropLink.Get.TypeOAPI(existing_linkprop)
+        
+        if ret == 0 and link_type == 'Linear':
+            existing_prop_instance = next(
                 (link for link in Sap_LinkProp_Linear.get_instances() if link.prop_name == existing_linkprop),
                 None
             )
-            if self.linkprop_instance:
-                # assume already defined
-                Ke = existing_link_instance.Ke
-                # get free DOF(Be Careful with freeF)
-                doflist = [dof for dof,ke in Ke.items() if ke <= freeF and dof not in ['R1','R2','R3']]
-                yield_force,init_k,ratio,exp = self.calculate_yield_properties(mu=0.02,yield_disp=0.0025,ratio=0.0,exp=2.0)
+            if isinstance(existing_prop_instance,Sap_LinkProp_Linear):
+                
+                Ke = existing_prop_instance.Ke
+                doflist = [dof for dof, ke in Ke.items() if ke <= freeF and dof not in ['U1', 'R1', 'R2', 'R3']]
+
+                # Extract parameters from kwargs or use default values
+                # 支座摩擦系数
+                mu = kwargs.get('mu', 0.02)
+                # 支座滑动时的位移（m）
+                yield_disp = kwargs.get('yield_disp', 0.0025)
+                # 屈服后刚度比，0.0代表双线性本构
+                ratio = kwargs.get('ratio', 0.0)
+                # 屈服后刚度指数，数值y越大，屈服比率越陡（大于等于一）
+                exp = kwargs.get('exp', 2.0)
+                if exp < 1:
+                    exp = 1
+
+                yield_force, init_k, ratio, exp = self.calculate_yield_properties(mu=mu, yield_disp=yield_disp, ratio=ratio, exp=exp)
+
                 for dof in doflist:
-                    self.linkprop_instance._update_link_yield_prop_1dof(dof,yield_force,init_k,ratio,exp)
-                    # update effective properties
-                    ke = init_k/0.1
-                    ce = 0.0
-                    self.linkprop_instance._update_link_effective_prop_1dof(dof,ke,ce)
-                logger.debug(f"nonlinear properties updated for {existing_link}")
+                    self.linkprop_instance._update_link_yield_prop_1dof(dof, yield_force, init_k, ratio, exp)
+                    
+                    # 等效刚度与初始刚度的比值
+                    ke_ratio = kwargs.get('ke_ratio', 0.1)
+                    ke = init_k * ke_ratio
+                    # 等效阻尼
+                    ce = kwargs.get('ce', 0.0)
+
+                    self.linkprop_instance._update_link_effective_prop_1dof(dof, ke, ce)
+
+                logger.debug(f"Nonlinear properties updated for {existing_link}")
             else:
                 raise ValueError(f"Sap_LinkProp_Linear instance for {existing_link} is not existing!")
         else:
-            logger.error(f"Link {existing_link} is not Not Supported yet!")
-            raise NotImplementedError
-        
+            logger.error(f"Link {existing_link} is not supported yet!")
+            raise NotImplementedError(f"Link type {link_type} is not supported.")
+    
     def add_link(self):
         """
         little different from Sap_Bearing.add_link,this function checks if link already exists, if yes, remove the previous one first.
@@ -1330,7 +1385,7 @@ class Sap_Girder:
         both_sliding_link.define_link()
         return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
 
-    def _update_ideal_link2bilinear_link(self,linear_link:Sap_Bearing_Linear,link_type:Literal['MultiLinearElastic','PlasticWen'] = 'PlasticWen'):
+    def _update_ideal_link2bilinear_link(self,linear_link:Sap_Bearing_Linear,link_type:Literal['MultiLinearElastic','PlasticWen'] = 'PlasticWen',*args,**kwargs):
         new_link_name = linear_link.name
         if link_type == 'MultiLinearElastic':
             new_linkprop_name = new_link_name+"_MultiElastic"
@@ -1338,7 +1393,7 @@ class Sap_Girder:
                                                                         DOF=linear_link.linkprop_instance.DOF,Fixed=linear_link.linkprop_instance.Fixed,NonLinear={},Ke=linear_link.linkprop_instance.Ke,Ce=linear_link.linkprop_instance.Ce,dj2=linear_link.linkprop_instance.dj2,dj3=linear_link.linkprop_instance.dj3,notes=f"Converted from {linear_link.linkprop_instance.prop_name}")
             new_MultiElastic_link = Sap_Bearing_MultiLinearElastic(new_link_name,
                                                                 linear_link.start_point,linear_link.end_point,linkprop_name=new_linkprop_name)
-            new_MultiElastic_link.update_yield_prop_for_existing_linear_link()
+            new_MultiElastic_link.update_yield_prop_for_existing_linear_link(*args,**kwargs)
             return new_MultiElastic_link
         elif link_type == 'PlasticWen':
             new_linkprop_name = new_link_name+"_PlasticWen"
@@ -1352,7 +1407,7 @@ class Sap_Girder:
                                                             dj2=linear_link.linkprop_instance.dj2,dj3=linear_link.linkprop_instance.dj3,notes=f"Converted from {linear_link.linkprop_instance.prop_name}")
             new_PlasticWen_link = Sap_Bearing_PlasticWen(new_link_name,
                                                         linear_link.start_point,linear_link.end_point,linkprop_name=new_linkprop_name)
-            new_PlasticWen_link.update_yield_prop_for_existing_linear_link()
+            new_PlasticWen_link.update_yield_prop_for_existing_linear_link(*args,**kwargs)
             return new_PlasticWen_link
         else:
             raise NotImplementedError(f"Link type {link_type} is not supported yet!")
@@ -1363,11 +1418,13 @@ class Sap_Girder:
             if not point.exists():
                 logger.opt(colors=True).warning(f"<yellow>{point.name}</yellow> Accidentally does not exist!")
                 point.add()
-            ret = Saproject().Assign.PointObj.Set.Constraint(point.name,constraint_name,ItemType = 0)
-            if ret[1] == 0:
-                logger.opt(colors=True).success(f"<yellow>{point.name}</yellow> added to Body constraint : <yellow>{constraint_name}</yellow>")
-            else:
-                logger.opt(colors=True).error(f"<yellow>{point.name}</yellow> failed to add to Body constraint : <yellow>{constraint_name}</yellow>")
+                
+        Saproject().Scripts.Group.AddtoGroup(constraint_name,[p.name for p in points], type='Point')
+        ret = Saproject().Assign.PointObj.Set.Constraint(constraint_name,constraint_name,ItemType = 1, Replace=False)
+        if ret[-1] == 0:
+            logger.opt(colors=True).success(f"<yellow>{[p.name for p in points]}</yellow> added to constraint : <yellow>{constraint_name}</yellow>")
+        else:
+            logger.opt(colors=True).error(f"<yellow>{[p.name for p in points]}</yellow> failed to add to constraint : <yellow>{constraint_name}</yellow>")
 
 
 @dataclass
@@ -1405,6 +1462,7 @@ class Sap_Box_Girder(Sap_Girder):
             self.add_mass_for_concentrated_girder()
             self.add_restraints_for_concentrated_girder()
         self.add_rigid_link(mode='RigidFrame')
+        # self.add_rigid_link(mode='Body')
         # self.add_bearing_links(strategy='ideal')
         Saproject().RefreshView()
     
@@ -1422,7 +1480,7 @@ class Sap_Box_Girder(Sap_Girder):
         self.girder_points[girdername]['right'].defineMass((self.q1+self.q2)*self.DefaultSpan/9.81, dof = ['Uy','Uz'])
         self.girder_points[girdername]['right'].defineMass((self.q1+self.q2)*self.DefaultSpan*self.spanCount/9.81, dof = ['Ux'])
     
-    def update_links_parameters(self,link_type:Literal['MultiLinearElastic','PlasticWen']):
+    def update_links_parameters(self,link_type:Literal['MultiLinearElastic','PlasticWen'],*args,**kwargs):
         """update bilinear ideal links for girder
         mu(float): frictional coefficient
         """
@@ -1432,7 +1490,7 @@ class Sap_Box_Girder(Sap_Girder):
             for side in ['left','right']:
                 linksdict = {}
                 for key,link in bearings[side].items():
-                    new_link = self._update_ideal_link2bilinear_link(link,link_type=link_type)
+                    new_link = self._update_ideal_link2bilinear_link(link,link_type=link_type,*args,**kwargs)
                     linksdict.update({key:new_link})
                 self.bearings[pier.name][side] = linksdict
     
@@ -1500,10 +1558,11 @@ class Sap_Box_Girder(Sap_Girder):
                 else:
                     if mode == 'Equal':
                         Saproject().Define.joint_constraints.Set.Equal(f"{pier.name}_{side}_Girder", rigid_dof)
+                        self._add_constraint_for_points(pier.name+"_"+side+"_girder", flatten([girder_point, bearing_top_points]))
                     elif mode == 'Body':
-                        Saproject().Define.joint_constraints.Set.Body(f"{pier.name}_{side}_Girder", rigid_dof)
-                    
-                    self._add_constraint_for_points(pier.name+"_"+side+"_girder", flatten([girder_point, bearing_top_points]))
+                        body_prop = f"{pier.name}_{side}_Girder"
+                        Saproject().Define.joint_constraints.Set.Body(body_prop, rigid_dof)
+                        self._add_constraint_for_points(body_prop, flatten([girder_point, bearing_top_points]))
                 
     def generate_girder_elements(self):
         for pier_start,pier_end in zip(self.pierlist[0:-1],self.pierlist[1:]):

@@ -226,8 +226,8 @@ class PropLink_Set:
         keCoupleDict={"U1U1":0,"U1U2":1,"U2U2":2,"U1U3":3,"U2U3":4,"U3U3":5,"U1R1":6,
                         "U2R1":7,"U3R1":8,"R1R1":9,"U1R2":10,"U2R2":11,"U3R2":12,"R1R2":13,
                         "R2R2":14,"U1R3":15,"U2R3":16,"U3R3":17,"R1R3":18,"R2R3":19,"R3R3":20}
-        keFinal=[0 for each in range(6)]
-        keCouple=[0 for each in range(21)]
+        keFinal=[0 for _ in range(6)]
+        keCouple=[0 for _ in range(21)]
         if not KeCoupled:
             keInput=keFinal
             key2=Ke.keys()
@@ -240,8 +240,8 @@ class PropLink_Set:
             for each3 in key3:
                 indexNum3=keCoupleDict[each3]
                 keInput[indexNum3]=Ke[each3]
-        ceFinal = [0 for each in range(6)]
-        ceCouple = [0 for each in range(21)]
+        ceFinal = [0 for _ in range(6)]
+        ceCouple = [0 for _ in range(21)]
         if not CeCoupled:
             ceInput=ceFinal
             key4=Ce.keys()
@@ -299,12 +299,12 @@ class PropLink_Set:
             indexNum2=DOFDict[each2]
             NonLinearFinal[indexNum2]=True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
@@ -351,12 +351,12 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
@@ -444,27 +444,27 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        kInput=[0 for each in range(6)]
+        kInput=[0 for _ in range(6)]
         key4=k.keys()
         for each4 in key4:
             indexNum4 = keDict[each4]
             kInput[indexNum4] = k[each4]
-        cInput = [0 for each in range(6)]
+        cInput = [0 for _ in range(6)]
         key5 = c.keys()
         for each5 in key5:
             indexNum5 = keDict[each5]
             cInput[indexNum5] = c[each5]
-        cexpInput = [0 for each in range(6)]
+        cexpInput = [0 for _ in range(6)]
         key6 = cexp.keys()
         for each6 in key6:
             indexNum6 = keDict[each6]
@@ -519,32 +519,32 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        kInput = [0 for each in range(6)]
+        kInput = [0 for _ in range(6)]
         key4 = k.keys()
         for each4 in key4:
             indexNum4 = keDict[each4]
             kInput[indexNum4] = k[each4]
-        cInput = [0 for each in range(6)]
+        cInput = [0 for _ in range(6)]
         key5 = c.keys()
         for each5 in key5:
             indexNum5 = keDict[each5]
             cInput[indexNum5] = c[each5]
-        cyInput = [0 for each in range(6)]
+        cyInput = [0 for _ in range(6)]
         key6 = cy.keys()
         for each6 in key6:
             indexNum6 = keDict[each6]
             cyInput[indexNum6] = cy[each6]
-        forceLimitInput = [0 for each in range(6)]
+        forceLimitInput = [0 for _ in range(6)]
         key7 = ForceLimit.keys()
         for each7 in key7:
             indexNum7 = keDict[each7]
@@ -595,22 +595,22 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        kInput = [0 for each in range(6)]
+        kInput = [0 for _ in range(6)]
         key4 = k.keys()
         for each4 in key4:
             indexNum4 = keDict[each4]
             kInput[indexNum4] = k[each4]
-        dispInput = [0 for each in range(6)]
+        dispInput = [0 for _ in range(6)]
         key5 = disp.keys()
         for each5 in key5:
             indexNum5 = keDict[each5]
@@ -660,22 +660,22 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        kInput = [0 for each in range(6)]
+        kInput = [0 for _ in range(6)]
         key4 = k.keys()
         for each4 in key4:
             indexNum4 = keDict[each4]
             kInput[indexNum4] = k[each4]
-        dispInput = [0 for each in range(6)]
+        dispInput = [0 for _ in range(6)]
         key5 = disp.keys()
         for each5 in key5:
             indexNum5 = keDict[each5]
@@ -694,7 +694,8 @@ class PropLink_Set:
                    Ratio:dict[Literal['U1','U2','U3','R1','R2','R3'],float] = {},
                    exp:dict[Literal['U1','U2','U3','R1','R2','R3'],float] = {},
                    dj2:float=0,
-                   dj3:float=0):
+                   dj3:float=0,
+                   notes:str=""):
         """
         ---This function initializes a plastic Wen-type link property---
         inputs:
@@ -731,38 +732,38 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        kInput = [0 for each in range(6)]
+        kInput = [0 for _ in range(6)]
         key4 = k.keys()
         for each4 in key4:
             indexNum4 = keDict[each4]
             kInput[indexNum4] = k[each4]
-        yieldFInput = [0 for each in range(6)]
+        yieldFInput = [0 for _ in range(6)]
         key5 = yieldF.keys()
         for each5 in key5:
             indexNum5 = keDict[each5]
             yieldFInput[indexNum5] = yieldF[each4]
-        RatioInput = [0 for each in range(6)]
+        RatioInput = [0 for _ in range(6)]
         key6 = Ratio.keys()
         for each6 in key6:
             indexNum6 = keDict[each6]
             RatioInput[indexNum6] = Ratio[each6]
-        expInput = [0 for each in range(6)]
+        expInput = [0 for _ in range(6)]
         key7 = exp.keys()
         for each7 in key7:
             indexNum7 = keDict[each7]
             expInput[indexNum7] = exp[each7]
         ret = self.__Model.PropLink.SetPlasticWen(name,DOFFinal,FixedFinal,NonLinearFinal,keInput,ceInput,kInput,
-                                                yieldFInput,RatioInput,expInput,dj2,dj3)
+                                                yieldFInput,RatioInput,expInput,dj2,dj3,notes)
         return ret
 
     def RubberIsolator(self,name: str,
@@ -816,27 +817,27 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        kInput = [0 for each in range(6)]
+        kInput = [0 for _ in range(6)]
         key4 = k.keys()
         for each4 in key4:
             indexNum4 = keDict[each4]
             kInput[indexNum4] = k[each4]
-        yieldFInput = [0 for each in range(6)]
+        yieldFInput = [0 for _ in range(6)]
         key5 = yieldF.keys()
         for each5 in key5:
             indexNum5 = keDict[each5]
             yieldFInput[indexNum5] = yieldF[each4]
-        RatioInput = [0 for each in range(6)]
+        RatioInput = [0 for _ in range(6)]
         key6 = Ratio.keys()
         for each6 in key6:
             indexNum6 = keDict[each6]
@@ -906,37 +907,37 @@ class PropLink_Set:
             indexNum2 = DOFDict[each2]
             NonLinearFinal[indexNum2] = True
         keDict = {"U1": 0, "U2": 1, "U3": 2, "R1": 3, "R2": 4, "R3": 5}
-        keInput = [0 for each in range(6)]
+        keInput = [0 for _ in range(6)]
         key2 = Ke.keys()
         for each2 in key2:
             indexNum2 = keDict[each2]
             keInput[indexNum2] = Ke[each2]
-        ceInput = [0 for each in range(6)]
+        ceInput = [0 for _ in range(6)]
         key3 = Ce.keys()
         for each3 in key3:
             indexNum3 = keDict[each3]
             ceInput[indexNum3] = Ce[each3]
-        kInput = [0 for each in range(6)]
+        kInput = [0 for _ in range(6)]
         key4 = k.keys()
         for each4 in key4:
             indexNum4 = keDict[each4]
             kInput[indexNum4] = k[each4]
-        slowInput = [0 for each in range(6)]
+        slowInput = [0 for _ in range(6)]
         key5 = slow.keys()
         for each5 in key5:
             indexNum5 = keDict[each5]
             slowInput[indexNum5] = slow[each5]
-        fastInput = [0 for each in range(6)]
+        fastInput = [0 for _ in range(6)]
         key6 = fast.keys()
         for each6 in key6:
             indexNum6 = keDict[each6]
             fastInput[indexNum6] = fast[each6]
-        rateInput = [0 for each in range(6)]
+        rateInput = [0 for _ in range(6)]
         key7 = Rate.keys()
         for each7 in key7:
             indexNum7 = keDict[each7]
             rateInput[indexNum7] = Rate[each7]
-        radiusInput = [0 for each in range(6)]
+        radiusInput = [0 for _ in range(6)]
         key8 = Radius.keys()
         for each8 in key8:
             indexNum8 = keDict[each8]

@@ -502,7 +502,7 @@ class Saproject(metaclass=SapMeta):
             )
             return
         unitid = self.Unitdict[Unit]
-        if unitid == self._Model.GetDatabaseUnits():
+        if unitid == self._Model.GetPresentUnits():
             logger.info(f"Model Units is already {Unit}")
         else:
             ret = self._Model.SetPresentUnits(unitid)

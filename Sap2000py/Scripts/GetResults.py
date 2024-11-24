@@ -58,8 +58,6 @@ class GetResults:
         else:
             return ret[1],ret[colstart:colend]
 
-
-
     def ElementForce_by_Group(self,Name,Dealflag = True):
         """
         Get ElementForce by group and return a np.array:[P,V2,V3,T,M2,M3]
