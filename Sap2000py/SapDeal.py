@@ -3,7 +3,7 @@ from typing import Literal, Union
 
 from loguru import logger
 
-from Sap2000py.SapConstraints import jointConstraints
+from Sap2000py.SapConstraints import JointConstraints
 from Sap2000py.Sapfunctions import Sapfunctions
 from Sap2000py.Sapload import SapLoadCases, SapLoadPatterns
 from Sap2000py.SapMaterial import SapMaterial
@@ -81,7 +81,7 @@ class SapFile():
         """
         self.__Model.File.NewBlank()
 
-    def Save(self,FileName : Union[Path , str] = Path('.')/"NewSapProj.sdb"):
+    def Save(self,FileName : Union[Path , str] = Path('.') / "NewSapProj.sdb"):
         """
         ---save Sap model file---
         save at savepath\savename
@@ -89,6 +89,8 @@ class SapFile():
         # make sure filepath exists
         if isinstance(FileName,str):
             FileName = Path(FileName).resolve()
+        if not FileName.parent.exists():
+            FileName.parent.mkdir(parents=True,exist_ok=True)
         ret = self.__Model.File.Save(str(FileName))
         return ret
     
@@ -276,12 +278,12 @@ class SapDefinitions:
         self.__Model = Sapobj._Model
         self.material = SapMaterial(Sapobj)
         self.section = SapSection(Sapobj)
-        self.jointConstraints = jointConstraints(Sapobj)
+        self.joint_constraints = JointConstraints(Sapobj)
         self.function = Sapfunctions(Sapobj)
         self.loadcases = SapLoadCases(Sapobj)
         self.loadpatterns = SapLoadPatterns(Sapobj)
         self.masssource = MassSource(Sapobj)
-        self.LoadCombo = LoadCombo(Sapobj)
+        self.loadcombo = LoadCombo(Sapobj)
 
 
 class SapAssign:
@@ -626,7 +628,7 @@ class SapResults_Get_Option:
 
     def NLStatic(self):
         """
-        ---This function retrieves the output option for nonlinear static results---
+        ---This function retrieves the output option for NonLinear static results---
         return:
         [index,Value]
 
@@ -805,7 +807,7 @@ class SapResults_Set_Option:
 
     def NLStatic(self,Value):
         """
-        ---This function sets the output option for nonlinear static results---
+        ---This function sets the output option for NonLinear static results---
         inputs:
         Value(int)-This item is 1, 2 or 3
             1 = Envelopes
@@ -2239,12 +2241,12 @@ class SapResults:
 
     def StepLabel(self):
         """
-        ---This function generates the step label for analyzed linear multi-step, nonlinear multi-step, or
+        ---This function generates the step label for analyzed linear multi-step, NonLinear multi-step, or
         staged-construction load cases. For other load case types, the label will be blank---
         return:
         [index,LoadCase,StepNum,Label]
 
-        LoadCase(str)-The name of an existing linear multi-step, nonlinear multi-step, or staged-construction load case
+        LoadCase(str)-The name of an existing linear multi-step, NonLinear multi-step, or staged-construction load case
         StepNum(int)-This is an overall step number from the specified load case. The range of values of StepNum for a
             given load case can be obtained from most analysis results calls, such as SapObject.SapModel.Results.JointDispl
         Label(str)-The is the step label, including the name or number of the stage, the step number within the stage,

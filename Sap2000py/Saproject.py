@@ -204,7 +204,8 @@ class Saproject(metaclass=SapMeta):
 
         ```python
         from pathlib import Path
-
+        from Sap2000py import Saproject
+        
         Sap = Saproject()
         Sap.openSap()
         Sap.File.New_Blank()
@@ -256,6 +257,20 @@ class Saproject(metaclass=SapMeta):
         self.Analyze = SapAnalyze(self)
         self.Results = SapResults(self)
         self.Scripts = SapScripts(self)
+
+    @classmethod
+    def new(cls, *args, **kwargs):
+        """Creates a new instance of the Saproject class.
+
+        This method is used to create a new instance of the Saproject class
+        with the specified arguments and keyword arguments.
+
+        Returns:
+            Saproject: A new instance of the Saproject class.
+        """
+        newinstance = object.__new__(cls)
+        newinstance.__init__(AttachToInstance = False)
+        return newinstance
 
     @property
     def SapVersion(self):
@@ -366,6 +381,10 @@ class Saproject(metaclass=SapMeta):
     def is_locked(self):
         """Checks if the model is locked."""
         return self._Model.GetModelIsLocked()
+
+    @property
+    def MaterialList(self):
+        return list(self._Model.PropMaterial.GetNameList()[1])
 
     def createSap(
         self,
@@ -487,7 +506,7 @@ class Saproject(metaclass=SapMeta):
             )
             return
         unitid = self.Unitdict[Unit]
-        if unitid == self._Model.GetDatabaseUnits():
+        if unitid == self._Model.GetPresentUnits():
             logger.info(f"Model Units is already {Unit}")
         else:
             ret = self._Model.SetPresentUnits(unitid)

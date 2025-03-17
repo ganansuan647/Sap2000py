@@ -330,17 +330,17 @@ class Sap_Double_Box_Pier:
         
         # add body constraint between capTop and pier
         
-        Sap.Define.jointConstraints.SetBody(self.name+"_Cap_Pier", body_dof)
+        Sap.Define.joint_constraints.Set.Body(self.name+"_Cap_Pier", body_dof)
         self.__add_body_constraints_for_points(self.name+"_Cap_Pier", flatten([self.cap_top_point, self.pier_bottom_point['left'],self.pier_bottom_point['right']]))
         
         # add body constraint between pier top and bearing bottom
         left_points = flatten([self.pier_top['left'], self.bearing_bottom_point_outer['left'], self.bearing_bottom_point_inner['left']])
         right_points = flatten([self.pier_top['right'], self.bearing_bottom_point_outer['right'], self.bearing_bottom_point_inner['right']])
         # left
-        Sap.Define.jointConstraints.SetBody(self.name+"_left_Pier_Bearing", body_dof)
+        Sap.Define.joint_constraints.Set.Body(self.name+"_left_Pier_Bearing", body_dof)
         self.__add_body_constraints_for_points(self.name+"_left_Pier_Bearing", left_points)
         # right
-        Sap.Define.jointConstraints.SetBody(self.name+"_right_Pier_Bearing", body_dof)
+        Sap.Define.joint_constraints.Set.Body(self.name+"_right_Pier_Bearing", body_dof)
         self.__add_body_constraints_for_points(self.name+"_right_Pier_Bearing", right_points)
         
     def generate_cap_elements(self):
@@ -495,7 +495,7 @@ class Sap_Box_Girder:
         flatten = lambda l: list(chain.from_iterable(map(lambda x: flatten(x) if isinstance(x, list) else [x], l)))
         for side in ['left','right']:
             for pier in self.pierlist:
-                Sap.Define.jointConstraints.SetBody(f"{pier.name}_{side}_Girder", body_dof)
+                Sap.Define.Set.Body(f"{pier.name}_{side}_Girder", body_dof)
                 girder_point = self.girder_points[pier.name][side]
                 bearing_top_points = list(self.girder_bearing_top_points[pier.name][side].values())
                 self.__add_body_constraints_for_points(pier.name+"_"+side+"_girder", flatten([girder_point,bearing_top_points]))

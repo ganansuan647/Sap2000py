@@ -46,6 +46,8 @@ class CommonMaterialSet_China:
                 Sapobj.Define.material.AddMaterial("C40",Concrete,"China","GB","GB 50010 C40")
                 Sapobj.Define.material.AddMaterial("C45",Concrete,"China","GB","GB 50010 C45")
                 Sapobj.Define.material.AddMaterial("C50",Concrete,"China","GB","GB 50010 C50")
+                Sapobj.Define.material.AddMaterial("C55",Concrete,"China","GB","GB 50010 C55")
+                Sapobj.Define.material.AddMaterial("C60",Concrete,"China","GB","GB 50010 C60")
             elif standard == "JTG":
                 # JTG Concrete
                 Sapobj.Define.material.AddMaterial("C30",Concrete,"China","JTG","JTG D62-2004 C30")
@@ -53,6 +55,8 @@ class CommonMaterialSet_China:
                 Sapobj.Define.material.AddMaterial("C40",Concrete,"China","JTG","JTG D62-2004 C40")
                 Sapobj.Define.material.AddMaterial("C45",Concrete,"China","JTG","JTG D62-2004 C45")
                 Sapobj.Define.material.AddMaterial("C50",Concrete,"China","JTG","JTG D62-2004 C50")
+                Sapobj.Define.material.AddMaterial("C55",Concrete,"China","JTG","JTG D62-2004 C55")
+                Sapobj.Define.material.AddMaterial("C60",Concrete,"China","JTG","JTG D62-2004 C60")
             elif standard == "TB":
                 # TB Concrete
                 Sapobj.Define.material.AddMaterial("C30",Concrete,"China","TB","TB10002.3 C30")
@@ -60,7 +64,8 @@ class CommonMaterialSet_China:
                 Sapobj.Define.material.AddMaterial("C40",Concrete,"China","TB","TB10002.3 C40")
                 Sapobj.Define.material.AddMaterial("C45",Concrete,"China","TB","TB10002.3 C45")
                 Sapobj.Define.material.AddMaterial("C50",Concrete,"China","TB","TB10002.3 C50")
-
+                Sapobj.Define.material.AddMaterial("C55",Concrete,"China","TB","TB10002.3 C55")
+                Sapobj.Define.material.AddMaterial("C60",Concrete,"China","TB","TB10002.3 C60")
             # Rebar
             if standard == "GB":
                 # GB Rebar
@@ -97,11 +102,10 @@ class CommonMaterialSet_China:
             
             print(standard +' Material Set Added!')
             # get material names
-            MaterialList = Sapobj._Model.PropMaterial.GetNameList()
-            print(MaterialList[0],' Materials are Defined:\n',MaterialList[1])
-            Sapobj.MaterialList = MaterialList[1]
+            MaterialList = Sapobj.MaterialList
+            print(len(MaterialList),' Materials are Defined:\n',MaterialList)
             print('Edit '+__file__+' to modify the materials you need!')
-            print('Material names are stored in Sapobject.MaterialList')
+            print('Material names are stored in Saproject().MaterialList')
         # User defined
         if standard == "User":
             # define your materials here
@@ -110,8 +114,7 @@ class CommonMaterialSet_China:
             # print materials you defined
             print('User defined Material Set Added!')
             # get material names
-            MaterialList = Sapobj._Model.PropMaterial.GetNameList()
-            print(MaterialList[0],' Materials are Defined:\n',MaterialList[1])
-            Sapobj.MaterialList = MaterialList[1]
+            MaterialList = Sapobj.MaterialList
+            print(len(MaterialList),' Materials are Defined:\n',MaterialList)
             print('Edit '+__file__+' to modify the materials you need!')
-            print('Material names are stored in Sapobject.MaterialList')
+            print('Material names are stored in Saproject().MaterialList')

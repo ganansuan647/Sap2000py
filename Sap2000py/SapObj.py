@@ -1,4 +1,6 @@
 
+from typing import Literal
+from loguru import logger
 class SapPointObj_Get:
     def __init__(self, Sapobj):
         self.__Object = Sapobj._Object 
@@ -37,7 +39,7 @@ class SapPointObj_Get:
         return:
         [numberItem,totalNumConstrait,pointNameturple,constraintNameTurple]
         """
-        result=self.__Model.PointObj.GetConstraint(name)
+        ret=self.__Model.PointObj.GetConstraint(name)
         return ret
 
     def CoordCartesian(self,name:str,Csys="Global"):
@@ -421,7 +423,7 @@ class SapPointObj_Set:
         ret = self.__Model.PointObj.SetMass(name,m,itemType,isLocalCSys,Replace)
         return ret
 
-    def Restraint(self,name:str,value,itemType=0):
+    def Restraint(self,name:str,DOF=list[Literal['Ux','Uy','Uz','Rx','Ry','Rz']],itemType:Literal['Object','Group','SelectedObjects']='Object'):
         """
         ---This function assigns the restraint assignments for a point object. The restraint assignments are always
         set in the point local coordinate system.---
@@ -443,7 +445,13 @@ class SapPointObj_Set:
             If this item is SelectedObjects, the load assignment is made to all selected point objects and the Name
             item is ignored.
         """
-        ret = self.__Model.PointObj.SetRestraint(name,value,itemType)
+        DOFdict = {'Ux':0,'Uy':1,"Uz":2,"Rx":3,"Ry":4,"Rz":5}
+        dofvalue = [False for _ in range(6)]
+        for dof in DOF:
+            dofvalue[DOFdict[dof]] = True
+        itemtypeDict = {'Object':0,'Group':1,'SelectedObjects':2}
+        Typeid = itemtypeDict[itemType]
+        ret = self.__Model.PointObj.SetRestraint(name,dofvalue,Typeid)
         return ret
 
     def Spring(self,name:str,k,ItemType=0,IsLocalCSys=False,Replace=False):
@@ -761,27 +769,33 @@ class FrameObj_Set:
         ret = self.__Model.FrameObj.SetGroupAssign(name,groupName,remove,itemType)
         return ret
 
-    def InsertionPoint(self,name,CardinalPoint,Mirror2,StiffTransform,Offset1,Offset2,
-                                          CSys="Local",itemType=0):
+    def InsertionPoint(self,
+                       name:str,
+                       CardinalPoint:Literal['Centroid','Shear Center','Bottom Left','Bottom Center','Bottom Right','Middle Left','Middle Center','Middle Right','Top Left','Top Center','Top Right'],
+                       Mirror2:bool,
+                       StiffTransform:bool,
+                       Offset1:list[float],
+                       Offset2:list[float],
+                       CSys:str="Local",itemType:int=0):
         """
         ---This function assigns frame object insertion point data. The assignments include the cardinal
             point and end joint offsets---
         inputs:
         name(str)-The name of an existing frame object or group, depending on the value of the ItemType item.
-        CardinalPoint(int)-This is a numeric value from 1 to 11 that specifies the cardinal point for the frame
+        CardinalPoint(str)-This is a string that specifies the cardinal point for the frame
             object. The cardinal point specifies the relative position of the frame section on the line representing
             the frame object.
-            1 = bottom left
-            2 = bottom center
-            3 = bottom right
-            4 = middle left
-            5 = middle center
-            6 = middle right
-            7 = top left
-            8 = top center
-            9 = top right
-            10 = centroid
-            11 = shear center
+            bottom left = 1
+            bottom center = 2
+            bottom right = 3
+            middle left = 4
+            middle center = 5
+            middle right = 6
+            top left = 7
+            top center = 8
+            top right = 9
+            centroid = 10
+            shear center = 11
         Mirror2(bool)-If this item is True, the frame object section is assumed to be mirrored (flipped) about
             its local 2-axis.
         StiffTransform(bool)-If this item is True, the frame object stiffness is transformed for cardinal point
@@ -804,7 +818,12 @@ class FrameObj_Set:
             If this item is Group, all of the frame objects in the group specified by the Name item are deleted.
             If this item is SelectedObjects, all selected frame objects are deleted, and the Name item is ignored.
         """
-        ret = self.__Model.FrameObj.SetInsertionPoint(name,CardinalPoint,Mirror2,StiffTransform,Offset1,Offset2,CSys,itemType)
+        CardinalDict = {"Bottom Left":1,"Bottom Center":2,"Bottom Right":3,
+                        "Middle Left":4,"Middle Center":5,"Middle Right":6,
+                        "Top Left":7,"Top Center":8,"Top Right":9,
+                        "Centroid":10,"Shear Center":11}
+        CardinalPointid = CardinalDict[CardinalPoint]
+        ret = self.__Model.FrameObj.SetInsertionPoint(name,CardinalPointid,Mirror2,StiffTransform,Offset1,Offset2,CSys,itemType)
         return ret
 
     def LoadDeformation(self,name,loadPat,DOF,d,itemType=0):
@@ -1049,7 +1068,7 @@ class FrameObj_Set:
         ret = self.__Model.FrameObj.SetLocalAxes(name,Ang,itemType)
         return ret
 
-    def Mass(self,name,massOverL,Replace=False,itemType=0):
+    def Mass(self,name:str,massOverL:float,Replace:bool=False,itemType=0):
         """
         ---This function assigns mass per unit length to frame objects---
         inputs:
@@ -1237,7 +1256,7 @@ class FrameObj_Set:
         ret = self.__Model.FrameObj.SetReleases(name,ii,jj,startValue,endValue,itemType)
         return ret
 
-    def Section(self,name,propName,itemType=0,sVarTotalLength=0,sVarRelStartLoc=0):
+    def Section(self,name:str,propName:str,itemType:int=0,sVarTotalLength:float=0.0,sVarRelStartLoc:float=0.0):
         """
         ---This function assigns a frame section property to a frame object---
         inputs:
@@ -1255,7 +1274,15 @@ class FrameObj_Set:
             frame object. This item is ignored when the sVarTotalLengthitem is 0.This item is applicable only when the
             assigned frame section property is a nonprismatic section, and the sVarTotalLengthitem is greater than zero.
         """
-        ret = self.__Model.FrameObj.SetSection(name,propName,itemType,sVarTotalLength,sVarRelStartLoc)
+        # original function
+        # ret = self.__Model.FrameObj.SetSection(name,propName,itemType,sVarTotalLength,sVarRelStartLoc)
+        logger.opt(colors = True).warning(f"Warning!!! The SapModel.FrameObj.SetSection function is not right in the API version 11.00. Please Check manually!!!")
+        # I don't know why there's such a factor difference.
+        A_STRANGE_CONSTANT = 39.37007874015748
+        # 2 difference between the two versions
+        # 1. the order of the arguments: sVarRelStartLoc and sVarTotalLength
+        # 2. the value of sVarTotalLength lack a strange factor of 39.37007874015748
+        ret = self.__Model.FrameObj.SetSection(name,propName,itemType,sVarRelStartLoc,sVarTotalLength*A_STRANGE_CONSTANT)
         return ret
 
     def Spring(self,name,myType,s=0,simpleSpringType=1,LinkProp="",springLocalOneType=1,Dir=1,
@@ -1305,7 +1332,7 @@ class FrameObj_Set:
         """
         ---This function makes tension/compression force limit assignments to frame objects.
         The function returns zero if the assignments are successfully applied, otherwise it returns a nonzero value.
-        Note that the tension and compression limits are only used in nonlinear analyses
+        Note that the tension and compression limits are only used in NonLinear analyses
         ---
         inputs:
         name(str)-The name of an existing frame object or group, depending on the value of the ItemType item.
@@ -1762,7 +1789,7 @@ class FrameObj_Get:
         """
         ---This function retrieves the tension/compression force limit assignments to frame objects.The function
         returns zero if the assignments are successfully retrieved, otherwise it returns a nonzero value.Note that
-        the tension and compression limits are used only in nonlinear analyses.
+        the tension and compression limits are used only in NonLinear analyses.
         ---
         inputs:
         name(str)-The name of an existing frame object.

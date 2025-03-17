@@ -40,7 +40,6 @@ Sap.setUnits("KN_m_C")
 # Add China Common Material Set·
 Sap.Scripts.AddCommonMaterialSet(standard = "JTG")
 
-
 # Build your Model Here
 # Add Joints by Script
 joint_coord = np.array([[0,0,0],[10,0,0],[20,0,0],[30,0,0]])
@@ -61,7 +60,6 @@ print(Eledict)
 Sap.Scripts.Group.Select('Edge')
 
 
-
 # Modal Analysis
 # Remove all cases for analysis
 Sap.Scripts.Analyze.RemoveCases("All")
@@ -71,7 +69,6 @@ Sap.Scripts.Analyze.AddCases(Casename = ['DEAD', 'MODAL','yourCase1', 'yourCase2
 Sap.Scripts.Analyze.DeleteResults("All")
 # Run analysis
 Sap.Scripts.Analyze.RunAll()
-
 
 
 # post process

@@ -27,7 +27,8 @@ class SapLoadPatterns:
         SelfWTMultiplier(float)-The self weight multiplier for the new load pattern.
         AddLoadCase(bool)-If this item is True, a linear static load case corresponding to the new load pattern is added.
         """
-        self.__Model.LoadPatterns.Add(name,myType,SelfWTMultiplier,AddLoadCase)
+        ret = self.__Model.LoadPatterns.Add(name,myType,SelfWTMultiplier,AddLoadCase)
+        return ret
 
 class load_StaticLinear:
     def __init__(self,Sapobj):
@@ -45,7 +46,8 @@ class load_StaticLinear:
         inputs:
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.StaticLinear.SetCase(name)
+        ret = self.__Model.LoadCases.StaticLinear.SetCase(name)
+        return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
@@ -54,10 +56,11 @@ class load_StaticLinear:
         name(str)-The name of an existing static linear load case.
         initialCase-This is blank, None or the name of an existing analysis case. This item specifies if the
             load case starts from zero initial conditions, that is, an unstressed state, or if it starts using
-            the stiffness that occurs at the end of a nonlinear static or nonlinear direct integration time
+            the stiffness that occurs at the end of a NonLinear static or NonLinear direct integration time
             history load case.
         """
-        self.__Model.LoadCases.StaticLinear.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.StaticLinear.SetInitialCase(name,initialCase)
+        return ret
 
     def SetLoads(self,name,numberLoads,loadType,loadName,scaleFactor):
         """
@@ -73,7 +76,8 @@ class load_StaticLinear:
         scaleFactor(float list)-This is a list that includes the scale factor of each load assigned to the load case.
             [L/s2] for Accel UX UY and UZ; otherwise unitless
         """
-        self.__Model.LoadCases.StaticLinear.SetLoads(name,numberLoads,loadType,loadName,scaleFactor)
+        ret = self.__Model.LoadCases.StaticLinear.SetLoads(name,numberLoads,loadType,loadName,scaleFactor)
+        return ret
 
 class load_StaticLinearMultistep:
     def __init__(self,Sapobj):
@@ -91,7 +95,8 @@ class load_StaticLinearMultistep:
         inputs:
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.StaticLinearMultistep.SetCase(name)
+        ret = self.__Model.LoadCases.StaticLinearMultistep.SetCase(name)
+        return ret
 
     def SetInitialCase(self,name,InitialCase=None):
         """
@@ -100,12 +105,13 @@ class load_StaticLinearMultistep:
         name(str)-The name of an existing static linear multistep analysis case.
         initialCase-This is blank, None, or the name of an existing analysis case. This item specifies if
             the load case starts from zero initial conditions, that is, an unstressed state, or if it
-            starts using the stiffness that occurs at the end of a nonlinear static or nonlinear direct
-            integration time history load case.If the specified initial case is a nonlinear static or
-            nonlinear direct integration time history load case, the stiffness at the end of that case
+            starts using the stiffness that occurs at the end of a NonLinear static or NonLinear direct
+            integration time history load case.If the specified initial case is a NonLinear static or
+            NonLinear direct integration time history load case, the stiffness at the end of that case
             is used. If the initial case is anything else, zero initial conditions are assumed.
         """
-        self.__Model.LoadCases.StaticLinearMultistep.SetInitialCase(name,InitialCase)
+        ret = self.__Model.LoadCases.StaticLinearMultistep.SetInitialCase(name,InitialCase)
+        return ret
 
     def SetLoads_1(self,name,numberLoads,LoadType,LoadName,scaleFactor,
                             stepRange,firstLoadStep,lastLoadStep,startCaseStep,extrapolateOption):
@@ -133,10 +139,11 @@ class load_StaticLinearMultistep:
             assigned to the load case. The allowed values are:0 = None,1 = Last Step,2 = Repeat Range
         """
 
-        self.__Model.LoadCases.StaticLinearMultistep.SetLoads_1(name,numberLoads,LoadType,LoadName,scaleFactor,
+        ret = self.__Model.LoadCases.StaticLinearMultistep.SetLoads_1(name,numberLoads,LoadType,LoadName,scaleFactor,
                 stepRange,firstLoadStep,lastLoadStep,startCaseStep,extrapolateOption)
+        return ret
 
-class load_StaticNonlinear:
+class load_StaticNonLinear:
     def __init__(self,Sapobj):
         """
         Passing in the parent class object directly is to avoid 
@@ -148,52 +155,56 @@ class load_StaticNonlinear:
 
     def SetCase(self,name):
         """
-        ---This function initializes a static nonlinear analysis case---
+        ---This function initializes a static NonLinear analysis case---
         inputs:
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.StaticNonlinear.SetCase(name)
+        ret = self.__Model.LoadCases.StaticNonLinear.SetCase(name)
+        return ret
 
-    def SetGeometricNonlinearity(self,name,NLGeomType=0):
+    def SetGeometricNonLinearity(self,name,NLGeomType=0):
         """
-        ---This function sets the geometric nonlinearity option for the specified load case.---
+        ---This function sets the geometric NonLinearity option for the specified load case.---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
-        NLGeomType(int)-This is 0, 1 or 2, indicating the geometric nonlinearity option selected for the load case.
+        name(str)-The name of an existing static NonLinear load case.
+        NLGeomType(int)-This is 0, 1 or 2, indicating the geometric NonLinearity option selected for the load case.
             0 = None,1 = P-delta,2 = P-delta plus large displacements
         """
-        self.__Model.LoadCases.StaticNonlinear.SetGeometricNonlinearity(name,NLGeomType)
+        ret = self.__Model.LoadCases.StaticNonLinear.SetGeometricNonLinearity(name,NLGeomType)
+        return ret
 
     def SetHingeUnloading(self,name,UnloadType):
         """
         ---This function sets the hinge unloading option for the specified load case.---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         UNLoadType(int)-This is 1, 2 or 3, indicating the hinge unloading option selected for the load case.
             1 = Unload entire structure,2 = Apply local redistribution,3 = Restart using secant stiffness
         """
-        self.__Model.LoadCases.StaticNonlinear.SetHingeUnloading(name,UnloadType)
+        ret = self.__Model.LoadCases.StaticNonLinear.SetHingeUnloading(name,UnloadType)
+        return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
         ---This function sets the initial condition for the specified load case.---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         initialCase-This is blank, None, or the name of an existing analysis case. This item specifies if
             the load case starts from zero initial conditions, that is, an unstressed state, or if it starts
-            from the state at the end of a nonlinear static or nonlinear direct integration time history load case.
-            If the specified initial case is a nonlinear static or nonlinear direct integration time history
+            from the state at the end of a NonLinear static or NonLinear direct integration time history load case.
+            If the specified initial case is a NonLinear static or NonLinear direct integration time history
             load case, the state at the end of that case is used. If the initial case is anything else, zero initial
             conditions are assumed.
         """
-        self.__Model.LoadCases.StaticNonlinearMultistep.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.StaticNonLinearMultistep.SetInitialCase(name,initialCase)
+        return ret
 
     def SetLoadApplication(self,name,LoadControl,DispType,Displ,Monitor,DOF,
                                                             PointName,GDispl):
         """
         ---This function sets the load application control parameters for the specified load case---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         LoadControl(int)-This is either 1 or 2, indicating the load application control method.1 = Full load,
             2 = Displacement control
         DispType(int)-This is either 1 or 2 indicating the control displacement type.1 = Conjugate displacement,
@@ -210,14 +221,15 @@ class load_StaticNonlinear:
         GDispl(str)-The name of the generalized displacement for which the displacement is monitored. This item
             applies only when Monitor = 2.
         """
-        self.__Model.LoadCases.StaticNonlinear.SetLoadApplication(name,LoadControl,DispType,Displ,Monitor,
+        ret = self.__Model.LoadCases.StaticNonLinear.SetLoadApplication(name,LoadControl,DispType,Displ,Monitor,
                         DOF,PointName,GDispl)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,SF):
         """
         ---This function sets the load data for the specified analysis case---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         NumberLoads(int)-The number of loads assigned to the specified analysis case.
         LoadType(str list)-This is a list that includes either Load or Accel, indicating the type of
             each load assigned to the load case.
@@ -228,36 +240,39 @@ class load_StaticNonlinear:
         SF(float list)-This is a list that includes the scale factor of each load assigned to the load case.
             [L/s2] for Accel UX UY and UZ; otherwise unitless
         """
-        self.__Model.LoadCases.StaticNonlinear.SetLoads(name,NumberLoads,LoadType,LoadName,SF)
+        ret = self.__Model.LoadCases.StaticNonLinear.SetLoads(name,NumberLoads,LoadType,LoadName,SF)
+        return ret
 
     def SetMassSource(self,name,Source=""):
         """
         ---This function sets the mass source to be used for the specified load case.---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         Source(str)-This is the name of an existing mass source or a blank string. Blank indicates to use the
         mass source from the previous load case or the default mass source if the load case starts from zero
         initial conditions.
         """
-        self.__Model.LoadCases.StaticNonlinear.SetMassSource(name,Source)
+        ret = self.__Model.LoadCases.StaticNonLinear.SetMassSource(name,Source)
+        return ret
 
     def SetModalCase(self,name,ModalCase):
         """
         ---This function sets the modal case for the specified analysis case---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         ModalCase(str)-This is the name of an existing modal load case. It specifies the modal load case
             on which any mode-type load assignments to the specified load case are based.
         """
-        self.__Model.LoadCases.StaticNonlinear.SetModalCase(name,ModalCase)
+        ret = self.__Model.LoadCases.StaticNonLinear.SetModalCase(name,ModalCase)
+        return ret
 
     def SetResultsSaved(self,name,SaveMultipleSteps,MinSavedStates=10,
                                                             MaxSavedStates=100,PositiveOnly=True):
         """
         ---This function sets the results saved parameters for the specified load case---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
-        SaveMultipleSteps(bool)-This item is True if multiple states are saved for the nonlinear analysis.
+        name(str)-The name of an existing static NonLinear load case.
+        SaveMultipleSteps(bool)-This item is True if multiple states are saved for the NonLinear analysis.
             It is False only if the final state is saved.
         MinSavedStates(int)-This item only applies when SaveMultipleSteps = True. It is the minimum number
             of saved steps.
@@ -266,15 +281,16 @@ class load_StaticNonlinear:
         PositiveOnly(bool)-If this item is True, only positive displacement increments are saved. If it is False,
             all displacement increments are saved.
         """
-        self.__Model.LoadCases.StaticNonlinear.SetResultsSaved(name,SaveMultipleSteps,MinSavedStates,
+        ret = self.__Model.LoadCases.StaticNonLinear.SetResultsSaved(name,SaveMultipleSteps,MinSavedStates,
                                                                 MaxSavedStates,PositiveOnly)
+        return ret
 
     def SetSolControlParameters(self,name,MaxTotalSteps,MaxFailedSubSteps,
         MaxIterCS,MaxIterNR,TolConvD,UseEventStepping,TolEventD,MaxLineSearchPerIter,TolLineSearch,LineSearchStepFact):
         """
         ---This function sets the solution control parameters for the specified load case---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         MaxTotalSteps(int)-The maximum total steps per stage.
         MaxFailedSubSteps(int)-The maximum null (zero) steps per stage.
         MaxIterCS(int)-The maximum constant-stiffness iterations per step.
@@ -286,21 +302,23 @@ class load_StaticNonlinear:
         TolLineSearch(float)-The relative line-search acceptance tolerance.
         LineSearchStepFact(float)-The line-search step factor.
         """
-        self.__Model.LoadCases.StaticNonlinear.SetSolControlParameters(name,MaxTotalSteps,MaxFailedSubSteps,
+        ret = self.__Model.LoadCases.StaticNonLinear.SetSolControlParameters(name,MaxTotalSteps,MaxFailedSubSteps,
         MaxIterCS,MaxIterNR,TolConvD,UseEventStepping,TolEventD,MaxLineSearchPerIter,TolLineSearch,LineSearchStepFact)
+        return ret
 
     def SetTargetForceParameters(self,name,TolConvF,MaxIter,AccelFact,NoStop):
         """
         ---This function sets the target force iteration parameters for the specified load case---
         inputs:
-        name(str)-The name of an existing static nonlinear load case.
+        name(str)-The name of an existing static NonLinear load case.
         TolConvF(float)-The relative convergence tolerance for target force iteration.
         MaxIter(int)-The maximum iterations per stage for target force iteration.
         AccelFact(float)-The acceleration factor.
         NoStop(bool)-If this item is True, the analysis is continued when there is no convergence in the target
             force iteration.
         """
-        self.__Model.LoadCases.StaticNonlinear.SetTargetForceParameters(name,TolConvF,MaxIter,AccelFact,NoStop)
+        ret = self.__Model.LoadCases.StaticNonLinear.SetTargetForceParameters(name,TolConvF,MaxIter,AccelFact,NoStop)
+        return ret
 
 class load_Buckling:
     def __init__(self,Sapobj):
@@ -311,13 +329,15 @@ class load_Buckling:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
+        
     def SetCase(self,name):
         """
         ---This function initializes a buckling load case.---
         inputs:
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.Buckling.SetCase(name)
+        ret = self.__Model.LoadCases.Buckling.SetCase(name)
+        return ret
 
     def SetInitialCase(self,name,InitialCase=None):
         """
@@ -326,12 +346,13 @@ class load_Buckling:
         name(str)-The name of an existing buckling load case.
         InitialCase-This is blank, None or the name of an existing analysis case. This item specifies if the
             load case starts from zero initial conditions, that is, an unstressed state, or if it starts using
-            the stiffness that occurs at the end of a nonlinear static or nonlinear direct integration time
-            history load case.If the specified initial case is a nonlinear static or nonlinear direct integration
+            the stiffness that occurs at the end of a NonLinear static or NonLinear direct integration time
+            history load case.If the specified initial case is a NonLinear static or NonLinear direct integration
             time history load case, the stiffness at the end of that case is used. If the initial case is anything
             else, zero initial conditions are assumed.
         """
-        self.__Model.LoadCases.Buckling.SetInitialCase(name,InitialCase)
+        ret = self.__Model.LoadCases.Buckling.SetInitialCase(name,InitialCase)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,SF):
         """
@@ -347,7 +368,8 @@ class load_Buckling:
         SF(float list)-This is a list that includes the scale factor of each load assigned to the load case.
             [L/s2] for Accel UX UY and UZ; otherwise unitless
         """
-        self.__Model.LoadCases.Buckling.SetLoads(name,NumberLoads,LoadType,LoadName,SF)
+        ret = self.__Model.LoadCases.Buckling.SetLoads(name,NumberLoads,LoadType,LoadName,SF)
+        return ret
 
     def SetParameters(self,name,NumBucklingModes=6,EigenTol=1.0e-9):
         """
@@ -357,7 +379,8 @@ class load_Buckling:
         NumBucklingModes(int)-The number of buckling modes requested.
         EigenTol(float)-The relative convergence tolerance for eigenvalues.
         """
-        self.__Model.LoadCases.Buckling.SetParameters(name,NumBucklingModes,EigenTol)
+        ret = self.__Model.LoadCases.Buckling.SetParameters(name,NumBucklingModes,EigenTol)
+        return ret
 
 class load_DirHistLinear:
     def __init__(self,Sapobj):
@@ -368,13 +391,15 @@ class load_DirHistLinear:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
+        
     def SetCase(self,name):
         """
         ---This function initializes a linear direct integration time history load case---
         inputs:
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.DirHistLinear.SetCase(name)
+        ret = self.__Model.LoadCases.DirHistLinear.SetCase(name)
+        return ret
 
     def SetDampProportional(self,name,DampType,Dampa,Dampb,Dampf1=0,
                                                             Dampf2=0,Dampd1=0,Dampd2=0):
@@ -394,7 +419,8 @@ class load_DirHistLinear:
         Dampd1(float)-This is the damping at point 1 (0 <= Dampd1 < 1).This item applies only when DampType = 2 or 3.
         Dampd2(float)-This is the damping at point 2 (0 <= Dampd2 < 1).This item applies only when DampType = 2 or 3.
         """
-        self.__Model.LoadCases.DirHistLinear.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        ret = self.__Model.LoadCases.DirHistLinear.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
@@ -403,12 +429,13 @@ class load_DirHistLinear:
         name(str)-The name of an existing linear direct integration time history load case.
         initialCase-This is blank, None, or the name of an existing analysis case. This item specifies if the load
             case starts from zero initial conditions, that is, an unstressed state, or if it starts using the
-            stiffness that occurs at the end of a nonlinear static or nonlinear direct integration time history
-            load case.If the specified initial case is a nonlinear static or nonlinear direct integration time
+            stiffness that occurs at the end of a NonLinear static or NonLinear direct integration time history
+            load case.If the specified initial case is a NonLinear static or NonLinear direct integration time
             history load case. the stiffness at the end of that case is used. If the initial case is anything else,
             zero initial conditions are assumed.
         """
-        self.__Model.LoadCases.DirHistLinear.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.DirHistLinear.SetInitialCase(name,initialCase)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,Func,SF=None,TF=None,AT=None,
                                                 CSys=None,Ang=None):
@@ -444,7 +471,8 @@ class load_DirHistLinear:
             CSys=["Global" for each in range(NumberLoads)]
         if Ang == None:
             Ang=[0.0 for each in range(NumberLoads)]
-        self.__Model.LoadCases.DirHistLinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        ret = self.__Model.LoadCases.DirHistLinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        return ret
 
     def SetTimeIntegration(self,name,IntegrationType=4):
         """
@@ -465,7 +493,8 @@ class load_DirHistLinear:
             Alpha=0.0
         if IntegrationType==5:
             Gamma,Beta,Alpha,m=0.5,0.25,0.0,0.0
-        self.__Model.LoadCases.DirHistLinear.SetTimeIntegration(name,IntegrationType,Alpha,Beta,Gamma,Theta,m)
+        ret = self.__Model.LoadCases.DirHistLinear.SetTimeIntegration(name,IntegrationType,Alpha,Beta,Gamma,Theta,m)
+        return ret
 
     def SetTimeStep(self,name,nstep,DT):
         """
@@ -475,9 +504,10 @@ class load_DirHistLinear:
         nstep(int)-The number of output time steps.
         DT(float)-The output time step size.
         """
-        self.__Model.LoadCases.DirHistLinear.SetTimeStep(name,nstep,DT)
+        ret = self.__Model.LoadCases.DirHistLinear.SetTimeStep(name,nstep,DT)
+        return ret
 
-class load_DirHistNonlinear:
+class load_DirHistNonLinear:
     def __init__(self,Sapobj):
         """
         Passing in the parent class object directly is to avoid 
@@ -486,13 +516,14 @@ class load_DirHistNonlinear:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
+        
     def SetCase(self,name):
         """
-        ---This function initializes a nonlinear direct integration time history load case---
+        ---This function initializes a NonLinear direct integration time history load case---
         inputs:
         name(str)-The name of an existing or new load case
         """
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetCase(name)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetCase(name)
         return ret
 
     def SetDampProportional(self,name,DampType=Literal['MassStiffness','Period','Frequency'],Dampa=0,Dampb=0,Dampf1=0,
@@ -514,32 +545,32 @@ class load_DirHistNonlinear:
             Dampd2(float)-This is the damping at point 2 (0 <= Dampd2 < 1).This item applies only when DampType = 2 or 3.
             """
         typeid = {'MassStiffness':1,'Period':2,'Frequency':3}[DampType]
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetDampProportional(name,typeid,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetDampProportional(name,typeid,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
         return ret
 
-    def SetGeometricNonlinearity(self,name,NLGeomType=0):
+    def SetGeometricNonLinearity(self,name,NLGeomType=0):
         """
-        ---This function sets the geometric nonlinearity option for the specified load case---
+        ---This function sets the geometric NonLinearity option for the specified load case---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
-        NLGeomType(int)-This is 0, 1 or 2, indicating the geometric nonlinearity option selected for the load case.
+        name(str)-The name of an existing NonLinear direct integration time history load case.
+        NLGeomType(int)-This is 0, 1 or 2, indicating the geometric NonLinearity option selected for the load case.
             0 = None,1 = P-delta,2 = P-delta plus large displacements
         """
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetGeometricNonlinearity(name,NLGeomType)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetGeometricNonLinearity(name,NLGeomType)
         return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
         ---This function sets the initial condition for the specified load case.---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
+        name(str)-The name of an existing NonLinear direct integration time history load case.
         initialCase-This is blank, None or the name of an existing analysis case. This item specifies if the load
             case starts from zero initial conditions, that is, an unstressed state, or if it starts from the state
-            at the end of a nonlinear static or nonlinear direct integration time history load case.If the specified
-            initial case is a nonlinear static or nonlinear direct integration time history load case, the state at
+            at the end of a NonLinear static or NonLinear direct integration time history load case.If the specified
+            initial case is a NonLinear static or NonLinear direct integration time history load case, the state at
             the end of that case is used. If the initial case is anything else, zero initial conditions are assumed.
         """
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetInitialCase(name,initialCase)
         return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,Func,SF=None,
@@ -547,7 +578,7 @@ class load_DirHistNonlinear:
         """
         ---This function sets the load data for the specified analysis case---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
+        name(str)-The name of an existing NonLinear direct integration time history load case.
         NumberLoads(int)-The number of loads assigned to the specified analysis case.
         LoadType(str list)-This is a str list that includes Load or Accel, indicating the type of each load
             assigned to the load case.
@@ -576,19 +607,19 @@ class load_DirHistNonlinear:
             CSys=["Global" for each in range(NumberLoads)]
         if Ang == None:
             Ang=[0.0 for each in range(NumberLoads)]
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
         return ret
 
     def SetMassSource(self,name,source=""):
         """
         ---This function sets the mass source to be used for the specified load case.---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
+        name(str)-The name of an existing NonLinear direct integration time history load case.
         source(str)-This is the name of an existing mass source or a blank string. Blank indicates to use the mass
             source from the previous load case or the default mass source if the load case starts from zero initial
             conditions.
         """
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetMassSource(name,source)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetMassSource(name,source)
         return ret
 
     def SetSolControlParameters(self,name,DTMax=0,DTMin=0,MaxIterCS=10,MaxIterNR=40,
@@ -597,7 +628,7 @@ class load_DirHistNonlinear:
         """
         ---This function sets the solution control parameters for the specified load case---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
+        name(str)-The name of an existing NonLinear direct integration time history load case.
         DTMax(float)-The maximum substep size
         DTMin(float)-The minimum substep size.
         MaxIterCS(int)-The maximum constant-stiffness iterations per step.
@@ -609,7 +640,7 @@ class load_DirHistNonlinear:
         TolLineSearch(float)-The relative line-search acceptance tolerance.
         LineSearchStepFact(float)-The line-search step factor.
         """
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetSolControlParameters(name,DTMax,DTMin,MaxIterCS,MaxIterNR,
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetSolControlParameters(name,DTMax,DTMin,MaxIterCS,MaxIterNR,
                 TolConvD,UseEventStepping,TolEventD,MaxLineSearchPerIter,TolLineSearch,LineSearchStepFact)
         return ret
 
@@ -637,7 +668,7 @@ class load_DirHistNonlinear:
         if IntegrationType == 'Chung and Hulbert':
             Gamma, Beta, Alpha, m = 0.5, 0.25, 0.0, 0.0
             typeid = 5
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetTimeIntegration(name,typeid,Alpha,Beta,Gamma,Theta,m)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetTimeIntegration(name,typeid,Alpha,Beta,Gamma,Theta,m)
         return ret
 
     def SetTimeStep(self,name,nstep,DT):
@@ -648,7 +679,7 @@ class load_DirHistNonlinear:
         nstep(int)-The number of output time steps.
         DT(float)-The output time step size.
         """
-        ret = self.__Model.LoadCases.DirHistNonlinear.SetTimeStep(name,nstep,DT)
+        ret = self.__Model.LoadCases.DirHistNonLinear.SetTimeStep(name,nstep,DT)
         return ret
 
 class load_ModalEigen:
@@ -677,8 +708,8 @@ class load_ModalEigen:
         name(str)-The name of an existing modal eigen load case.
         initialCase-This is blank, None, or the name of an existing analysis case. This item specifies if the
             load case starts from zero initial conditions, that is, an unstressed state, or if it starts using
-            the stiffness that occurs at the end of a nonlinear static or nonlinear direct integration time
-            history load case.If the specified initial case is a nonlinear static or nonlinear direct integration
+            the stiffness that occurs at the end of a NonLinear static or NonLinear direct integration time
+            history load case.If the specified initial case is a NonLinear static or NonLinear direct integration
             time history load case, the stiffness at the end of that case is used. If the initial case is anything
             else, zero initial conditions are assumed.
         """
@@ -750,7 +781,8 @@ class load_ModalRitz:
         inputs:
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.ModalRitz.SetCase(name)
+        ret = self.__Model.LoadCases.ModalRitz.SetCase(name)
+        return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
@@ -759,12 +791,13 @@ class load_ModalRitz:
         name(str)-The name of an existing modal eigen load case.
         initialCase-This is blank, None, or the name of an existing analysis case. This item specifies if the
             load case starts from zero initial conditions, that is, an unstressed state, or if it starts using
-            the stiffness that occurs at the end of a nonlinear static or nonlinear direct integration time
-            history load case.If the specified initial case is a nonlinear static or nonlinear direct integration
+            the stiffness that occurs at the end of a NonLinear static or NonLinear direct integration time
+            history load case.If the specified initial case is a NonLinear static or NonLinear direct integration
             time history load case, the stiffness at the end of that case is used. If the initial case is anything
             else, zero initial conditions are assumed.
         """
-        self.__Model.LoadCases.ModalRitz.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.ModalRitz.SetInitialCase(name,initialCase)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,RitzMaxCyc=None,TargetPar=None):
         """
@@ -786,7 +819,8 @@ class load_ModalRitz:
             RitzMaxCyc=[0 for each in range(NumberLoads)]
         if TargetPar==None:
             TargetPar=[99 for each in range(NumberLoads)]
-        self.__Model.LoadCases.ModalRitz.SetLoads(name,NumberLoads,LoadType,LoadName,RitzMaxCyc,TargetPar)
+        ret = self.__Model.LoadCases.ModalRitz.SetLoads(name,NumberLoads,LoadType,LoadName,RitzMaxCyc,TargetPar)
+        return ret
 
     def SetNumberModes(self,name,MaxModes=12,MinModes=1):
         """
@@ -796,7 +830,8 @@ class load_ModalRitz:
         MaxModes(int)-The maximum number of modes requested.
         MinModes(int)-The minimum number of modes requested.
         """
-        self.__Model.LoadCases.ModalRitz.SetNumberModes(name,MaxModes,MinModes)
+        ret = self.__Model.LoadCases.ModalRitz.SetNumberModes(name,MaxModes,MinModes)
+        return ret
 
 class load_ModalHistLinear:
     def __init__(self,Sapobj):
@@ -807,12 +842,14 @@ class load_ModalHistLinear:
         """
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
+        
     def SetCase(self,name):
         """
         ---This function initializes a linear modal history analysis case---
         name(str)-The name of an existing or new load case.
         """
-        self.__Model.LoadCases.ModHistLinear.SetCase(name)
+        ret = self.__Model.LoadCases.ModHistLinear.SetCase(name)
+        return ret
 
     def SetDampConstant(self,name,Damp):
         """
@@ -821,7 +858,8 @@ class load_ModalHistLinear:
         name(str)-The name of an existing linear modal history analysis case.
         Damp(float)-The constant damping for all modes (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ModHistLinear.SetDampConstant(name,Damp)
+        ret = self.__Model.LoadCases.ModHistLinear.SetDampConstant(name,Damp)
+        return ret
 
     def SetDampInterpolated(self,name,DampType,NumberItems,Time,Damp):
         """
@@ -836,7 +874,8 @@ class load_ModalHistLinear:
         Damp(float list)-This is a float list that includes the damping for the specified period of frequency
             (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ModHistLinear.SetDampInterpolated(name,DampType,NumberItems,Time,Damp)
+        ret = self.__Model.LoadCases.ModHistLinear.SetDampInterpolated(name,DampType,NumberItems,Time,Damp)
+        return ret
 
     def SetDampProportional(self,name,DampType,Dampa,Dampb,Dampf1=0,Dampf2=0,
                                                             Dampd1=0,Dampd2=0):
@@ -856,14 +895,15 @@ class load_ModalHistLinear:
             Dampd1(float)-This is the damping at point 1 (0 <= Dampd1 < 1).This item applies only when DampType = 2 or 3.
             Dampd2(float)-This is the damping at point 2 (0 <= Dampd2 < 1).This item applies only when DampType = 2 or 3.
             """
-        self.__Model.LoadCases.ModHistLinear.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        ret = self.__Model.LoadCases.ModHistLinear.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,Func,SF=None,
                                                     TF=None,AT=None,CSys=None,Ang=None):
         """
         ---This function sets the load data for the specified analysis case---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
+        name(str)-The name of an existing NonLinear direct integration time history load case.
         NumberLoads(int)-The number of loads assigned to the specified analysis case.
         LoadType(str list)-This is a str list that includes Load or Accel, indicating the type of each load
             assigned to the load case.
@@ -892,7 +932,8 @@ class load_ModalHistLinear:
             CSys=["GLOBAL" for each in range(NumberLoads)]
         if Ang == None:
             Ang=[0.0 for each in range(NumberLoads)]
-        self.__Model.LoadCases.ModHistLinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        ret = self.__Model.LoadCases.ModHistLinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        return ret
 
     def SetModalCase(self,name,modalCase):
         """
@@ -901,7 +942,8 @@ class load_ModalHistLinear:
         name(str)-The name of an existing linear modal history analysis case.
         modalCase(str)-This is the name of an existing modal load case.
         """
-        self.__Model.LoadCases.ModHistLinear.SetModalCase(name,modalCase)
+        ret = self.__Model.LoadCases.ModHistLinear.SetModalCase(name,modalCase)
+        return ret
 
     def SetTimeStep(self,name,nstep,DT):
         """
@@ -911,9 +953,10 @@ class load_ModalHistLinear:
         nstep(int)-The number of output time steps.
         DT(float)-The output time step size.
         """
-        self.__Model.LoadCases.ModHistLinear.SetTimeStep(name,nstep,DT)
+        ret = self.__Model.LoadCases.ModHistLinear.SetTimeStep(name,nstep,DT)
+        return ret
 
-class load_ModalHistNonlinear:
+class load_ModalHistNonLinear:
     def __init__(self,Sapobj):
         """
         Passing in the parent class object directly is to avoid 
@@ -925,20 +968,22 @@ class load_ModalHistNonlinear:
 
     def SetCase(self,name):
         """
-        ---This function initializes a nonlinear modal history analysis case.---
+        ---This function initializes a NonLinear modal history analysis case.---
         inputs:
         name(str)-The name of an existing or new load case
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetCase(name)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetCase(name)
+        return ret
 
     def SetDampConstant(self,name,damp):
         """
         ---This function sets constant modal damping for the specified load case---
         inputs:
-        name(str)-The name of an existing nonlinear modal history analysis case.
+        name(str)-The name of an existing NonLinear modal history analysis case.
         damp(float)-The constant damping for all modes (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetDampConstant(name,damp)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetDampConstant(name,damp)
+        return ret
 
     def SetDampInterpolated(self,name,DampType,NumberItems,Time,Damp):
         """
@@ -953,18 +998,20 @@ class load_ModalHistNonlinear:
         Damp(float list)-This is a float list that includes the damping for the specified period of frequency
             (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetDampInterpolated(name,DampType,NumberItems,Time,Damp)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetDampInterpolated(name,DampType,NumberItems,Time,Damp)
+        return ret
 
     def SetDampOverrides(self,name,NumberItems,Mode,Damp):
         """
         ---This function sets the modal damping overrides for the specified load case---
         inputs:
-        name(str)-The name of an existing nonlinear modal history analysis case.
+        name(str)-The name of an existing NonLinear modal history analysis case.
         NumberItems(int)-The number of Mode and Damp pairs.
         Mode(int list)-This is a int list that includes a mode number.
         Damp(float list)-This is a float list that includes the damping for the specified mode (0 <= Damp < 1).
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetDampOverrides(name,NumberItems,Mode,Damp)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetDampOverrides(name,NumberItems,Mode,Damp)
+        return ret
 
     def SetDampProportional(self,name,DampType,Dampa,Dampb,Dampf1=0,
                                                             Dampf2=0,Dampd1=0,Dampd2=0):
@@ -984,26 +1031,28 @@ class load_ModalHistNonlinear:
             Dampd1(float)-This is the damping at point 1 (0 <= Dampd1 < 1).This item applies only when DampType = 2 or 3.
             Dampd2(float)-This is the damping at point 2 (0 <= Dampd2 < 1).This item applies only when DampType = 2 or 3.
             """
-        self.__Model.LoadCases.ModHistNonlinear.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetDampProportional(name,DampType,Dampa,Dampb,Dampf1,Dampf2,Dampd1,Dampd2)
+        return ret
 
     def SetInitialCase(self,name,initialCase=None):
         """
         ---This function sets the initial condition for the specified load case---
         inputs:
-        name(str)-The name of an existing nonlinear modal history analysis case.
+        name(str)-The name of an existing NonLinear modal history analysis case.
         initialCase-This is blank, None or the name of an existing analysis case. This item specifies if the
             load case starts from zero initial conditions, that is, an unstressed state, or if it continues
-            from the end of another nonlinear modal time history load case.If the specified initial case is
-            not a nonlinear modal time history load case, zero initial conditions are assumed
+            from the end of another NonLinear modal time history load case.If the specified initial case is
+            not a NonLinear modal time history load case, zero initial conditions are assumed
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetInitialCase(name,initialCase)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetInitialCase(name,initialCase)
+        return ret
 
     def SetLoads(self,name,NumberLoads,LoadType,LoadName,Func,SF=None,
                                                     TF=None,AT=None,CSys=None,Ang=None):
         """
         ---This function sets the load data for the specified analysis case---
         inputs:
-        name(str)-The name of an existing nonlinear direct integration time history load case.
+        name(str)-The name of an existing NonLinear direct integration time history load case.
         NumberLoads(int)-The number of loads assigned to the specified analysis case.
         LoadType(str list)-This is a str list that includes Load or Accel, indicating the type of each load
             assigned to the load case.
@@ -1032,23 +1081,25 @@ class load_ModalHistNonlinear:
             CSys=["GLOBAL" for each in range(NumberLoads)]
         if Ang == None:
             Ang=[0.0 for each in range(NumberLoads)]
-        self.__Model.LoadCases.ModHistNonlinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetLoads(name,NumberLoads,LoadType,LoadName,Func,SF,TF,AT,CSys,Ang)
+        return ret
 
     def SetModalCase(self,name,modalCase):
         """
         ---This function sets the modal case for the specified analysis case---
         inputs:
-        name(str)-The name of an existing nonlinear modal history analysis case.
+        name(str)-The name of an existing NonLinear modal history analysis case.
         modalCase(str)-This is the name of an existing modal load case
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetModalCase(name,modalCase)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetModalCase(name,modalCase)
+        return ret
 
     def SetSolControlParameters(self,name,tstat=0,dtmax=0,dtmin=0,ftol=1e-5,
                                                                     etol=1e-5,itmax=100,itmin=2,Cf=1):
         """
         ---This function sets the solution control parameters for the specified load case---
         inputs:
-        name(str)-The name of an existing nonlinear modal time history analysis case.
+        name(str)-The name of an existing NonLinear modal time history analysis case.
         tstat(float)-The static period.
         dtmax(float)-The maximum substep size.
         dtmin(float)-The minimum substep size.
@@ -1058,17 +1109,19 @@ class load_ModalHistNonlinear:
         itmin(int)-The minimum iteration limit.
         Cf(float)-The convergence factor.
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetSolControlParameters(name,tstat,dtmax,dtmin,ftol,etol,itmax,itmin,Cf)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetSolControlParameters(name,tstat,dtmax,dtmin,ftol,etol,itmax,itmin,Cf)
+        return ret
 
     def SetTimeStep(self,name:str,nstep:int,dt:float):
         """
         ---This function sets the time step data for the specified load case---
         inputs:
-        name(str)-The name of an existing nonlinear modal history analysis case.
+        name(str)-The name of an existing NonLinear modal history analysis case.
         nstep(int)-The number of output time steps.
         DT(float)-The output time step size.
         """
-        self.__Model.LoadCases.ModHistNonlinear.SetTimeStep(name,nstep,dt)
+        ret = self.__Model.LoadCases.ModHistNonLinear.SetTimeStep(name,nstep,dt)
+        return ret
 
 class load_ResponseSpectrum:
     def __init__(self,Sapobj):
@@ -1162,7 +1215,7 @@ class load_ResponseSpectrum:
         ret = self.__Model.LoadCases.ResponseSpectrum.SetDiaphragmEccentricityOverride(name,Diaph,Eccen,Delete)
         return ret
 
-    def SetDirComb(self,name,MyType = Literal['SRSS', 'ABS', 'CQC3'],SF=0):
+    def SetDirComb(self,name,CombMethod = Literal['SRSS', 'ABS', 'CQC3'],SF=0):
         """
         ---This function sets the directional combination option for the specified load case---
         inputs:
@@ -1170,7 +1223,7 @@ class load_ResponseSpectrum:
         MyType(int)-This is 1, 2, or 3,  indicating the directional combination option.1 = SRSS,2 = ABS,3 = CQC3
         SF(float)-This item applies only when MyType = 2. It is the ABS scale factor.
         """
-        mytype = {'SRSS':1,'ABS':2,'CQC3':3}[MyType]
+        mytype = {'SRSS':1,'ABS':2,'CQC3':3}[CombMethod]
         ret = self.__Model.LoadCases.ResponseSpectrum.SetDirComb(name,mytype,SF)
         return ret
 
@@ -1251,12 +1304,12 @@ class SapLoadCases:
         self.__Model = Sapobj._Model
         self.StaticLinear = load_StaticLinear(Sapobj)
         self.StaticLinearMultistep = load_StaticLinearMultistep(Sapobj)
-        self.StaticNonlinear = load_StaticNonlinear(Sapobj)
+        self.StaticNonLinear = load_StaticNonLinear(Sapobj)
         self.Buckling = load_Buckling(Sapobj)
         self.DirHistLinear = load_DirHistLinear(Sapobj)
-        self.DirHistNonlinear = load_DirHistNonlinear(Sapobj)
+        self.DirHistNonLinear = load_DirHistNonLinear(Sapobj)
         self.ModalEigen = load_ModalEigen(Sapobj)
         self.ModalRitz = load_ModalRitz(Sapobj)
         self.ModalHistLinear = load_ModalHistLinear(Sapobj)
-        self.ModalHistNonlinear = load_ModalHistNonlinear(Sapobj)
+        self.ModalHistNonLinear = load_ModalHistNonLinear(Sapobj)
         self.ResponseSpectrum = load_ResponseSpectrum(Sapobj)

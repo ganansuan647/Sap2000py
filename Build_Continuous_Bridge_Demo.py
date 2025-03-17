@@ -1,17 +1,13 @@
-from Sap2000py.Saproject import Saproject
-from loguru import logger
 from pathlib import Path
-from dataclasses import dataclass
-from loguru import logger
-from shapely import Polygon
-from sectionproperties.pre import Geometry
-from sectionproperties.analysis import Section
-from typing import Literal
-from itertools import chain
+
 import numpy as np
-import math
+from loguru import logger
 from rich.console import Console
 from rich.table import Table
+
+from Sap2000py import SapBridge as Bridge
+from Sap2000py import SapEarthquake as Earthquake
+from Sap2000py import Saproject
 
 #full path to the model
 ModelPath = Path('.\Test\Span5SteelBoxPierBridge.sdb')
@@ -42,7 +38,6 @@ Sap.Scripts.AddCommonMaterialSet(standard = "JTG")
 # filepath of the spring data
 SixSpringFile = Path('.\Examples\ContinuousBridge6spring.txt')
 
-from Sap2000py.Bridge.SapBridge import SapBridge as Bridge
 # Build Piers and connect with base springs
 pier1 = Bridge.Pier.DoubleBox(
     name="#1",
@@ -292,22 +287,25 @@ girderleft = Bridge.Girder.Box(
     name = "SpanLeft",
     pierlist=[pier1,pier2,pier3,pier4,pier5,pier6],
     fixedpier = [pier3],
-    Plan = '方案一')
-girderleft.add_bearing_links(strategy = 'ideal')      
+    Plan = '方案一',
+    DefaultSpan=90.0)
+girderleft.add_ideal_bearing_links()      
 
 girdermain = Bridge.Girder.Box(
     name = "SpanMain",
     pierlist=[pier6,pier7,pier8,pier9,pier10,pier11],
     fixedpier = [pier8],
-    Plan = '方案一')
-girdermain.add_bearing_links(strategy = 'ideal')
+    Plan = '方案一',
+    DefaultSpan=90.0)
+girdermain.add_ideal_bearing_links()   
 
 girderright = Bridge.Girder.Box(
     name = "SpanRight",
     pierlist=[pier11,pier12,pier13,pier14,pier15,pier16],
     fixedpier = [pier13],
-    Plan = '方案一')
-girderright.add_bearing_links(strategy = 'ideal')
+    Plan = '方案一',
+    DefaultSpan=90.0)
+girderright.add_ideal_bearing_links()   
 
 # gravity load
 Sap.Define.loadcases.StaticLinear.SetLoads("DEAD",numberLoads=1,loadType=['Accel'],loadName=['UZ'],scaleFactor=[9.81])
@@ -357,8 +355,7 @@ Sap.Analyze.RunAnalysis()
 PartiMassRatios = Sap.Results.Modal.ParticipatingMassRatios()
 periods = PartiMassRatios[4]
 # print Modal results(20 modes)
-from rich.console import Console
-from rich.table import Table
+
 # setup table
 table = Table(title="Modal Information Comparison", show_header=True, header_style="bold magenta")
 table.add_column("Mode", justify="left", style="cyan", no_wrap=True)
@@ -401,90 +398,78 @@ logger.opt(colors=True).success(f"Rayleigh damping Control Period of Z direction
 # unlck the model to make more settings
 Sap.unlockModel()
 
-def get_spectrum_from_file(file_path:Path):
-    times = []
-    values = []
-    with open(file_path, 'r') as file:
-        # Skip the header line
-        next(file)
-        for line in file:
-            time, value = line.strip().split()
-            times.append(float(time))
-            values.append(float(value))
-    return times,values
-
-def get_time_history_from_file(file_path:Path,dt:float):
-    time = 0.0
-    times = []
-    values = []
-    with open(file_path, 'r') as file:
-        # Skip the header line
-        for line in file:
-            value = line.strip().split()[0]
-            times.append(float(time))
-            values.append(float(value))
-            time+=dt
-    return times,values
-
-spectrum_path = Path('.\Examples\ResponseSpectrum_E2_Damping_0.02.txt')
-times,values = get_spectrum_from_file(spectrum_path)
-
 # E2 Spectrum Function
-Sap.Define.function.ResponseSpectrum.Set_User('E2Spectrum',times,values,0.02)   
+E2_spectrum_fun = Earthquake.Spectrum.Func(name='E2Spectrum', damping=0.02)
+E2_spectrum_fun.get_from_file(Path('.\Examples\ResponseSpectrum_E2_Damping_0.02.txt'))
+E2_spectrum_fun.define()
+# # or use the following code to define the spectrum function manually
+# Sap.Define.function.ResponseSpectrum.Set_User('E2Spectrum',times,values,0.02)
+    
 # E2X Spectrum
-Sap.Define.loadcases.ResponseSpectrum.SetCase("E2X")
-Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2X',0.02)
-Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2X','SRSS')
-Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2X',NumberLoads=2,LoadName=['U1','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
+E2XCase = Earthquake.Spectrum.Case(name='E2X', damping=0.02, CombMethod='SRSS', Loads={'LoadName':['U1','U3'],'LoadFunc':['E2Spectrum','E2Spectrum'],'LoadSF':[1,0.65]})
+E2XCase.define()
+# # or use the following code to define the spectrum case manually
+# Sap.Define.loadcases.ResponseSpectrum.SetCase("E2X")
+# Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2X',0.02)
+# Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2X','SRSS')
+# Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2X',NumberLoads=2,LoadName=['U1','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
 
 # E2Y Spectrum
-Sap.Define.loadcases.ResponseSpectrum.SetCase("E2Y")
-Sap.Define.loadcases.ResponseSpectrum.SetDampConstant('E2Y',0.02)
-Sap.Define.loadcases.ResponseSpectrum.SetDirComb('E2Y','SRSS')
-Sap.Define.loadcases.ResponseSpectrum.SetLoads('E2Y',NumberLoads=2,LoadName=['U2','U3'],Func=['E2Spectrum','E2Spectrum'],SF=[1,0.65])
-TH_names = []
-time_history_folder_path = Path('.\Examples\waves')
-TH_files = time_history_folder_path.glob('*.txt')
-for file_path in TH_files:
-    times,values = get_time_history_from_file(file_path,dt=0.02)
-    time_history_name = 'E2'+file_path.stem.split('.')[0]
-    TH_names.append(time_history_name)
-    Sap.Define.function.TimeHistory.Set_User(time_history_name,times,values)
-    # E2X Modal History
-    Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2X'+time_history_name)
-    Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2X'+time_history_name,0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2X'+time_history_name,nstep=8192, dt=0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # # E2X Time History
-    # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2X'+time_history_name)
-    # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2X'+time_history_name,'Newmark')
-    # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2X'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
-    # E2Y Modal History
-    Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2Y'+time_history_name)
-    Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2Y'+time_history_name,0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2Y'+time_history_name,nstep=8192, dt=0.02)
-    Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2Y'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U2','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # # E2Y Time History
-    # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2Y'+time_history_name)
-    # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2Y'+time_history_name,'Newmark')
-    # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2Y'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U2','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
-    # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2Y'+time_history_name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_y_1, Dampf2=min(period_y_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
+E2YCase = Earthquake.Spectrum.Case(name='E2Y', damping=0.02, CombMethod='SRSS', Loads={'LoadName':['U2','U3'],'LoadFunc':['E2Spectrum','E2Spectrum'],'LoadSF':[1,0.65]})
+E2YCase.define()
+
+THfuncs = Earthquake.TimeHistory.Func.get_from_folder(Path('.\Examples\waves'))
+for fun in THfuncs:
+    fun.name = 'E2'+fun.name
+    fun.define()
+
+TH_mode = 'modal'
+for fun in THfuncs:
+    if TH_mode == 'modal':
+        # E2X Modal History
+        E2XCase = Earthquake.TimeHistory.ModalCase(name='E2X'+fun.name, damping=0.02, Loads={'LoadName':['U1','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2XCase.define()
+        # manually define the modal history case
+        # Sap.Define.loadcases.ModalHistNonlinear.SetCase('E2X'+time_history_name)
+        # Sap.Define.loadcases.ModalHistNonlinear.SetDampConstant('E2X'+time_history_name,0.02)
+        # Sap.Define.loadcases.ModalHistNonlinear.SetTimeStep('E2X'+time_history_name,nstep=8192, dt=0.02)
+        # Sap.Define.loadcases.ModalHistNonlinear.SetLoads('E2X'+time_history_name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[time_history_name,time_history_name],SF=[1,0.65])
+        
+        # E2Y Modal History
+        E2YCase = Earthquake.TimeHistory.ModalCase(name='E2Y'+fun.name, damping=0.02, Loads={'LoadName':['U2','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2YCase.define()
+    
+    if TH_mode == 'direct':
+        # E2X Time History
+        E2XCase = Earthquake.TimeHistory.DirCase(name='E2X'+fun.name, IntegrationMethod = "Newmark", Loads={'LoadName':['U1','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2XCase.define()
+        E2XCase.set_damping_rayleigh(DampType='Period', Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
+        
+        # # manually define the time history case
+        # Sap.Define.loadcases.DirHistNonlinear.SetCase('E2X'+fun.name)
+        # Sap.Define.loadcases.DirHistNonlinear.SetTimeIntegration('E2X'+fun.name,'Newmark')
+        # Sap.Define.loadcases.DirHistNonlinear.SetLoads('E2X'+fun.name,NumberLoads=2,LoadType=['Accel','Accel'],LoadName=['U1','U3'],Func=[fun.name,fun.name],SF=[1,0.65])
+        # Sap.Define.loadcases.DirHistNonlinear.SetDampProportional('E2X'+fun.name,DampType='Period', Dampa=0, Dampb=0, Dampf1=period_x_1, Dampf2=min(period_x_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
+        
+        # E2Y Time History
+        E2YCase = Earthquake.TimeHistory.DirCase(name='E2Y'+fun.name, IntegrationMethod = "Newmark", Loads={'LoadName':['U2','U3'],'LoadType':['Accel','Accel'],'LoadFunc':[fun.name,fun.name],'LoadSF':[1,0.65]})
+        E2YCase.define()
+        E2YCase.set_damping_rayleigh(DampType='Period', Dampf1=period_y_1, Dampf2=min(period_y_2,period_z_2),Dampd1= 0.02,Dampd2= 0.02)  # Rayleigh damping at period f1/s and f2/s is set to 0.02
     
 
-Sap.Define.LoadCombo.Add('E2纵向+竖向', comboType = 'AbsAdd')
-ret = [Sap.Define.LoadCombo.SetCaseList('E2纵向+竖向',CNameType="LoadCase",CName = 'E2X'+name, SF = 1/len(TH_names)) for name in TH_names]
+Sap.Define.loadcombo.Add('E2纵向+竖向', comboType = 'AbsAdd')
+ret = [Sap.Define.loadcombo.SetCaseList('E2纵向+竖向',CNameType="LoadCase",CName = 'E2X'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
 if all([r[1] == 0 for r in ret]):
-    logger.opt(colors=True).success(f"Load Combination E2纵向+竖向 has been successfully defined.")
+    logger.opt(colors=True).success("Load Combination E2纵向+竖向 has been successfully defined.")
 else:
-    logger.opt(colors=True).error(f"An error occurred while defining the Load Combination E2纵向.")
+    logger.opt(colors=True).error("An error occurred while defining the Load Combination E2纵向.")
 
-Sap.Define.LoadCombo.Add('E2横向+竖向', comboType = 'AbsAdd')
-ret = [Sap.Define.LoadCombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = 'E2Y'+name, SF = 1/len(TH_names)) for name in TH_names]
+Sap.Define.loadcombo.Add('E2横向+竖向', comboType = 'AbsAdd')
+ret = [Sap.Define.loadcombo.SetCaseList('E2横向+竖向',CNameType="LoadCase",CName = 'E2Y'+fun.name, SF = 1/len(THfuncs)) for fun in THfuncs]
 if all([r[1] == 0 for r in ret]):
-    logger.opt(colors=True).success(f"Load Combination E2横向+竖向 has been successfully defined.")
+    logger.opt(colors=True).success("Load Combination E2横向+竖向 has been successfully defined.")
 else:
-    logger.opt(colors=True).error(f"An error occurred while defining the Load Combination E2横向.")
+    logger.opt(colors=True).error("An error occurred while defining the Load Combination E2横向.")
 
 Sap.File.Save(ModelPath)
 
@@ -587,6 +572,10 @@ if True:
 # print table
 console = Console()
 console.print(table)
+# 创建一个 Rich 的 Con
+# sole 对象，指定输出文件
+with open("output.txt", "w+") as file:
+    console = Console(file=file)
 
 table = Table(title="横桥向+竖向墩底单元受力比较", show_header=True, header_style="bold magenta")
 table.add_column("墩号", justify="left", style="cyan", no_wrap=True)
@@ -613,6 +602,62 @@ if True:
                 f"{max(EleAbsForceS2[i][0:2]):.2f}",
                 f"{max(EleAbsForceTH1[i][0:2]):.2f}",
                 f"{max(EleAbsForceTH2[i][0:2]):.2f}",
+            )
+# print table
+console = Console()
+console.print(table)
+
+table = Table(title="纵桥向+竖向墩底单元受力比较", show_header=True, header_style="bold magenta")
+table.add_column("墩号", justify="left", style="cyan", no_wrap=True)
+table.add_column("墩底剪力(反应谱)", justify="right", style="green")
+table.add_column("墩底弯矩(反应谱)", justify="right", style="yellow")
+table.add_column("墩底剪力(E2时程)", justify="right", style="green")
+table.add_column("墩底弯矩(E2时程)", justify="right", style="yellow")
+if True:
+    Sap.Scripts.SelectCombo_Case(["E2X"])
+    # get Frame Shear force result by group name
+    Name,EleAbsForceS,__,__ = Sap.Scripts.GetResults.ElementJointForce_by_Group("PierBottom")
+    
+    Sap.Scripts.SelectCombo_Case("E2纵向+竖向")
+    
+    # get Frame Shear force result by group name
+    Name,EleAbsForceTH,__,__ = Sap.Scripts.GetResults.ElementJointForce_by_Group("PierBottom")
+    sorted_indices = sorted(range(len(Name)), key=lambda i: int(Name[i].split('_')[0][1:]))
+    for i in sorted_indices:
+        table.add_row(
+                f"{Name[i].split('_')[0].split('#')[-1]}",
+                f"{max(EleAbsForceS[i][0:2]):.2f}",
+                f"{max(EleAbsForceS[i][3:5]):.2f}",
+                f"{max(EleAbsForceTH[i][0:2]):.2f}",
+                f"{max(EleAbsForceTH[i][3:5]):.2f}",
+            )
+# print table
+console = Console()
+console.print(table)
+
+table = Table(title="横桥向+竖向墩底单元受力比较", show_header=True, header_style="bold magenta")
+table.add_column("墩号", justify="left", style="cyan", no_wrap=True)
+table.add_column("墩底剪力(反应谱)", justify="right", style="green")
+table.add_column("墩底弯矩(反应谱)", justify="right", style="yellow")
+table.add_column("墩底剪力(E2时程)", justify="right", style="green")
+table.add_column("墩底弯矩(E2时程)", justify="right", style="yellow")
+if True:
+    Sap.Scripts.SelectCombo_Case(["E2Y"])
+    # get Frame Shear force result by group name
+    Name,EleAbsForceS,__,__ = Sap.Scripts.GetResults.ElementJointForce_by_Group("PierBottom")
+    
+    Sap.Scripts.SelectCombo_Case("E2横向+竖向")
+    
+    # get Frame Shear force result by group name
+    Name,EleAbsForceTH,__,__ = Sap.Scripts.GetResults.ElementJointForce_by_Group("PierBottom")
+    sorted_indices = sorted(range(len(Name)), key=lambda i: int(Name[i].split('_')[0][1:]))
+    for i in sorted_indices:
+        table.add_row(
+                f"{Name[i].split('_')[0].split('#')[-1]}",
+                f"{max(EleAbsForceS[i][0:2]):.2f}",
+                f"{max(EleAbsForceS[i][3:5]):.2f}",
+                f"{max(EleAbsForceTH[i][0:2]):.2f}",
+                f"{max(EleAbsForceTH[i][3:5]):.2f}",
             )
 # print table
 console = Console()
