@@ -386,6 +386,10 @@ class Saproject(metaclass=SapMeta):
     def MaterialList(self):
         return list(self._Model.PropMaterial.GetNameList()[1])
 
+    @property
+    def SectionList(self):
+        return list(self._Model.PropFrame.GetNameList()[1])
+    
     def createSap(
         self,
         AttachToInstance: Literal[True, False] = False,
