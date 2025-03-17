@@ -12,7 +12,7 @@
 #  Environemet: Successfully executed in python 3.8
 #  Date: 2021-08-12
 #########################################################################
-__version__ = "0.1.3"
+__version__ = "0.1.5"
 
 from Sap2000py.Saproject import Saproject
 from Sap2000py.Bridge.SapBridge import SapBridge
