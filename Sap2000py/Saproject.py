@@ -382,6 +382,10 @@ class Saproject(metaclass=SapMeta):
         """Checks if the model is locked."""
         return self._Model.GetModelIsLocked()
 
+    @property
+    def MaterialList(self):
+        return list(self._Model.PropMaterial.GetNameList()[1])
+
     def createSap(
         self,
         AttachToInstance: Literal[True, False] = False,

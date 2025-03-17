@@ -81,7 +81,7 @@ class SapFile():
         """
         self.__Model.File.NewBlank()
 
-    def Save(self,FileName : Union[Path , str] = Path('.')/"NewSapProj.sdb"):
+    def Save(self,FileName : Union[Path , str] = Path('.') / "NewSapProj.sdb"):
         """
         ---save Sap model file---
         save at savepath\savename
@@ -89,6 +89,8 @@ class SapFile():
         # make sure filepath exists
         if isinstance(FileName,str):
             FileName = Path(FileName).resolve()
+        if not FileName.parent.exists():
+            FileName.parent.mkdir(parents=True,exist_ok=True)
         ret = self.__Model.File.Save(str(FileName))
         return ret
     

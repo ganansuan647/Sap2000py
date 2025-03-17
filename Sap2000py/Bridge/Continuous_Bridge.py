@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
 from typing import ClassVar, Dict, List, Literal, Union
+from abc import ABC, abstractmethod
 import copy
 
 import numpy as np
@@ -18,12 +19,14 @@ from Sap2000py import Saproject
 class ShouldNotInstantiateError(Exception):
     pass
 
-class SapSection:
+class SapSection(ABC):
     name: str
     material: str
     notes: str = "Creates by Sap2000py"
     unit_of_sec: Literal['mm', 'cm', 'm'] = 'm'
 
+    # 集成该基类的子类必须实现abstractmethod
+    @abstractmethod
     def define(self):
         raise NotImplementedError
 
@@ -49,6 +52,11 @@ class SapSection:
 
     def get_elements_with_this_section(self):
         raise NotImplementedError
+
+    @property
+    def is_defined(self):
+        ret = Saproject()._Model.PropFrame.GetNameList()
+        return self.name in list(ret[1])
 
     @classmethod
     def rigid_link(cls, name: str = "rigid", stiffness: float = 1e10):
@@ -173,6 +181,29 @@ class Section_NonPrismatic(SapSection):
         ret = Saproject().Define.section.PropFrame_SetNonPrismatic(self.name, NumberItems, startSecList, endSecList, lengthlist, lengthTypeList, EI33Variation, EI22Variation)
         if ret[-1] == 0:
             logger.opt(colors=True).success(f"Section <yellow>{self.name}</yellow> added!")
+        return ret
+
+@dataclass
+class Section_Rectangle(SapSection):
+    name:str
+    material:str
+    width:float
+    depth:float
+    unit_of_sec:Literal['mm','cm','m'] = 'm'
+    notes:str=""
+
+    def define(self):
+        if self.unit_of_sec == 'mm':
+            Saproject().setUnits("KN_mm_C")
+        elif self.unit_of_sec == 'cm':
+            Saproject().setUnits("KN_cm_C")
+        elif self.unit_of_sec == 'm':
+            Saproject().setUnits("KN_m_C")
+        ret = Saproject().Define.section.PropFrame_SetRectangle(self.name, self.material, self.width, self.depth, -1, self.notes)
+        if ret == 0:
+            logger.opt(colors=True).success(f"Section <yellow>{self.name}</yellow> added!")
+        else:
+            logger.opt(colors=True).error(f"Section <yellow>{self.name}</yellow> failed to add.")
         return ret
 
    
@@ -334,6 +365,18 @@ class SapFrame:
         rigidlink.define()
         return rigidlink
 
+class SapBase_Fixed:
+    def __init__(self, point: SapPoint, fix_dof = ['Ux', 'Uy', 'Uz', 'Rx', 'Ry', 'Rz']):
+        self.point = point
+        self.fix_dof = fix_dof
+    
+    def auto_build(self):
+        self.fix()
+    
+    def fix(self):
+        ret = self.point.fix(DOF=self.fix_dof)
+        return ret
+
 class SapBase_6Spring:
     def __init__(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path(".\Examples\ContinuousBridge6spring.txt")):
         self.point = point
@@ -361,7 +404,7 @@ class SapBase_6Spring:
         with open(datapath, "r") as f:
             lines = f.readlines()
             springs = [line.strip().split('\t') for line in lines]
-            spring = [s for s in springs if s[0].split('#')[-1] == self.spring_data_name][0]
+            spring = [s for s in springs if s[0] == self.spring_data_name or s[0].split('#')[-1] == self.spring_data_name][0]
         klist = []
         for k in spring:
             if k != self.spring_data_name and k.split('#')[-1] != self.spring_data_name and k != 'GLOBAL':
@@ -396,8 +439,42 @@ class SapBase_6Spring:
     def connect_with_pier(self):
         raise NotImplementedError
 
+class SapPier(ABC):
+    name: str
+    station: float
+    notes: str = "Creates by Sap2000py"
+    unit_of_sec: Literal['mm', 'cm', 'm'] = 'm'
+
+    @property
+    def default_section(self):
+        default_material = Saproject().MaterialList[0]
+        # 默认为一个3x5m的矩形
+        return Section_General(
+            name='default_section',
+            material=default_material,
+            Area=15,
+            Depth=3,
+            Width=5,
+            As2=12.5,
+            As3=12.5,
+            I22=31.25,
+            I33=11.25,
+            I23=0,
+            J=28.1737,
+            unit_of_sec='m'
+            )
+
+    # 集成该基类的子类必须实现abstractmethod
+    @abstractmethod
+    def build(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def connect_with_base(self):
+        raise NotImplementedError
+
 @dataclass
-class Sap_Double_Box_Pier:
+class Sap_Double_Box_Pier(SapPier):
     name:str
     station:float
     Height_of_pier_bottom:float
@@ -407,13 +484,14 @@ class Sap_Double_Box_Pier:
     Distance_between_bearings:float
     Distance_between_piers:float
     Height_of_cap:float=None
-    num_of_hollow_elements:int =1
-    is_intermediate_pier:bool =False
-    offset:float =1.0
-    Plan:Literal['方案一','方案二','方案三'] = '方案一'
-    spring_file_path:Path = None
+    num_of_hollow_elements:int = 3
+    is_intermediate_pier:bool = False
+    offset:float = 1.0
+    Box_Section:SapSection = None
+    Solid_Section:SapSection = None
+    Cap_Section:SapSection = None
         
-    def __post_init__(self):
+    def build(self):
         self.addsome_empty_attr()
         
         self.generate_pier_points(side = 'both')
@@ -429,38 +507,38 @@ class Sap_Double_Box_Pier:
     
     def connect_with_base(self,baseobj:Literal['SapBase_6Spring']):
         self.base = baseobj
-        self.base.get_spring_data(datapath = self.spring_file_path)
+        self.base.get_spring_data()
         self.base.add_spring()
     
     def generate_base_points(self):
         x = self.station
         y = 0
         # base point
-        self.base_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap, f"{self.name}_Base")
-        
-        # cap points
-        if not hasattr(self, "Mass_of_cap_in_ton"):
-            self.get_cap_section()
-        self.cap_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap/2, f"{self.name}_Cap",mass=[self.Mass_of_cap_in_ton for _ in range(3)] + [0, 0, 0])
-        
-        # cap top points
-        self.cap_top_point = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name}_CapTop")
-        
-        self.base_points = [self.base_point, self.cap_point, self.cap_top_point]
-        for point in self.base_points:
-            point.add()
+        if self.Height_of_cap > 1e-3:
+            self.base_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap, f"{self.name}_Base")
+            
+            # cap points
+            if not hasattr(self, "Mass_of_cap_in_ton"):
+                cap_section = self.get_cap_section()
+                self.Mass_of_cap_in_ton = cap_section.width * cap_section.depth * self.Height_of_pier * 2.5
+            self.cap_point = SapPoint(x, y, self.Height_of_pier_bottom-self.Height_of_cap/2, f"{self.name}_Cap",mass=[self.Mass_of_cap_in_ton for _ in range(3)] + [0, 0, 0])
+            
+            # cap top points
+            self.cap_top_point = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name}_CapTop")
+            
+            self.base_points = [self.base_point, self.cap_point, self.cap_top_point]
+            for point in self.base_points:
+                point.add()
+        else:
+            logger.warning("Height of cap is too small. Skipping cap generation.")
+            self.cap_top_point = self.base_point = SapPoint(x, y, self.Height_of_pier_bottom, f"{self.name}_Base")
+            self.base_points = [self.base_point]
+            for point in self.base_points:
+                point.add()
     
     def addsome_empty_attr(self):
         if self.Height_of_cap is None:
-            # if self.Plan == '方案一':
-            #     self.Height_of_cap = 3.0 if self.Height_of_pier >= 50 else 2.8 if 40<=self.Height_of_pier<50 else 2.7
-            # elif self.Plan == '方案二':
-            #     self.Height_of_cap: float = 3.2 if self.Height_of_pier >= 50 else 3.0 if 40<=self.Height_of_pier<50 else 2.8
-            # elif self.Plan == '方案三':
-            #     self.Height_of_cap: float = 3.5 if self.Height_of_pier >= 50 else 3.5 if 40<=self.Height_of_pier<50 else 3.2
-            
-            # 延性抗震设计，统一采用最小尺寸2.7m
-            self.Height_of_cap = 2.7
+            raise ValueError("Height of cap is not defined.")
             
         self.pier_bottom_point:dict = {}
         self.pier_hollow_bottom:dict = {}
@@ -546,184 +624,6 @@ class Sap_Double_Box_Pier:
             result.append(coord_list[0] + (coord_list[1] - coord_list[0]) * i / self.num_of_hollow_elements)
         return result
     
-    def __box_section_geoms(self):
-        # 合并截面
-        # 可修改的值
-        # if self.Height_of_pier >= 50:
-        #     if self.Plan == '方案一':
-        #         height = 400
-        #     elif self.Plan == '方案二':
-        #         height = 450
-        #     elif self.Plan == '方案三':
-        #         height = 500
-        #     else:
-        #         raise ValueError("Plan is not valid.")
-        # elif self.Height_of_pier >= 40:
-        #     if self.Plan == '方案一':
-        #         height = 350
-        #     elif self.Plan == '方案二':
-        #         height = 400
-        #     elif self.Plan == '方案三':
-        #         height = 450
-        #     else:
-        #         raise ValueError("Plan is not valid.")
-        # elif self.Height_of_pier < 40 and self.Height_of_pier >= 0:
-        #     if self.Plan == '方案一':
-        #         height = 300
-        #     elif self.Plan == '方案二':
-        #         height = 350
-        #     elif self.Plan == '方案三':
-        #         height = 400
-        #     else:
-        #         raise ValueError("Plan is not valid.")
-        # else:
-        #     logger.error("Height of pier is not valid.")
-        #     return None
-        # # 不变的值
-        # width = 900
-        # if self.Plan == '方案三':
-        #     width = 1000
-        
-        # 延性设计，均采用900x300
-        height = 300
-        width = 900
-        
-        d_width_concrete = 105
-        chamfer_width,chamfer_height = 120,60
-        d_height_concrete = 70
-        R = height/2
-        # clockwise(八边形)
-        inner_points = [
-            (-width/2+d_width_concrete+chamfer_width, height/2-d_height_concrete),
-            (width/2-d_width_concrete-chamfer_width, height/2-d_height_concrete),
-            (width/2-d_width_concrete, height/2-d_height_concrete-chamfer_height),
-            (width/2-d_width_concrete, -height/2+d_height_concrete+chamfer_height),
-            (width/2-d_width_concrete-chamfer_width, -height/2+d_height_concrete),
-            (-width/2+d_width_concrete+chamfer_width, -height/2+d_height_concrete),
-            (-width/2+d_width_concrete, -height/2+d_height_concrete+chamfer_height),
-            (-width/2+d_width_concrete, height/2-d_height_concrete-chamfer_height)]
-
-        def create_arc(center, radius, start_angle, end_angle, num_points=20):
-            """
-            Create a half-circle arc.
-            
-            :param center: Tuple (x, y) representing the center of the circle.
-            :param radius: Radius of the circle.
-            :param start_angle: Starting angle of the arc in degrees.
-            :param end_angle: Ending angle of the arc in degrees.
-            :param num_points: Number of points to generate the arc.
-            :return: Shapely LineString representing the half-circle arc.
-            """
-            angles = [np.radians(start_angle + i * (end_angle - start_angle) / (num_points - 1))
-                    for i in range(num_points)]
-            points = [(center[0] + radius * np.cos(angle), center[1] + radius * np.sin(angle))
-                    for angle in angles]
-
-            return points
-
-        outer_points = []
-        outer_points.append((-width/2+R,R))
-        outer_points.append((width/2-R,R))
-        outer_points.extend(create_arc((width/2-R,0),R,90,-90))
-        outer_points.append((width/2-R,-R))
-        outer_points.append((-width/2+R,-R))
-        outer_points.extend(create_arc((-width/2+R,0),R,270,90))
-        # 实心截面需内开小洞，否则翘曲常数计算会存在问题
-        innerpoly = Polygon(inner_points)
-        inner_circle = Polygon(create_arc((0,0),1,0,360))
-        outerpoly = Polygon(outer_points)
-        
-        innergeom = Geometry(geom=innerpoly)
-        inner_circle_geom = Geometry(geom=inner_circle)
-        outergeom = Geometry(geom=outerpoly)-inner_circle_geom
-        outergeom.create_mesh(mesh_sizes=[(outerpoly.area)/100])
-        combinedgeom = outergeom - innergeom
-        combinedgeom.create_mesh(mesh_sizes=[(outerpoly.area-innerpoly.area)/100])
-        return combinedgeom,outergeom
-    
-    def get_solid_section(self,plot:bool = False,plottype:Literal['geometry','mesh']='mesh'):
-        material = "C40"
-        unit_of_sec = 'cm'
-        _,solidgeom = self.__box_section_geoms()
-        sec = Section(geometry=solidgeom)
-        if plot:
-            if plottype == 'geometry':
-                sec.plot_geometry()
-            elif plottype == 'mesh':
-                sec.plot_mesh(materials=False)
-        # 计算截面特性
-        # 几何特性
-        sec.calculate_frame_properties()
-        sec.calculate_geometric_properties()
-        # warpping properties like shear area As2,As3, torsion constant J
-        sec.calculate_warping_properties()
-        bounds = solidgeom.geom.bounds  # (minx, miny, maxx, maxy)
-        width = bounds[2] - bounds[0]
-        height = bounds[3] - bounds[1]
-
-        ixx_c, iyy_c, ixy_c = sec.get_ic()
-        J = sec.get_j() if sec.get_j() != math.nan else ixx_c + iyy_c
-        asx, asy = sec.get_as()
-
-        self.solid_section = Section_General(
-            name=self.name+"_pier_box",
-            material=material,
-            Area=sec.get_area(),
-            Depth=height,Width=width,
-            As2=asy,As3=asx,
-            I22=iyy_c,I33=ixx_c,I23=ixy_c,J=J,
-            geom=solidgeom,sec=sec,
-            unit_of_sec=unit_of_sec,
-            notes=self.name+"_pier_box_section"
-        )
-        return self.solid_section
-    
-    def get_box_section(self,plot:bool = False,plottype:Literal['geometry','mesh']='mesh'):
-        material = "C40"
-        unit_of_sec = 'cm'
-        combinedgeom,_ = self.__box_section_geoms()        
-
-        sec = Section(geometry=combinedgeom)
-        if plot:
-            if plottype == 'geometry':
-                sec.plot_geometry()
-            elif plottype == 'mesh':
-                sec.plot_mesh(materials=False)
-        # 计算截面特性
-        # 几何特性
-        sec.calculate_frame_properties()
-        sec.calculate_geometric_properties()
-        # warpping properties like shear area As2,As3, torsion constant J
-        sec.calculate_warping_properties()
-        bounds = combinedgeom.geom.bounds  # (minx, miny, maxx, maxy)
-        width = bounds[2] - bounds[0]
-        height = bounds[3] - bounds[1]
-        
-        ixx_c, iyy_c, ixy_c = sec.get_ic()
-        asx,asy = sec.get_as()
-
-        self.box_section = Section_General(
-            name = self.name+"_pier_box",
-            material = material,
-            Area = sec.get_area(),
-            Depth = height,Width = width,
-            As2=asy,As3=asx,
-            I22=iyy_c,I33=ixx_c,I23=ixy_c,J=sec.get_j(),
-            geom = combinedgeom, sec = sec,
-            unit_of_sec = unit_of_sec,
-            notes = self.name+"_pier_box_section")
-        return self.box_section
-    
-    def get_cap_section(self):
-        width = 12 if self.Height_of_pier >= 50 else 10.794
-        depth = 37.25
-        self.Mass_of_cap_in_ton = width * depth * self.Height_of_cap * 2.5
-        ret = Saproject()._Model.PropFrame.SetRectangle(self.name+"_Cap", "C30", width, depth)
-        if ret == 0:
-            logger.success(f"Cap section {self.name}_Cap added!")
-        self.cap_section = self.name+"_Cap"
-        return self.cap_section
-    
     def _add_constraint_for_points(self,constraint_name:str, points : list):
         for point in points:
             if not point.exists():
@@ -770,14 +670,41 @@ class Sap_Double_Box_Pier:
                 elif mode == 'Equal':
                     Saproject().Define.joint_constraints.Set.Equal(self.name+f"_{side}_Pier_Bearing", rigid_dof)
                     self._add_constraint_for_points(self.name+f"_{side}_Pier_Bearing", [pier_top_point]+bearing_bottom_points)
-        
-    def generate_cap_elements(self):
-        cap_section_name = self.get_cap_section()
-        
-        # define solid cap
-        SapFrame(node1=self.base_point.name, node2=self.cap_point.name,section=cap_section_name,name=self.name+"_base2cap").define()
-        SapFrame(node1=self.cap_point.name, node2=self.cap_top_point.name,section=cap_section_name,name=self.name+"_cap2bottom").define()
     
+    def get_cap_section(self):
+        if self.Cap_Section is None:
+            logger.warning("Cap section is not defined. Using default section.")
+            self.Cap_Section = self.default_section
+        return self.Cap_Section
+
+    def generate_cap_elements(self):
+        if self.Height_of_cap <= 1e-3:
+            logger.warning("Height of cap is too small. Skipping cap generation.")
+            return
+        cap_section = self.get_cap_section()
+        
+        if not cap_section.is_defined:
+            cap_section.define()
+        # define solid cap
+        SapFrame(node1=self.base_point.name, node2=self.cap_point.name,section=cap_section.name,name=self.name+"_base2cap").define()
+        SapFrame(node1=self.cap_point.name, node2=self.cap_top_point.name,section=cap_section.name,name=self.name+"_cap2bottom").define()
+
+    def get_solid_section(self):
+        if self.Solid_Section is None:
+            if self.Box_Section is None:
+                logger.warning("Solid section is not defined. Using default section.")
+                self.Solid_Section = self.default_section
+            else:
+                logger.warning("Solid section is not defined. Using box section.")
+                self.Solid_Section = self.Box_Section
+        return self.Solid_Section
+
+    def get_box_section(self):
+        if self.Box_Section is None:
+            logger.warning("Box section is not defined. Using default section.")
+            self.Box_Section = self.default_section
+        return self.Box_Section
+
     def generate_pier_elements(self,side = Literal['left','right','both']):
         if side == 'both':
             self.generate_pier_elements('left')
@@ -786,8 +713,10 @@ class Sap_Double_Box_Pier:
                   
         solid_section = self.get_solid_section()
         box_section = self.get_box_section()
-        solid_section.define()
-        box_section.define()
+        if not solid_section.is_defined:
+            solid_section.define()
+        if not box_section.is_defined:
+            box_section.define()
         
         # define pier
         SapFrame(node1=self.pier_bottom_point[side].name, node2=self.pier_hollow_bottom[side].name,section=solid_section.name,name=self.name+'_'+side+"_bottom2hollowBottom").define()
@@ -803,8 +732,7 @@ class Sap_Double_Box_Pier:
             SapFrame(node1=self.hollow_points[side][-1].name, node2=self.pier_hollow_top[side].name, section=box_section.name, name=self.name+'_'+side+"_hollowBottom2Top").define()
         SapFrame(node1=self.pier_hollow_top[side].name, node2=self.pier_top[side].name, section=solid_section.name, name=self.name+'_'+side+"_hollowTop2Top").define()
 
-
-class Sap_Bearing:
+class Sap_Bearing(ABC):
     def __init__(self):
         logger.error('Sap_Bearing is a abstract class!Should not be instantiated!')
         raise ShouldNotInstantiateError('Abstract class Sap_Bearing accidentally instantiated!')
@@ -866,7 +794,19 @@ class Sap_Bearing:
         else:
             logger.error(f"Failed to get axial force for link {link_name}")
             return None
-            
+
+    # 集成该基类的子类必须实现abstractmethod
+    @abstractmethod
+    def is_defined(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def define_link(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def __hash__(self):
+        raise NotImplementedError
 
 @dataclass
 class Sap_LinkProp_Linear(Sap_Bearing):
@@ -1412,7 +1352,6 @@ class Sap_Girder:
         else:
             raise NotImplementedError(f"Link type {link_type} is not supported yet!")
         
-        
     def _add_constraint_for_points(self,constraint_name:str, points : list):
         for point in points:
             if not point.exists():
@@ -1685,7 +1624,7 @@ class Sap_Box_Girder(Sap_Girder):
             self.q2 = 56.0
             self.girder_section = Section_General(
                 name = self.name+"_girder",
-                material = "C60",
+                material = "Q420q", # 以上信息将混凝土折算为了钢材
                 Area = Area,
                 Depth = Depth,Width = Width,
                 As2=Asz,As3=Asy,

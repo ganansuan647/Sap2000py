@@ -102,11 +102,10 @@ class CommonMaterialSet_China:
             
             print(standard +' Material Set Added!')
             # get material names
-            MaterialList = Sapobj._Model.PropMaterial.GetNameList()
-            print(MaterialList[0],' Materials are Defined:\n',MaterialList[1])
-            Sapobj.MaterialList = MaterialList[1]
+            MaterialList = Sapobj.MaterialList
+            print(len(MaterialList),' Materials are Defined:\n',MaterialList)
             print('Edit '+__file__+' to modify the materials you need!')
-            print('Material names are stored in Sapobject.MaterialList')
+            print('Material names are stored in Saproject().MaterialList')
         # User defined
         if standard == "User":
             # define your materials here
@@ -115,8 +114,7 @@ class CommonMaterialSet_China:
             # print materials you defined
             print('User defined Material Set Added!')
             # get material names
-            MaterialList = Sapobj._Model.PropMaterial.GetNameList()
-            print(MaterialList[0],' Materials are Defined:\n',MaterialList[1])
-            Sapobj.MaterialList = MaterialList[1]
+            MaterialList = Sapobj.MaterialList
+            print(len(MaterialList),' Materials are Defined:\n',MaterialList)
             print('Edit '+__file__+' to modify the materials you need!')
-            print('Material names are stored in Sapobject.MaterialList')
+            print('Material names are stored in Saproject().MaterialList')

@@ -11,6 +11,21 @@ class SapSection:
         self._Sapobj = Sapobj
         self.PropLink = PropLink(Sapobj)
 
+    def PropFrame_SetRectangle(self, sectName: str, matName: str, t3: float, t2: float, Color=-1, Notes="", GUID = ""):
+        """
+        ---set a rectangle frame section property---
+        input:
+        sectName(str)-the name of the defined sections
+        matName(str)-the name of the material used for current section
+        Depth(t3)-The depth of the section. [L]
+        Width(t2)-The width of the section. [L]
+        Color(long)-The display color assigned to the section. If Color is specified as -1, the program will automatically assign a color.
+        Notes(str)-The notes, if any, assigned to the section.
+        GUID(str)-The GUID (global unique identifier), if any, assigned to the section. If this item is input as Default, the program assigns a GUID to the section.
+        """
+        ret = self.__Model.PropFrame.SetRectangle(sectName, matName, t3, t2, Color, Notes, GUID)
+        return ret
+
     def PropFrame_SetGeneral(self,sectName:str,matName:str,t3:float,t2:float,Area:float,As2:float,As3:float,I22:float,I33:float,J:float,notes:str=""):
         """
         ---set a general frame section property---
@@ -171,6 +186,21 @@ class SapSection:
             formulation. In general, incompatible modes significantly improve the bending behavior of the object.
         """
         ret = self.__Model.PropSolid.SetProp(name,matProp,a,b,c,incompatible)
+        return ret
+
+    def PropFrame_SetRectangle(self, Name: str, MatProp: str, t3: float, t2: float, Color: int = -1, Notes: str = "", GUID: str = ""):
+        """
+        ---设置矩形截面属性---
+        输入参数:
+        Name(str) - 截面名称（新建或已有）
+        MatProp(str) - 材料名称
+        t3(float) - 截面高度 [L]
+        t2(float) - 截面宽度 [L]
+        Color(int) - 显示颜色（默认-1自动分配）
+        Notes(str) - 备注信息
+        GUID(str) - 全局唯一标识符
+        """
+        ret = self.__Model.PropFrame.SetRectangle(Name, MatProp, t3, t2, Color, Notes, GUID)
         return ret
 
 class PropLink_Set:
@@ -789,15 +819,12 @@ class PropLink_Set:
         Ke(dict)-This is a dictionary of stiffness terms for the link property,e.g.,{"U1":2000,"R1":5000}
         Ce(dict)-This is a dictionary of damping terms for the link property,e.g.,{"U1":0.03,"R1":0.05}
         k(dict)-The initial stiffness applies for NonLinear analyses.e.g.,{"U1":10000}
-            k(0) = U1, Not Used,k(1) = U2 [F/L],k(2) = U3 [F/L],k(3) = R1, Not Used,k(4) = R2, Not Used
-            k(5) = R3, Not Used
+            k(0) = U1, Not Used,k(1) = U2 [F/L],k(2) = U3 [F/L],k(3) = R1, Not Used,k(4) = R2, Not Used,k(5) = R3, Not Used
         yieldF(dict)-yield force terms for the link property. The yield force applies for NonLinear analyses.
-            k(0) = U1, Not Used,k(1) = U2 [F/L],k(2) = U3 [F/L],k(3) = R1, Not Used,k(4) = R2, Not Used
-            k(5) = R3, Not Used
+            k(0) = U1, Not Used,k(1) = U2 [F/L],k(2) = U3 [F/L],k(3) = R1, Not Used,k(4) = R2, Not Used,k(5) = R3, Not Used
         Ratio(dict)-post-yield stiffness ratio terms for the link property. The post-yield stiffness ratio
             applies for NonLinear analyses. It is the post-yield stiffness divided by the initial stiffness.
-            k(0) = U1, Not Used,k(1) = U2 [F/L],k(2) = U3 [F/L],k(3) = R1, Not Used,k(4) = R2, Not Used
-            k(5) = R3, Not Used
+            k(0) = U1, Not Used,k(1) = U2 [F/L],k(2) = U3 [F/L],k(3) = R1, Not Used,k(4) = R2, Not Used,k(5) = R3, Not Used
         dj2(float)-The distance from the J-End of the link to the U2 shear spring.
             This item applies only when DOF(1) = True. [L]
         dj3(float)-The distance from the J-End of the link to the U3 shear spring.
@@ -1244,16 +1271,22 @@ class PropLink_Get:
             - NumberPoints (int): The number of force-deformation points for the specified degree of freedom.
             - F (list of float): An array, dimensioned to NumberPoints - 1, that includes the force at each point.
             - D (list of float): An array, dimensioned to NumberPoints - 1, that includes the displacement at each point.
-            - MyType (int): This item applies only to multilinear plastic link properties. It is 1, 2, or 3, indicating the hysteresis type.
-            - a1 (float): This item only applies to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Alpha1 hysteresis parameter.
-            - a2 (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Alpha2 hysteresis parameter.
-            - b1 (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Beta1 hysteresis parameter.
-            - b2 (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Beta2 hysteresis parameter.
-            - eta (float): This item applies only to multilinear plastic link properties that have a pivot hysteresis type (MyType = 3). It is the Eta hysteresis parameter.
+            - MyType (int): This item applies only to multilinear plastic link properties. It is 1, 2 or 3, indicating
+            the hysteresis type.
+            - a1 (float): This item only applies to multilinear plastic link properties that have a pivot
+            hysteresis type (MyType = 3). It is the Alpha1 hysteresis parameter.
+            - a2 (float): This item applies only to multilinear plastic link properties that have a pivot
+            hysteresis type (MyType = 3). It is the Alpha2 hysteresis parameter.
+            - b1 (float): This item applies only to multilinear plastic link properties that have a pivot
+            hysteresis type (MyType = 3). It is the Beta1 hysteresis parameter.
+            - b2 (float): This item applies only to multilinear plastic link properties that have a pivot
+            hysteresis type (MyType = 3). It is the Beta2 hysteresis parameter.
+            - eta (float): This item applies only to multilinear plastic link properties that have a pivot
+            hysteresis type (MyType = 3). It is the Eta hysteresis parameter.
         """
         ret = self.__Model.PropLink.GetMultiLinearPoints(name)
         return ret
-
+            
     def NameList(self) -> list:
         """
         Retrieves the names of all defined link properties of the specified type.
@@ -1488,4 +1521,3 @@ class PropLink:
         self.Get = PropLink_Get(Sapobj)
 
     
-
