@@ -378,7 +378,7 @@ class SapBase_Fixed:
         return ret
 
 class SapBase_6Spring:
-    def __init__(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path(".\Examples\ContinuousBridge6spring.txt")):
+    def __init__(self, point: SapPoint, pier_name, spring_data_name=None,spring_file_path:Path = Path("./Examples/ContinuousBridge6spring.txt")):
         self.point = point
         self.pier_name = pier_name
         self.name = self.pier_name + "_Base"
@@ -787,7 +787,7 @@ class Sap_Bearing(ABC):
             
         # read axial force
         Saproject().Scripts.SelectCombo_Case("DEAD")
-        ret = Saproject().Results.Link.Force(link_name,ItemTypeElm=1)
+        ret = Saproject().Results.Link.Force(link_name,ItemTypeElm="Element")
         if ret[-1] == 0:
             axialF = max([abs(val) for val in ret[7]])
             return axialF
@@ -1218,14 +1218,20 @@ class Sap_Bearing_PlasticWen(Sap_LinkProp_PlasticWen):
         if not self.linkprop_instance:
             logger.error(f"PlasticWen Link Property {self.linkprop_name} does not exist!")
     
-    def calculate_yield_properties(self,mu:float = 0.02,yield_disp:float=0.0025,ratio:float=0.0,exp:float=2.0):
+    def calculate_yield_properties(self,mu:float = 0.02,yield_disp:float=0.0025,ratio:Union[float, None]=None,post_stiffness:Union[float, None]=None,exp:float=2.0):
         yield_force = self.AxialF_under_dead_weight(self.name) * mu
         init_k = yield_force/yield_disp
-        ratio = ratio
-        exp = exp
-        return yield_force,init_k,ratio,exp
+        if not ratio and post_stiffness:
+            ratio = post_stiffness/init_k
+        elif not post_stiffness and ratio:
+            ratio = ratio
+        else:
+            logger.warning("ratio or post_stiffness must be provided. Using default: ratio=0.0.")
+            ratio = 0.0
+
+        return yield_force,init_k,ratio
     
-    def update_yield_prop_for_existing_linear_link(self, freeF: float = 10.0, *args, **kwargs):
+    def update_yield_prop_for_existing_linear_link(self, freeF: float = 10.0, ignore_freeF: bool = False, *args, **kwargs):
         """
         Update yield properties for an existing linear link.
 
@@ -1251,21 +1257,25 @@ class Sap_Bearing_PlasticWen(Sap_LinkProp_PlasticWen):
             if isinstance(existing_prop_instance,Sap_LinkProp_Linear):
                 
                 Ke = existing_prop_instance.Ke
-                doflist = [dof for dof, ke in Ke.items() if ke <= freeF and dof not in ['U1', 'R1', 'R2', 'R3']]
-
+                if not ignore_freeF:
+                    doflist = [dof for dof, ke in Ke.items() if ke <= freeF and dof not in ['U1', 'R1', 'R2', 'R3']]
+                else:
+                    doflist = [dof for dof, ke in Ke.items() if dof not in ['U1', 'R1', 'R2', 'R3']]
                 # Extract parameters from kwargs or use default values
                 # 支座摩擦系数
                 mu = kwargs.get('mu', 0.02)
                 # 支座滑动时的位移（m）
                 yield_disp = kwargs.get('yield_disp', 0.0025)
                 # 屈服后刚度比，0.0代表双线性本构
-                ratio = kwargs.get('ratio', 0.0)
+                ratio = kwargs.get('ratio', None)
+                # 屈服后刚度，0.0代表双线性本构(屈后刚度和屈后刚度比至少定义其一，否则报错)
+                post_stiffness = kwargs.get('post_stiffness', None)
                 # 屈服后刚度指数，数值y越大，屈服比率越陡（大于等于一）
-                exp = kwargs.get('exp', 2.0)
-                if exp < 1:
-                    exp = 1
+                exp = kwargs.get('exp', 10.0)
+                if exp < 2:
+                    exp = 2
 
-                yield_force, init_k, ratio, exp = self.calculate_yield_properties(mu=mu, yield_disp=yield_disp, ratio=ratio, exp=exp)
+                yield_force, init_k, ratio = self.calculate_yield_properties(mu=mu, yield_disp=yield_disp, ratio=ratio, post_stiffness=post_stiffness)
 
                 for dof in doflist:
                     self.linkprop_instance._update_link_yield_prop_1dof(dof, yield_force, init_k, ratio, exp)
@@ -1300,7 +1310,8 @@ class Sap_Girder:
         logger.error('Sap_Girder is a abstract class!Should not be instantiated!')
         raise ShouldNotInstantiateError('Abstract class Sap_Girder accidentally instantiated!')
 
-    def _define_ideal_links(self):
+    @staticmethod
+    def _define_ideal_links():
         # 刚度取大值，不直接固定,暂时不考虑阻尼
         # U1为竖向，U2为纵桥向，U3为横桥向
         # FixedDOF = ["R1"]
@@ -1325,7 +1336,20 @@ class Sap_Girder:
         both_sliding_link.define_link()
         return fixed_link, y_sliding_link, x_sliding_link, both_sliding_link
 
-    def _update_ideal_link2bilinear_link(self,linear_link:Sap_Bearing_Linear,link_type:Literal['MultiLinearElastic','PlasticWen'] = 'PlasticWen',*args,**kwargs):
+    @staticmethod
+    def _define_gap_link():
+        # 刚度取小值，不直接固定,暂时不考虑阻尼
+        # U1为竖向，U2为纵桥向，U3为横桥向
+        # FixedDOF = ["R1"]
+        FixedDOF = []
+        DOF = ['U1', 'U2', 'U3', 'R1', 'R2', 'R3']
+        # 固定支座:
+        uncoupleKe = {"U1":1e-3,"U2":0,"U3":0,"R1":0,"R2":0,"R3":0}
+        gap_link = Sap_LinkProp_Linear("gap",DOF=DOF,Fixed=FixedDOF,Ke=uncoupleKe)
+        gap_link.define_link()
+        return gap_link
+    
+    def _update_ideal_link2bilinear_link(self,linear_link:Sap_Bearing_Linear,link_type:Literal['MultiLinearElastic','PlasticWen','Friction Pendulum'] = 'PlasticWen',*args,**kwargs):
         new_link_name = linear_link.name
         if link_type == 'MultiLinearElastic':
             new_linkprop_name = new_link_name+"_MultiElastic"
@@ -1347,7 +1371,8 @@ class Sap_Girder:
                                                             dj2=linear_link.linkprop_instance.dj2,dj3=linear_link.linkprop_instance.dj3,notes=f"Converted from {linear_link.linkprop_instance.prop_name}")
             new_PlasticWen_link = Sap_Bearing_PlasticWen(new_link_name,
                                                         linear_link.start_point,linear_link.end_point,linkprop_name=new_linkprop_name)
-            new_PlasticWen_link.update_yield_prop_for_existing_linear_link(*args,**kwargs)
+            ignore_flag = kwargs.get('FrictionPendulum', False) # if True, 认为是摩擦摆支座，放开所有水平自由度
+            new_PlasticWen_link.update_yield_prop_for_existing_linear_link(ignore_freeF=ignore_flag, *args, **kwargs)
             return new_PlasticWen_link
         else:
             raise NotImplementedError(f"Link type {link_type} is not supported yet!")

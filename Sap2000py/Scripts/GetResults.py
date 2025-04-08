@@ -23,8 +23,7 @@ class GetResults:
         MinReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
         """
         # get result by group name
-        GroupElm = 2
-        ret = self._Sapobj.Results.Joint.React(Name,GroupElm)
+        ret = self._Sapobj.Results.Joint.React(Name, ItemTypeElm="GroupElm")
         colstart,colend = 6,12
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -49,8 +48,7 @@ class GetResults:
             MinReaction (ndarray): Minimum displacements and rotations in np.array: [U1, U2, U3, R1, R2, R3].
         """
         # get result by group name
-        GroupElm = 2
-        ret = self._Sapobj.Results.Joint.Displ(Name,GroupElm)
+        ret = self._Sapobj.Results.Joint.Displ(Name, ItemTypeElm="GroupElm")
         colstart,colend = 6,12
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -73,8 +71,7 @@ class GetResults:
         MinReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
         """
         # get result by group name
-        GroupElm = 2
-        ret = self._Sapobj.Results.Frame.Force(Name,GroupElm)
+        ret = self._Sapobj.Results.Frame.Force(Name, ItemTypeElm="GroupElm")
         colstart,colend = 8,14
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -97,8 +94,7 @@ class GetResults:
         MinReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
         """
         # get result by group name
-        GroupElm = 2
-        ret = self._Sapobj.Results.Frame.JointForce(Name,GroupElm)
+        ret = self._Sapobj.Results.Frame.JointForce(Name, ItemTypeElm="GroupElm")
         colstart,colend = 7,13
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -121,8 +117,7 @@ class GetResults:
         MinReaction(ndarray):results in np.array:[P,V2,V3,T,M2,M3]
         """
         # get result by group name
-        GroupElm = 2
-        ret = self._Sapobj.Results.Link.Force(Name,GroupElm)
+        ret = self._Sapobj.Results.Link.Force(Name, ItemTypeElm="GroupElm")
         colstart,colend = 7,13
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -145,8 +140,7 @@ class GetResults:
         MinReaction(ndarray):results in np.array:[F1,F2,F3,M1,M2,M3]
         """
         # get result by group name
-        GroupElm = 2
-        ret = self._Sapobj.Results.LinkJointForce(Name,GroupElm)
+        ret = self._Sapobj.Results.LinkJointForce(Name,ItemTypeElm="GroupElm")
         colstart,colend = 7,13
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
@@ -169,8 +163,7 @@ class GetResults:
         MinReaction(ndarray):results in np.array:[U1,U2,U3,R1,R2,R3]
         """
         # get result by group name
-        GroupElm = 2
-        ret = self._Sapobj.Results.Link.Deformation(Name,GroupElm)
+        ret = self._Sapobj.Results.Link.Deformation(Name, ItemTypeElm="GroupElm")
         colstart,colend = 6,12
         if Dealflag:
             uniquelist,AbsReaction,MaxReaction,MinReaction = deal_with_item(ret,colstart,colend)
