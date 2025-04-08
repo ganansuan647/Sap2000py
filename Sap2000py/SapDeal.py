@@ -84,7 +84,7 @@ class SapFile():
     def Save(self,FileName : Union[Path , str] = Path('.') / "NewSapProj.sdb"):
         """
         ---save Sap model file---
-        save at savepath\savename
+        save at savepath/savename
         """
         # make sure filepath exists
         if isinstance(FileName,str):
@@ -418,28 +418,60 @@ class SapAnalyze_Set:
         """
         self.__Model.Analyze.SetRunCaseFlag(Name,Run,All)
 
-    def SolverOption_2(self,SolverType,SolverProcessType,NumberParallelRuns,StiffCase):
+    def SolverOption(self, 
+                     SolverType: Literal["Standard", "Advanced", "Multi-threaded"] = "Advanced", 
+                     SolverProcessType: Literal["Auto", "GUI", "Separate"] = "Auto", 
+                     NumberParallelRuns: int = 0, 
+                     ResponseFileSizeMaxMB: int = 0,
+                     NumberAnalysisThreads: int = 0,
+                     StiffCase: str = ""):
         """
-        ---This function sets the model solver options---
-        inputs:
-        SoverType(int)-This is 0, 1 or 2, indicating the solver type.
-            0 = Standard solver
-            1 = Advanced solver
-            2 = Multi-threaded solver
-        SolverProcessType(int)-This is 0, 1 or 2, indicating the process the analysis is run.
-            0 = Auto (program determined)
-            1 = GUI process
-            2 = Separate process
-        NumberParallelRuns(int)-This is an integer between -8 and 8, inclusive, not including -1.
-            -8 to -2 = Auto parallel (use up to all physical cores - max 8). Treated the same as 0.
-            -1 = Illegal value; will return an error.
-            0 = Auto parallel (use up to all physical cores).
-            1 = Serial.
-            2 to 8 = User defined parallel (use up to this fixed number of cores - max 8).
-        StiffCase(str)-The name of the load case used when outputting the mass and stiffness matrices to
-            text files If this item is blank, no matrices are output
+        Sets the model solver options.
+        
+        Args:
+            SolverType (str): Solver type. Options:
+                "Standard" = Standard solver
+                "Advanced" = Advanced solver
+                "Multi-threaded" = Multi-threaded solver
+            SolverProcessType (str): Process type for analysis run. Options:
+                "Auto" = Automatic (program decides)
+                "GUI" = GUI process
+                "Separate" = Separate process
+            NumberParallelRuns (int): Number of parallel runs. Integer between -8 and 8 (excluding -1)
+                -8 to -2 = Auto parallel (use up to all physical cores - max 8). Treated same as 0.
+                -1 = Invalid value; will return an error.
+                0 = Auto parallel (use up to all physical cores).
+                1 = Serial.
+                2 to 8 = User defined parallel (use up to this fixed number of cores - max 8).
+            ResponseFileSizeMaxMB (int): Maximum size of response file in MB. Positive for user-specified, negative for program-determined.
+            NumberAnalysisThreads (int): Number of threads analysis can use. Positive for user-specified, negative for program-determined.
+            StiffCase (str): Name of load case for outputting mass and stiffness matrices to text files. If blank, no matrices are output.
         """
-        self.__Model.Analyze.SetSolverOption_2(SolverType,SolverProcessType,NumberParallelRuns,StiffCase)
+        solver_type_map = {"Standard": 0, "Advanced": 1, "Multi-threaded": 2}
+        process_type_map = {"Auto": 0, "GUI": 1, "Separate": 2}
+        
+        solver_type_int = solver_type_map[SolverType]
+        process_type_int = process_type_map[SolverProcessType]
+        
+        if NumberParallelRuns == -1:
+            raise ValueError("NumberParallelRuns cannot be -1, it's an invalid value")
+        if NumberParallelRuns < -8 or NumberParallelRuns > 8:
+            raise ValueError("NumberParallelRuns must be between -8 and 8 (excluding -1)")
+        
+        version = self.__Model.GetVersion()[0]
+        if version < "21.1.0":
+            raise ValueError(f"SetSolverOption API was first introduced in v21.1.0, but current version is {version}")
+        elif version < "22.1.0":
+            self.__Model.Analyze.SetSolverOption(solver_type_int, process_type_int, NumberParallelRuns, StiffCase)
+            if ResponseFileSizeMaxMB != 0 or NumberAnalysisThreads != 0:
+                logger.warning(f"ResponseFileSizeMaxMB and NumberAnalysisThreads parameters are not available before v23.2.0, these parameters will be ignored")
+        elif version < "23.2.0":
+            self.__Model.Analyze.SetSolverOption_2(solver_type_int, process_type_int, NumberParallelRuns, StiffCase)
+            if ResponseFileSizeMaxMB != 0 or NumberAnalysisThreads != 0:
+                logger.warning(f"ResponseFileSizeMaxMB and NumberAnalysisThreads parameters are not available before v23.2.0, these parameters will be ignored")
+        else:
+            self.__Model.Analyze.SetSolverOption_3(solver_type_int, process_type_int, NumberParallelRuns, 
+                                                ResponseFileSizeMaxMB, NumberAnalysisThreads, StiffCase)
 
 class SapAnalyze:
     def __init__(self,Sapobj):
@@ -750,27 +782,37 @@ class SapResults_Set_Option:
         """
         self.__Model.Results.Setup.SetOptionBucklingMode(BuckModeStart,BuckModeEnd,BuckModeAll)
 
-    def DirectHist(self,Value):
+    def DirectHist(self,mode:Literal['Envelopes','Step-by-Step','Last Step'] = 'Envelopes'):
         """
         ---This function sets the output option for direct history results---
         inputs:
-        Value(int)-This item is 1, 2 or 3
-            1 = Envelopes
-            2 = Step-by-Step
-            3 = Last Step
+        mode(Literal['Envelopes','Step-by-Step','Last Step'])-corresponding value for API is 1, 2 or 3
+            Envelopes       :1
+            Step-by-Step    :2
+            Last Step       :3
         """
-        self.__Model.Results.Setup.SetOptionDirectHist(Value)
+        Value = {
+            'Envelopes': 1,
+            'Step-by-Step': 2,
+            'Last Step': 3
+        }
+        self.__Model.Results.Setup.SetOptionDirectHist(Value[mode])
 
-    def ModalHist(self,Value):
+    def ModalHist(self,mode:Literal['Envelopes','Step-by-Step','Last Step'] = 'Envelopes'):
         """
         ---This function sets the output option for modal history results---
         inputs:
-        Value(int)-This item is 1, 2 or 3
-            1 = Envelopes
-            2 = Step-by-Step
-            3 = Last Step
+        mode(Literal['Envelopes','Step-by-Step','Last Step'])-corresponding value for API is 1, 2 or 3
+            Envelopes       :1
+            Step-by-Step    :2
+            Last Step       :3
         """
-        self.__Model.Results.Setup.SetOptionModalHist(Value)
+        Value = {
+            'Envelopes': 1,
+            'Step-by-Step': 2,
+            'Last Step': 3
+        }
+        self.__Model.Results.Setup.SetOptionModalHist(Value[mode])
 
     def ModeShape(self,ModeShapeStart,ModeShapeEnd,ModeShapesAll=False):
         """
@@ -783,62 +825,90 @@ class SapResults_Set_Option:
         """
         self.__Model.Results.Setup.SetOptionModeShape(ModeShapeStart,ModeShapeEnd,ModeShapesAll)
 
-    def MultiStepStatic(self,Value):
+    def MultiStepStatic(self,mode:Literal['Envelopes','Step-by-Step','Last Step'] = 'Envelopes'):
         """
         ---This function sets the output option for multistep static linear results---
         inputs:
-        Value(int)-This item is 1, 2 or 3
-            1 = Envelopes
-            2 = Step-by-Step
-            3 = Last Step
+        mode(Literal['Envelopes','Step-by-Step','Last Step'])-corresponding value for API is 1, 2 or 3
+            Envelopes       :1
+            Step-by-Step    :2
+            Last Step       :3
         """
-        self.__Model.Results.Setup.SetOptionMultiStepStatic(Value)
+        Value = {
+            'Envelopes': 1,
+            'Step-by-Step': 2,
+            'Last Step': 3
+        }
+        self.__Model.Results.Setup.SetOptionMultiStepStatic(Value[mode])
 
-    def MultiValuedCombo(self,Value):
+    def MultiValuedCombo(self,mode:Literal['Envelopes','Multiple values, if possible','Correspondence'] = 'Envelopes'):
         """
         ---This function sets the output option for multi-valued load combination results---
         inputs:
-        Value(int)-This item is either 1, 2, or 3.
-            1 = Envelopes
-            2 = Multiple values, if possible
-            3 = Correspondence
+        mode(Literal['Envelopes','Multiple values, if possible','Correspondence'])-corresponding value for API is 1, 2 or 3
+            Envelopes       :1
+            Multiple values, if possible:2
+            Correspondence  :3
         """
-        self.__Model.Results.Setup.SetOptionMultiValuedCombo(Value)
+        Value = {
+            'Envelopes': 1,
+            'Multiple values, if possible': 2,
+            'Correspondence': 3
+        }
+        self.__Model.Results.Setup.SetOptionMultiValuedCombo(Value[mode])
 
-    def NLStatic(self,Value):
+    def NLStatic(self,mode:Literal['Envelopes','Step-by-Step','Last Step'] = 'Envelopes'):
         """
         ---This function sets the output option for NonLinear static results---
         inputs:
-        Value(int)-This item is 1, 2 or 3
-            1 = Envelopes
-            2 = Step-by-Step
-            3 = Last Step
+        mode(Literal['Envelopes','Step-by-Step','Last Step'])-corresponding value for API is 1, 2 or 3
+            Envelopes       :1
+            Step-by-Step    :2
+            Last Step       :3
         """
-        self.__Model.Results.Setup.SetOptionNLStatic(Value)
+        Value = {
+            'Envelopes': 1,
+            'Step-by-Step': 2,
+            'Last Step': 3
+        }
+        self.__Model.Results.Setup.SetOptionNLStatic(Value[mode])
 
-    def PSD(self,Value):
+    def PSD(self,mode:Literal['RMS','sqrt(PSD)'] = 'RMS'):
         """
         ---This function sets the output option for power spectral density results---
         inputs:
-        Value(int)-This item is either 1 or 2
-            1 = RMS
-            2 = sqrt(PSD)
+        mode(Literal['RMS','sqrt(PSD)'])-corresponding value for API is 1 or 2
+            RMS             :1
+            sqrt(PSD)       :2
         """
-        self.__Model.Results.Setup.SetOptionPSD(Value)
+        Value = {
+            'RMS': 1,
+            'sqrt(PSD)': 2
+        }
+        self.__Model.Results.Setup.SetOptionPSD(Value[mode])
 
-    def SteadyState(self,Value,SteadyStateOption):
+    def SteadyState(self,mode:Literal['Envelopes','At Frequencies'] = 'Envelopes', SteadyStateOption:Literal['In and Out of Phase','Magnitude','All'] = 'In and Out of Phase'):
         """
         ---This function sets the output option for steady state results---
         inputs:
-        Value(int)-This item is either 1 or 2
-            1 = Envelopes
-            2 = At Frequencies
-        SteadyStateOption(int)-This item is 1, 2 or 3
-            1 = In and Out of Phase
-            2 = Magnitude
-            3 = All
+        mode(Literal['Envelopes','At Frequencies'])-corresponding value for API is 1 or 2
+            Envelopes       :1
+            At Frequencies  :2
+        SteadyStateOption(Literal['In and Out of Phase','Magnitude','All'])-corresponding value for API is 1, 2 or 3
+            In and Out of Phase:1
+            Magnitude         :2
+            All               :3
         """
-        self.__Model.Results.Setup.SetOptionSteadyState(Value,SteadyStateOption)
+        Value = {
+            'Envelopes': 1,
+            'At Frequencies': 2
+        }
+        Value2 = {
+            'In and Out of Phase': 1,
+            'Magnitude': 2,
+            'All': 3
+        }
+        self.__Model.Results.Setup.SetOptionSteadyState(Value[mode], Value2[SteadyStateOption])
 
 class SapResults_Set:
     def __init__(self,Sapobj):
@@ -920,7 +990,7 @@ class SapResults_Area:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
 
-    def ForceShell(self,Name,itemTypeElm=0):
+    def ForceShell(self,Name,itemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the area forces for the specified area elements that are assigned shell section
         properties (not plane or asolid properties). Note that the forces reported are per unit of in-plane length
@@ -928,7 +998,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects, depending on the value of the
             ItemTypeElm item
-        itemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        itemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -991,10 +1061,16 @@ class SapResults_Area:
             the area local 1 axis to the direction of Vmax. This item is only reported for area elements with properties
             that allow plate bending behavior. [deg]
         """
-        result=self.__Model.Results.AreaForceShell(Name,itemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaForceShell(Name,Value[itemTypeElm])
         return result
 
-    def JointForcePlane(self,Name,ObjectElm=0):
+    def JointForcePlane(self,Name,ObjectElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the area joint forces for the point elements at each corner of the specified plane
         elements that have plane-type or asolid-type properties (not shell).
@@ -1002,7 +1078,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects depending on the value of the
             ItemTypeElm item
-        ObjectElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ObjectElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1030,10 +1106,16 @@ class SapResults_Area:
         M1,M2,M3(float list)-These are one dimensional arrays that include the joint moment components about
             the point element local axes. [FL]
         """
-        result=self.__Model.Results.AreaJointForcePlane(Name,ObjectElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaJointForcePlane(Name,Value[ObjectElm])
         return result
 
-    def JointForceShell(self,Name,ItemTypeElm=0):
+    def JointForceShell(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the area joint forces for the point elements at each corner of the specified area
         elements that have shell-type properties (not plane or asolid).
@@ -1041,7 +1123,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects, depending on the value of
             the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1069,10 +1151,16 @@ class SapResults_Area:
         M1,M2,M3(float list)-These are one dimensional arrays that include the joint moment components about the
             point element local axes. [FL]
         """
-        result=self.__Model.Results.AreaJointForceShell(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaJointForceShell(Name,Value[ItemTypeElm])
         return result
 
-    def StrainShell(self,Name,ItemTypeElm=0):
+    def StrainShell(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the area strains for the specified area elements that are assigned shell section
         properties (not plane or asolid properties). Strains are reported at each point element associated with
@@ -1081,7 +1169,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects, depending on the value of
             the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1122,10 +1210,16 @@ class SapResults_Area:
             area local 1 axis to the direction of GMaxAvg. This item is only reported for area elements with
             properties that allow plate bending behavior. [deg]
         """
-        result=self.__Model.Results.AreaStrainShell(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaStrainShell(Name,Value[ItemTypeElm])
         return result
 
-    def StrainShellLayered(self,Name,ItemTypeElm=0):
+    def StrainShellLayered(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the area strains for the specified area elements that are assigned layered shell
         section properties
@@ -1133,7 +1227,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects, depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1177,10 +1271,16 @@ class SapResults_Area:
         GAngleAvg(float)-The angle measured counter clockwise (when the local 3 axis is pointing toward you) from the area
             local 1 axis to the direction of GMaxAvg. [deg]
         """
-        result=self.__Model.Results.AreaStrainShellLayered(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaStrainShellLayered(Name,Value[ItemTypeElm])
         return result
 
-    def StressPlane(self,Name,ItemTypeElm=0):
+    def StressPlane(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the stresses for the specified plane elements that are assigned plane or asolid
         section properties (not shell properties).
@@ -1188,7 +1288,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects, depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1217,10 +1317,16 @@ class SapResults_Area:
             plane element local 1 axis to the direction of the maximum principal stress. [deg]
         SVM(float)-The plane element internal Von Mises stress at the specified point element. [F/L2]
         """
-        result=self.__Model.Results.AreaStressPlane(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaStressPlane(Name,Value[ItemTypeElm])
         return result
 
-    def StressShell(self,Name,ItemTypeElm=0):
+    def StressShell(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the area stresses for the specified area elements that are assigned shell section
         properties (not plane or asolid properties). Stresses are reported at each point element associated with
@@ -1229,7 +1335,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects, depending on the value of
             the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1271,10 +1377,16 @@ class SapResults_Area:
             area local 1 axis to the direction of SMaxAvg. This item is only reported for area elements with properties
             that allow plate bending behavior. [deg]
         """
-        result=self.__Model.Results.AreaStressShell(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaStressShell(Name,Value[ItemTypeElm])
         return result
 
-    def StressShellLayered(self,Name,ItemTypeElm=0):
+    def StressShellLayered(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the area stresses for the specified area elements that are assigned layered shell
         section properties
@@ -1282,7 +1394,7 @@ class SapResults_Area:
         inputs:
         Name(str)-The name of an existing area object, area element or group of objects, depending on the value of the
             ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1328,7 +1440,13 @@ class SapResults_Area:
         SAngleAvg(float)-The angle measured counter clockwise (when the local 3 axis is pointing toward you) from
             the area local 1 axis to the direction of SMaxAvg. [deg]
         """
-        result=self.__Model.Results.AreaStressShellLayered(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AreaStressShellLayered(Name,Value[ItemTypeElm])
         return result
 
 class SapResults_Frame:
@@ -1341,9 +1459,24 @@ class SapResults_Frame:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
 
-    def Force(self,Name,ItemTypeElm=0):
+    def Force(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the frame forces for the specified line elements---
+        inputs:
+        Name(str)-The name of an existing line object, line element or group of objects, depending on the value of the
+            ItemTypeElm item
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
+            ObjectElm = 0
+            Element = 1
+            GroupElm = 2
+            SelectionElm = 3
+            If this item is ObjectElm, the result request is for the line elements corresponding to the line object
+            specified by the Name item.
+            If this item is Element, the result request is for the line element specified by the Name item.
+            If this item is GroupElm, the result request is for the line elements corresponding to all line objects
+            included in the group specified by the Name item.
+            If this item is SelectionElm, the result request is for line elements corresponding to all selected line
+            objects and the Name item is ignored.
         return:
         [index,NumberResults,Obj,ObjSta,Elm,ElmSta,LoadCase,StepType,StepNum,P,V2,V3,T,M2,M3]
 
@@ -1363,15 +1496,21 @@ class SapResults_Frame:
         T,M2,M3(float list)-These are one dimensional arrays that include the torsion, moment about the local 2axis,
             and moment about the local 3-axis, respectively, for each result. [FL]
         """
-        result=self.__Model.Results.FrameForce(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.FrameForce(Name,Value[ItemTypeElm])
         return result
 
-    def JointForce(self,Name,ItemTypeElm=0):
+    def JointForce(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the frame joint forces for the point elements at each end of the specified line elements---
         inputs:
-        Name(str)-The name of an existing line object, line element or group of objects depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        Name(str)-The name of an existing line object, line element or group of objects, depending on the value of the ItemTypeElm item
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1398,7 +1537,13 @@ class SapResults_Frame:
         M1,M2,M3(float list)-These are one dimensional arrays that include the joint moment components about the
             point element local axes. [FL]
         """
-        result=self.__Model.Results.FrameJointForce(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.FrameJointForce(Name,Value[ItemTypeElm])
         return result
 
 class SapResults_Joint:
@@ -1411,7 +1556,7 @@ class SapResults_Joint:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
 
-    def Acc(self,Name,ItemTypeElm=0):
+    def Acc(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint accelerations for the specified point elements. The accelerations
         reported by this function are relative accelerations
@@ -1419,7 +1564,7 @@ class SapResults_Joint:
         inputs:
         Name(str)-The name of an existing point object, point element, or group of objects,
             depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1447,10 +1592,16 @@ class SapResults_Joint:
         R1,R2,R3(float list)-These are one dimensional arrays that include the rotational acceleration about the point
             element local 1, 2 and 3 axes, respectively, for each result. [rad/s2]
         """
-        result=self.__Model.Results.JointAcc(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.JointAcc(Name,Value[ItemTypeElm])
         return result
 
-    def AccAbs(self,Name,ItemTypeElm=0):
+    def AccAbs(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint absolute accelerations for the specified point elements. Absolute and
         relative accelerations are the same, except when reported for time history load cases subjected to acceleration
@@ -1487,10 +1638,16 @@ class SapResults_Joint:
         R1,R2,R3(float list)-These are one dimensional arrays that include the rotational acceleration about the point
             element local 1, 2 and 3 axes, respectively, for each result. [rad/s2]
         """
-        result=self.__Model.Results.JointAccAbs(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.JointAccAbs(Name,Value[ItemTypeElm])
         return result
 
-    def Displ(self,Name,ItemTypeElm=0):
+    def Displ(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint displacements for the specified point elements. The displacements reported
         by this function are relative displacements
@@ -1498,7 +1655,7 @@ class SapResults_Joint:
         inputs:
         Name(str)-The name of an existing point object, point element, or group of objects depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1526,10 +1683,16 @@ class SapResults_Joint:
         R1,R2,R3(float list)-These are one dimensional arrays that include the rotation about the point element
             local 1, 2 and 3 axes, respectively, for each result. [rad]
         """
-        result=self.__Model.Results.JointDispl(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.JointDispl(Name,Value[ItemTypeElm])
         return result
 
-    def DisplAbs(self,Name,ItemTypeElm=0):
+    def DisplAbs(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the absolute joint displacements for the specified point elements. Absolute and
         relative displacements are the same except when reported for time history load cases subjected to acceleration
@@ -1538,7 +1701,7 @@ class SapResults_Joint:
         inputs:
         Name(str)-The name of an existing point object, point element, or group of objects depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1566,16 +1729,22 @@ class SapResults_Joint:
         R1,R2,R3(float list)-These are one dimensional arrays that include the rotation about the point element
             local 1, 2 and 3 axes, respectively, for each result. [rad]
         """
-        result=self.__Model.Results.JointDisplAbs(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.JointDisplAbs(Name,Value[ItemTypeElm])
         return result
 
-    def React(self,Name,ItemTypeElm=0):
+    def React(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint reactions for the specified point elements. The reactions reported are from
         restraints, springs and grounded (one-joint) links---
         inputs:
         Name(str)-The name of an existing line object, line element or group of objects depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1602,10 +1771,16 @@ class SapResults_Joint:
         M1,M2,M3(float list)-These are one dimensional arrays that include the reaction moments about the point
             element local 1, 2 and 3 axes, respectively, for each result. [FL]
         """
-        result=self.__Model.Results.JointReact(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.JointReact(Name,Value[ItemTypeElm])
         return result
 
-    def Vel(self,Name,ItemTypeElm=0):
+    def Vel(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint velocities for the specified point elements. The velocities reported by
         this function are relative velocities
@@ -1613,7 +1788,7 @@ class SapResults_Joint:
         inputs:
         Name(str)-The name of an existing point object, point element, or group of objects depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1641,10 +1816,16 @@ class SapResults_Joint:
         R1,R2,R3(float list)-These are one dimensional arrays that include the rotational velocity about the
             point element local 1, 2 and 3 axes, respectively, for each result. [rad/s]
         """
-        result=self.__Model.Results.JointVel(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.JointVel(Name,Value[ItemTypeElm])
         return result
 
-    def VelAbs(self,Name,ItemTypeElm=0):
+    def VelAbs(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint absolute velocities for the specified point elements. Absolute and
         relative velocities are the same, except when reported for time history load cases subjected to acceleration
@@ -1652,7 +1833,7 @@ class SapResults_Joint:
         inputs:
         Name(str)-The name of an existing point object, point element, or group of objects depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1680,7 +1861,13 @@ class SapResults_Joint:
         R1,R2,R3(float list)-These are one dimensional arrays that include the rotational velocity about the
             point element local 1, 2 and 3 axes, respectively, for each result. [rad/s]
         """
-        result=self.__Model.Results.JointVelAbs(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.JointVelAbs(Name,Value[ItemTypeElm])
         return result
 
 class SapResults_Link:
@@ -1693,13 +1880,13 @@ class SapResults_Link:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
 
-    def Deformation(self,Name,ItemTypeElm=0):
+    def Deformation(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the link internal deformations---
         inputs:
         Name(str)-The name of an existing point object, point element, or group of objects depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1727,16 +1914,22 @@ class SapResults_Link:
         R1,R2,R3(float list)-These are one dimensional arrays that include the internal rotational deformation
             of the link about the link element local axes. [rad]
         """
-        result=self.__Model.Results.LinkDeformation(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.LinkDeformation(Name,Value[ItemTypeElm])
         return result
 
-    def Force(self,Name,ItemTypeElm=0):
+    def Force(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the link forces at the point elements at the ends of the specified link elements---
         inputs:
         Name(str)-The name of an existing point object, point element, or group of objects depending on the value
             of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1767,15 +1960,21 @@ class SapResults_Link:
         M2,M3(float list)-These are one dimensional arrays that include the link moment components about the link
             element local axes. [FL]
         """
-        result=self.__Model.Results.LinkForce(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.LinkForce(Name,Value[ItemTypeElm])
         return result
 
-    def JointForce(self,Name,ItemTypeElm=0):
+    def JointForce(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint forces for the point elements at the ends of the specified link elements---
         inputs:
         Name(str)-The name of an existing line object, line element or group of objects depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -1802,7 +2001,13 @@ class SapResults_Link:
         M1,M2,M3(float list)-These are one dimensional arrays that include the joint moment components about the
             point element local axes. [FL]
         """
-        result=self.__Model.Results.LinkJointForce(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.LinkJointForce(Name,Value[ItemTypeElm])
         return result
 
 class SapResults_Modal:
@@ -1930,23 +2135,23 @@ class SapResults_Modal:
         result=self.__Model.Results.ModalPeriod()
         return result
 
-    def Shape(self,Name,ItemTypeElm=0):
+    def Shape(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the modal displacements (mode shapes) for the specified point elements---
         inputs:
         Name(str)-The name of an existing point element or group of objects, depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
             SelectionElm = 3
-            If this item is ObjectElm, the result request is for the point element corresponding to the point object
-                specified by the Name item.
+            If this item is ObjectElm, the result request is for the point element corresponding to the point
+            object specified by the Name item.
             If this item is Element, the result request is for the point element specified by the Name item.
-            If this item is GroupElm, the result request is for all point elements directly or indirectly specified in
-            the group specified by the Name item.
-            If this item is SelectionElm, the result request is for all point elements directly or indirectly selected
-            and the Name item is ignored.
+            If this item is GroupElm, the result request is for all point elements directly or indirectly specified
+            in the group specified by the Name item.
+            If this item is SelectionElm, the result request is for all point elements directly or indirectly
+            selected and the Name item is ignored.
         return:
         [index,NumberResults,Obj,Elm,LoadCase,StepType,StepNum,U1,U2,U3,R1,R2,R3]
 
@@ -1964,7 +2169,13 @@ class SapResults_Modal:
         R1,R2,R3(float list)-These are one dimensional arrays that include the rotation about the point element
             local 1, 2 and 3 axes, respectively, for each result. [rad]
         """
-        result=self.__Model.Results.ModeShape(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.ModeShape(Name,Value[ItemTypeElm])
         return result
 
 class SapResults_Solid:
@@ -1977,12 +2188,12 @@ class SapResults_Solid:
         self.__Object = Sapobj._Object 
         self.__Model = Sapobj._Model
 
-    def JointForce(self,Name,ItemTypeElm=0):
+    def JointForce(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the joint forces for the point elements at each corner of the specified solid elements---
         inputs:
         Name(str)-The name of an existing solid object, solid element, or group of objects, depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -2010,16 +2221,22 @@ class SapResults_Solid:
         M1,M2,M3(float list)-These are one dimensional arrays that include the joint moment components about the
             point element local axes. [FL]
         """
-        result=self.__Model.Results.SolidJointForce(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.SolidJointForce(Name,Value[ItemTypeElm])
         return result
 
-    def Strain(self,Name,ItemTypeElm=0):
+    def Strain(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the strains for the specified solid elements. Strains are reported at each point
         element associated with the solid element---
         inputs:
         Name(str)-The name of an existing solid object, solid element, or group of objects, depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -2054,16 +2271,22 @@ class SapResults_Solid:
         DirCosMin1,DirCosMin2,DirCosMin3(float)-These are three direction cosines defining the orientation of the
             minimum principal strain with respect to the solid element local axes.
         """
-        result=self.__Model.Results.SolidStrain(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.SolidStrain(Name,Value[ItemTypeElm])
         return result
 
-    def Stress(self,Name,ItemTypeElm=0):
+    def Stress(self,Name,ItemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the stresses for the specified solid elements. Stresses are reported at
         each point element associated with the solid element---
         inputs:
         Name(str)-The name of an existing solid object, solid element, or group of objects, depending on the value of the ItemTypeElm item
-        ItemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        ItemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -2098,7 +2321,13 @@ class SapResults_Solid:
         DirCosMin1,DirCosMin2,DirCosMin3(float)-These are three direction cosines defining the orientation of the
             minimum principal stress with respect to the solid element local axes.
         """
-        result=self.__Model.Results.SolidStress(Name,ItemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.SolidStress(Name,Value[ItemTypeElm])
         return result
 
 class SapResults:
@@ -2118,14 +2347,14 @@ class SapResults:
         self.Modal = SapResults_Modal(Sapobj)
         self.Solid = SapResults_Solid(Sapobj)
         
-    def AssembledJointMass_1(self,MassSourceName,Name,itemTypeElm):
+    def AssembledJointMass_1(self,MassSourceName,Name,itemTypeElm:Literal['ObjectElm','Element','GroupElm','SelectionElm'] = 'ObjectElm'):
         """
         ---This function reports the assembled joint masses for the specified point elements---
         inputs:
         MassSourceName(str)-The name of an existing mass source definition. If this value is left empty or
             unrecognized, data for all mass sources will be returned
         Name(str)-The name of an existing point element or group of objects, depending on the value of the ItemTypeElm item
-        itemTypeElm(int)-This is one of the following items in the eItemTypeElm enumeration:
+        itemTypeElm(Literal['ObjectElm','Element','GroupElm','SelectionElm'])-This is one of the following items in the eItemTypeElm enumeration:
             ObjectElm = 0
             Element = 1
             GroupElm = 2
@@ -2148,7 +2377,13 @@ class SapResults:
         R1,R2,R3(float)-These are one dimensional arrays that include the rotational mass moment of inertia
             about the point element local 1, 2 and 3 axes, respectively, for each result. [ML2]
         """
-        result=self.__Model.Results.AssembledJointMass_1(MassSourceName,Name,itemTypeElm)
+        Value = {
+            'ObjectElm': 0,
+            'Element': 1,
+            'GroupElm': 2,
+            'SelectionElm': 3
+        }
+        result=self.__Model.Results.AssembledJointMass_1(MassSourceName,Name,Value[itemTypeElm])
         return result
 
     def BaseReact(self):
@@ -2254,3 +2489,87 @@ class SapResults:
         """
         result=self.__Model.Results.StepLabel()
         return result
+
+class SapAnalyze:
+    def __init__(self,Sapobj):
+        """
+        Passing in the parent class object directly is to avoid 
+        getting only the last opened SAP2000 window when initializing the 
+        parent class instance to get the model pointer in the subclass.
+        """
+        self.__Object = Sapobj._Object 
+        self.__Model = Sapobj._Model
+        self.Get = SapAnalyze_Get(Sapobj)
+        self.Set = SapAnalyze_Set(Sapobj)
+
+    def CreateAnalysisModel(self):
+        """
+        ---This function creates the analysis model. If the analysis model is already created and current, nothing is done.
+        The function returns zero if the analysis model is successfully created or it already exists and is current,
+        otherwise it returns a nonzero value.It is not necessary to call this function before running an analysis.
+        The analysis model is automatically created, if necessary, when the model is run
+        ---
+        """
+        self.__Model.Analyze.CreateAnalysisModel()
+
+    def MergeAnalysisResults(self,FileName):
+        """
+        ---See “Merging Analysis Results” section in program help file for requirements and limitations.
+        The analysis model is automatically created as part of this function.
+        The function returns zero if analysis results are successfully merged, otherwise it returns a nonzero value.
+        IMPORTANT NOTE: Your model must have a file path defined before merging analysis results. If the model is
+        opened from an existing file, a file path is defined. If the model is created from scratch, the File.Save
+        function must be called with a file name before merging analysis results. Saving the file creates the file path.
+        ---
+        inputs:
+        FileName(str)-The full path of a model file from which the analysis results are to be merged
+        """
+        self.__Model.Analyze.MergeAnalysisResults(FileName)
+
+    def ModifyUnDeformedGeometry(self,CaseName,SF,Stage=-1,Original=False):
+        """
+        ---This function modifies the undeformed geometry based on displacements obtained from a specified load case---
+        inputs:
+        CaseName(str)-The name of the static load case from which displacements are obtained
+        SF(float)-The scale factor applied to the displacements
+        Stage(int)-This item applies only when the specified load case is a staged construction load case. It is the
+            stage number from which the displacements are obtained. Specifying a -1 for this item means to use the last run stage
+        Original(bool)-If this item is True, all other input items in this function are ignored and the original
+            undeformed geometry data is reinstated
+        """
+        self.__Model.Analyze.ModifyUnDeformedGeometry(CaseName,SF,Stage,Original)
+
+    def RunAnalysis(self):
+        """
+        ---This function runs the analysis. The analysis model is automatically created as part of this function.
+        The function returns zero if the analysis model is successfully run, otherwise it returns a nonzero value.
+        IMPORTANT NOTE: Your model must have a file path defined before running the analysis. If the model is opened
+        from an existing file, a file path is defined. If the model is created from scratch, the File.Save function
+        must be called with a file name before running the analysis. Saving the file creates the file path.
+        ---
+        """
+        self.__Model.Analyze.RunAnalysis()
+
+    def DeleteResults(self,CaseName):
+        """
+        ---This function deletes the results for a specified load case---
+        inputs:
+        CaseName(str)-The name of a load case
+        """
+        ret = self.__Model.Analyze.DeleteResults(CaseName)
+        return ret
+
+    def ModifyUnDeformedGeometryModeShape(self,CaseName,Mode,MaxDisp,Direction,Original=False):
+        """
+        ---This function modifies the undeformed geometry based on the shape of a specified mode from a specified
+        modal or buckling load case
+        ---
+        inputs:
+        CaseName(str)-The name of a modal or buckling load case
+        Mode(int)-The mode shape to consider
+        MaxDisp(float)-The maximum displacement to which the mode shape will be scaled
+        Direction(int)-The direction in which to apply the geometry modification
+        Original(bool)-If this item is True, all other input items in this function are ignored and
+            the original undeformed geometry data is reinstated
+        """
+        self.__Model.Analyze.ModifyUndeformedGeometryModeShape(CaseName,Mode,MaxDisp,Direction,Original)

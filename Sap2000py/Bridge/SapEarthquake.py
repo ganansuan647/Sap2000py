@@ -15,7 +15,7 @@ class SapSpectrumFunc:
     values: List[float] = field(default_factory=list)
     damping: float = 0.05
     
-    def get_from_file(self,file_path:Path = Path('..\..\Examples\ResponseSpectrum_E2_Damping_0.02.txt')):
+    def get_from_file(self,file_path:Path = Path('../../Examples/ResponseSpectrum_E2_Damping_0.02.txt')):
         times = []
         values = []
         with open(file_path, 'r') as file:
@@ -125,14 +125,14 @@ class SapTimeHistoryFunc:
         else:
             raise NotImplementedError("Unit conversion from {origin_unit} to {target} not supported yet!")
     
-    def get_from_txt(self,file_path:Path = Path('..\..\Examples\waves\Examples\waves\GH1NMB01.txt'),dt:float=0.02) -> Tuple[List[float], List[float]]:
+    def get_from_txt(self,file_path:Path = Path('../../Examples/waves/Examples/waves/GH1NMB01.txt'),dt:float=0.02) -> Tuple[List[float], List[float]]:
         """Parses a txt file containing time history data
         the txt file should be in the format of:
         (maybe some header lines)
         time value (or only value, then time will be calculated by dt)
 
         Args:
-            file_path (Path, optional): file path as a Path instance. Defaults to Path('..\..\Examples\waves\Examples\waves\GH1NMB01.txt').
+            file_path (Path, optional): file path as a Path instance. Defaults to Path('../../Examples/waves/Examples/waves/GH1NMB01.txt').
             dt (float, optional): dt will only be used when only value included in the txt file. Defaults to 0.02.
 
         Raises:
@@ -273,7 +273,7 @@ class SapTimeHistoryFunc:
         return self.periods, self.sa, self.sv, self.sd
     
     @classmethod
-    def get_from_DAT(cls, file_path:Path = Path('..\..\Examples\waves\cz2-2-34.DAT')):
+    def get_from_DAT(cls, file_path:Path = Path('../../Examples/waves/cz2-2-34.DAT')):
         """Parses a DAT file containing time history data.
         The DAT file should follow this format:
         1. The first line contains two values: the number of data points and the time interval (dt).
@@ -287,7 +287,7 @@ class SapTimeHistoryFunc:
             0.0704    -0.0229    -0.0964     0.0263     0.1186    -0.0238    -0.1617
             ...
             0.0337
-            file_path (Path, optional): The path to the DAT file. Defaults to Path('..\..\Examples\waves\cz2-2-34.DAT').
+            file_path (Path, optional): The path to the DAT file. Defaults to Path('../../Examples/waves/cz2-2-34.DAT').
             
         Returns:
             tuple: A tuple containing two lists:
@@ -295,7 +295,7 @@ class SapTimeHistoryFunc:
                 - values: A list of corresponding data values.
                 
         Args:
-            file_path (Path, optional): path to .DAT file. Defaults to Path('..\..\Examples\waves\cz2-2-34.DAT').
+            file_path (Path, optional): path to .DAT file. Defaults to Path('../../Examples/waves/cz2-2-34.DAT').
         """
         if not file_path.is_file():
             logger.error(f"{file_path} is not a file!")
@@ -314,7 +314,7 @@ class SapTimeHistoryFunc:
             while i < len(lines):
                 line_values = get_i_line(lines,i)
                 if len(line_values) == 2:
-                    if len(get_i_line(lines,i+1)) != 2:
+                    if i+1 < len(lines) and len(get_i_line(lines,i+1)) != 2:
                         # end the last record
                         if len(values) > 0:
                             times = [dt*k for k in range(num_points)]
@@ -355,7 +355,7 @@ class SapTimeHistoryFunc:
             logger.opt(colors=True).error(f"Time History Function <yellow>{self.name}</yellow> Failed to define!")
     
     @classmethod
-    def get_from_folder(cls,file_folder:Path = Path('..\..\Examples\waves\Examples\waves'),suffix:str='txt'):
+    def get_from_folder(cls,file_folder:Path = Path('../../Examples/waves/Examples/waves'),suffix:str='txt'):
         TH_files = file_folder.glob(f'*.{suffix}')
         funcs = []
         for file in TH_files:
@@ -457,5 +457,3 @@ class SapTimeHistory:
 class SapEarthquake:
     Spectrum = SapSpectrum
     TimeHistory = SapTimeHistory
-    
-    
